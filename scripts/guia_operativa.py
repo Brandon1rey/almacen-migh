@@ -74,12 +74,16 @@ def construir(resumen, destino=DOCX):
     parrafo(doc, "El archivo del área no puede contestar «¿qué se me vence primero?». Eso es PEPS/FEFO, "
                  "no papeleo: es merma y desabasto.", False, ROJO, 9, 10)
 
-    parrafo(doc, "2. Cómo se usa (tres pasos, 15 segundos)", True, AZUL, 11)
+    parrafo(doc, "2. Cómo se usa (cuatro pasos, menos de un minuto)", True, AZUL, 11)
     for paso in [
-        "Abrir el sistema: doble clic en arrancar.cmd de la carpeta del proyecto. Se abre en el navegador.",
-        "Escribir tu nombre la primera vez. Queda registrado en cada movimiento que hagas.",
-        "Buscar el material o el lote, teclear el código del rack en la columna UBICACIÓN y dar Enter. "
-        "Si no aparece, botón «no está» y anotas qué pasó.",
+        "Abrir el sistema: doble clic en arrancar.cmd. Se abre en el navegador y pide usuario y contraseña "
+        "(cada movimiento queda firmado con quien lo hizo).",
+        "Buscar el material o el lote y teclear el código del rack en la columna UBICACIÓN, o usar "
+        "«Registrar movimiento» para cambiarlo de lugar eligiendo el motivo.",
+        "Si se mueven solo unos kilos, escribir esa cantidad en el modal: el resto se queda en su rack y "
+        "se crea un renglón nuevo con la parte movida (acción PARCIAL en la bitácora).",
+        "Si hubo un error, pestaña Movimientos → Deshacer (el último del lote). El administrador puede "
+        "borrar una captura de prueba dejando motivo y registro de auditoría.",
     ]:
         parrafo(doc, f"• {paso}", False, None, 9, 3)
 

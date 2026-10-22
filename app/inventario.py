@@ -196,10 +196,12 @@ class Inventario:
                 return registro
         raise KeyError(f"fila inexistente: {fila}")
 
-    def buscar(self, texto="", solo_sin_ubicar=False, solo_vencidos=False):
+    def buscar(self, texto="", solo_sin_ubicar=False, solo_vencidos=False, incluir_cero=False):
         termino = normalizar(texto)
         salida = []
         for f in self.filas:
+            if not incluir_cero and not self._tiene_existencia(f):
+                continue
             if solo_sin_ubicar and f["ubicacion"]:
                 continue
             if solo_vencidos and f["semaforo"] != "VENCIDO":
@@ -212,27 +214,35 @@ class Inventario:
             salida.append(f)
         return salida
 
+    @staticmethod
+    def _tiene_existencia(registro):
+        cantidad = registro.get("cantidad")
+        return isinstance(cantidad, (int, float)) and cantidad > 0
+
     def resumen(self):
-        total = len(self.filas)
-        con = [f for f in self.filas if f["ubicacion"]]
+        activas = [f for f in self.filas if self._tiene_existencia(f)]
+        total = len(activas)
+        con = [f for f in activas if f["ubicacion"]]
         semaforo = {"VENCIDO": 0, "CRITICO": 0, "AVISO": 0, "OK": 0, "SIN DATO": 0}
-        for f in self.filas:
+        for f in activas:
             semaforo[f["semaforo"]] += 1
         por_unidad = {}
-        for f in self.filas:
+        for f in activas:
             if isinstance(f["cantidad"], (int, float)):
                 unidad = (f["unidad"] or "kg").strip().lower() or "kg"
                 por_unidad[unidad] = round(por_unidad.get(unidad, 0) + f["cantidad"], 3)
         return {
             "total": total,
+            "registros": len(self.filas),
+            "anulados": len(self.filas) - total,
             "con_ubicacion": len(con),
             "sin_ubicacion": total - len(con),
             "cobertura": round(100 * len(con) / total, 1) if total else 0.0,
             "kg": round(por_unidad.get("kg", 0.0), 1),
             "por_unidad": {k: round(v, 3) for k, v in por_unidad.items()},
             "semaforo": semaforo,
-            "sin_lote": sum(1 for f in self.filas if not f["lote"]),
-            "sin_caducidad": sum(1 for f in self.filas if not f["caducidad"]),
+            "sin_lote": sum(1 for f in activas if not f["lote"]),
+            "sin_caducidad": sum(1 for f in activas if not f["caducidad"]),
             "con_formula": sum(1 for f in self.filas if f["cantidad_formula"]),
             "por_zona": self._por_zona(),
             "actualizado": dt.datetime.now().isoformat(sep=" ", timespec="seconds"),
@@ -241,7 +251,7 @@ class Inventario:
     def _por_zona(self):
         conteo = {}
         for f in self.filas:
-            if not f["ubicacion"]:
+            if not f["ubicacion"] or not self._tiene_existencia(f):
                 continue
             zona = ubicaciones.zona_de(f["ubicacion"])
             conteo[zona] = conteo.get(zona, 0) + 1
@@ -272,6 +282,66 @@ class Inventario:
         self.wb.save(temporal)
         temporal.replace(destino)
         return destino
+
+    # ---------- cantidades y parcialidades ----------
+    def ajustar_cantidad(self, fila, nueva):
+        col = self.columnas.get("cantidad")
+        if not col:
+            raise ValueError("el libro no tiene columna de cantidad")
+        modelo = self.ws.cell(row=fila, column=col)
+        celda = self.ws.cell(row=fila, column=col, value=float(nueva))
+        if modelo.has_style:
+            celda._style = copy(modelo._style)
+        registro = self.por_fila(fila)
+        registro["cantidad"] = float(nueva)
+        return registro
+
+    def agregar_parcialidad(self, fila_origen, cantidad, destino, nota=None):
+        """Crea un renglón nuevo con la parte que se mueve y deja el resto en el original."""
+        if cantidad is None or cantidad <= 0:
+            raise ValueError("la cantidad a mover debe ser mayor que cero")
+        origen = self.por_fila(fila_origen)
+        disponible = float(origen["cantidad"] or 0)
+        if cantidad >= disponible:
+            raise ValueError(f"la cantidad ({cantidad}) debe ser menor que la existencia "
+                             f"({disponible}); para mover todo usa el movimiento completo")
+        if not ubicaciones.existe(destino):
+            raise ValueError(f"ubicación inexistente en el catálogo: {destino}")
+
+        fila = self.ws.max_row + 1
+        col_desc = self.columnas["descripcion"]
+        while fila > FILA_DATOS and not self.ws.cell(row=fila - 1, column=col_desc).value:
+            fila -= 1
+
+        for campo, col in self.columnas.items():
+            valor = self.ws.cell(row=fila_origen, column=col).value
+            if campo == "cantidad":
+                valor = round(float(cantidad), 3)
+            elif campo == "ubicacion":
+                valor = destino
+            elif campo == "observaciones":
+                previo = str(valor).strip() if valor not in (None, "") else ""
+                marca = nota or f"parcialidad de la fila {fila_origen}"
+                valor = f"{previo} · {marca}" if previo else marca
+            celda = self.ws.cell(row=fila, column=col, value=valor)
+            modelo = self.ws.cell(row=fila_origen, column=col)
+            if modelo.has_style:
+                celda._style = copy(modelo._style)
+
+        self.ajustar_cantidad(fila_origen, round(disponible - float(cantidad), 3))
+        self.filas = self._leer()
+        return self.por_fila(fila)
+
+    def anular(self, fila, nota):
+        """Deja el renglón en cero y sin ubicación, con la marca en observaciones."""
+        self.ajustar_cantidad(fila, 0)
+        self.asignar(fila, None)
+        col = self.columnas.get("observaciones")
+        if col:
+            previo = self.ws.cell(row=fila, column=col).value
+            texto = f"{str(previo).strip() + ' · ' if previo else ''}{nota}"
+            self.ws.cell(row=fila, column=col, value=texto)
+        return self.por_fila(fila)
 
     def copia(self, destino):
         destino = pathlib.Path(destino)

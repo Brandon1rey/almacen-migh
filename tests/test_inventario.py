@@ -104,9 +104,12 @@ class TestInventarioReal(unittest.TestCase):
 
     def test_resumen_cuadra(self):
         r = self.inv.resumen()
-        self.assertEqual(r["total"], 137)
-        self.assertEqual(r["con_ubicacion"] + r["sin_ubicacion"], 137)
-        self.assertEqual(sum(r["semaforo"].values()), 137)
+        # 137 renglones, de los cuales 2 tienen existencia cero (anulados)
+        self.assertEqual(r["registros"], 137)
+        self.assertEqual(r["total"], 135)
+        self.assertEqual(r["anulados"], 2)
+        self.assertEqual(r["con_ubicacion"] + r["sin_ubicacion"], r["total"])
+        self.assertEqual(sum(r["semaforo"].values()), r["total"])
 
     def test_kg_incluye_las_cantidades_en_formula(self):
         # 4 filas del archivo traen =suma sin valor calculado (Excel las muestra,

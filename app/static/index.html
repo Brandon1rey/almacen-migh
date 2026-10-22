@@ -2,153 +2,297 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f3b73">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Ubicación de almacén · MIGH</title>
 <style>
   :root{
     --tinta:#111827; --suave:#6b7280; --linea:#d1d5db; --fondo:#f3f4f6; --blanco:#fff;
-    --azul:#1f3b73; --verde:#1e6b3a; --ambar:#b45309; --rojo:#b01c1c;
+    --azul:#1f3b73; --azul-claro:#eef2ff; --verde:#1e6b3a; --ambar:#b45309; --rojo:#b01c1c;
+    --radio:12px; --toque:46px;
   }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--fondo);color:var(--tinta)}
-  header{background:var(--azul);color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
-  header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.3px}
-  .kpis{display:flex;gap:16px;flex-wrap:wrap;font-size:12px}
-  .kpis b{display:block;font-size:18px;line-height:1.1}
-  .barra{position:sticky;top:0;z-index:5;background:var(--blanco);border-bottom:1px solid var(--linea);padding:10px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .barra input[type=search]{flex:1 1 260px;padding:12px 14px;font-size:17px;border:2px solid var(--linea);border-radius:9px}
-  .barra label{font-size:13px;display:flex;gap:6px;align-items:center;white-space:nowrap}
-  .descargas{display:flex;gap:8px;flex-wrap:wrap}
-  .descargas a{background:#eef2ff;border:1px solid #c7d2fe;color:var(--azul);text-decoration:none;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600}
-  .descargas a:hover{background:#e0e7ff}
-  main{padding:10px 16px 60px;max-width:1100px}
-  table{width:100%;border-collapse:collapse;background:var(--blanco);font-size:14px}
-  th{position:sticky;top:64px;background:#e5e7eb;text-align:left;font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:#374151;padding:8px;border-bottom:1px solid var(--linea)}
-  td{padding:8px;border-bottom:1px solid #eef0f3;vertical-align:middle}
-  tr:hover td{background:#fafafa}
-  .desc{font-weight:600}
-  .lote{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#374151;text-align:left;white-space:nowrap}
-  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .ubi input{width:130px;padding:9px;font-size:15px;font-family:ui-monospace,Consolas,monospace;text-transform:uppercase;border:1.5px solid var(--linea);border-radius:7px;letter-spacing:.5px}
-  .ubi input:focus{outline:none;border-color:var(--azul);box-shadow:0 0 0 3px #1f3b7322}
-  .ubi input.ok{border-color:var(--verde);background:#eaf5ee}
-  .ubi input.err{border-color:var(--rojo);background:#fdeaea}
-  button{cursor:pointer;font-size:13px;padding:8px 10px;border-radius:7px;border:1px solid var(--linea);background:var(--blanco);white-space:nowrap}
-  button.mini{padding:6px 8px;font-size:12px}
-  button:hover{background:#f3f4f6}
-  .sem{display:inline-block;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:700}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:rgba(31,59,115,.12)}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:var(--fondo);color:var(--tinta);font-size:16px;line-height:1.35;overscroll-behavior-y:contain}
+  [hidden]{display:none !important}
+  button,input,select{font-family:inherit;font-size:16px} /* 16px evita el zoom automático en iOS */
+  button{cursor:pointer;min-height:var(--toque);padding:10px 14px;border-radius:10px;border:1px solid var(--linea);background:var(--blanco);color:var(--tinta);font-weight:600}
+  button:active{transform:scale(.985)}
+  button.primario{background:var(--azul);border-color:var(--azul);color:#fff}
+  button.peligro{background:#fdeaea;border-color:#f3c2c2;color:var(--rojo)}
+  button.mini{min-height:38px;padding:6px 10px;font-size:14px}
+  input,select{width:100%;min-height:var(--toque);padding:10px 12px;border:1.5px solid var(--linea);border-radius:10px;background:var(--blanco);color:var(--tinta)}
+  input:focus,select:focus{outline:none;border-color:var(--azul);box-shadow:0 0 0 3px #1f3b7322}
+  input[type=search]{-webkit-appearance:none}
+
+  /* ---------- login ---------- */
+  #login{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#1f3b73,#0f2447 70%)}
+  .tarjeta-login{width:100%;max-width:400px;background:var(--blanco);border-radius:18px;padding:22px;box-shadow:0 20px 50px #0005}
+  .tarjeta-login h1{font-size:19px;margin:0 0 2px}
+  .tarjeta-login p.sub{margin:0 0 18px;color:var(--suave);font-size:13px}
+  .tarjeta-login label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px;color:#374151}
+  .error{background:#fdeaea;color:var(--rojo);border-radius:10px;padding:10px 12px;font-size:14px;margin-top:12px}
+  .pie-login{margin-top:14px;font-size:12px;color:var(--suave);text-align:center}
+
+  /* ---------- estructura ---------- */
+  header.top{position:sticky;top:0;z-index:20;background:var(--azul);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top))}
+  .marca{font-weight:800;font-size:15px;letter-spacing:.3px;line-height:1.15}
+  .marca small{display:block;font-weight:400;font-size:11px;opacity:.8}
+  .usuario{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;text-align:right}
+  .usuario b{display:block;font-size:13px}
+  .usuario button{background:#ffffff22;border-color:#ffffff44;color:#fff;min-height:36px;padding:6px 10px;font-size:12px}
+  nav.tabs{display:flex;gap:6px;padding:8px 10px;background:var(--blanco);border-bottom:1px solid var(--linea);position:sticky;top:calc(56px + env(safe-area-inset-top));z-index:19;overflow-x:auto}
+  nav.tabs button{flex:1 0 auto;min-height:42px;font-size:14px;border-radius:999px;padding:8px 16px;background:#f3f4f6;border-color:#e5e7eb}
+  nav.tabs button.activo{background:var(--azul);color:#fff;border-color:var(--azul)}
+  main{padding:10px 10px 96px;max-width:1100px;margin:0 auto}
+
+  /* ---------- buscador y filtros ---------- */
+  .panel{background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);padding:10px;margin-bottom:10px}
+  .fila-filtros{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--linea);border-radius:999px;padding:8px 12px;font-size:13px;background:var(--blanco);white-space:nowrap}
+  .chip input{width:auto;min-height:0;margin:0}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+  .kpi{background:var(--blanco);border:1px solid var(--linea);border-radius:10px;padding:8px}
+  .kpi b{display:block;font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums}
+  .kpi span{font-size:11px;color:var(--suave)}
+  .kpi.alerta b{color:var(--rojo)}
+
+  /* ---------- lista de lotes: tarjeta en teléfono, renglón en escritorio ---------- */
+  .cabecera-lista{display:none}
+  .lote{background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);padding:10px;margin-bottom:8px;
+        display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;align-items:center}
+  .lote .et{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--suave);font-weight:700}
+  .c-desc{grid-column:1/-1;font-weight:700;font-size:15px;line-height:1.2}
+  .c-desc small{display:block;font-weight:400;font-size:12px;color:var(--suave);margin-top:2px}
+  .c-lote code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;word-break:normal;overflow-wrap:anywhere;hyphens:none}
+  .c-cant{font-variant-numeric:tabular-nums}
+  .sem{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
   .VENCIDO{background:#fdeaea;color:var(--rojo)} .CRITICO{background:#fff2cc;color:var(--ambar)}
   .AVISO{background:#fef9e7;color:#8a6d00} .OK{background:#eaf5ee;color:var(--verde)}
   .SIN{background:#eef0f3;color:var(--suave)}
-  .sin{color:#b45309;font-style:italic}
-  footer{padding:16px;color:var(--suave);font-size:12px}
-  .bitacora{max-width:1100px;padding:0 16px 40px}
-  .bitacora h2{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:#374151}
-  .bitacora li{font-size:12px;color:#374151;margin:3px 0}
-  code{background:#eef0f3;padding:1px 5px;border-radius:4px}
-  .aviso{padding:10px 16px;background:#fff2cc;border-bottom:1px solid #f0d98a;font-size:13px}
-  .aviso.demo{background:#b01c1c;color:#fff;font-weight:700;letter-spacing:.4px;text-align:center}
-  .aviso.demo span{font-weight:400;opacity:.9}
-  /* --- botón primario y modal de movimiento --- */
-  button.primario{background:var(--azul);color:#fff;border-color:var(--azul);font-weight:700;padding:11px 14px}
-  button.primario:hover{background:#16295a}
-  .modal{position:fixed;inset:0;background:#111827aa;display:flex;align-items:flex-start;justify-content:center;padding:24px;z-index:50;overflow:auto}
-  .modal[hidden]{display:none}
-  .caja{background:#fff;border-radius:12px;max-width:520px;width:100%;padding:18px;box-shadow:0 20px 50px #0004}
-  .caja .cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .caja h2{margin:0;font-size:17px}
-  .caja h3{margin:16px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280}
-  .caja label{display:block;font-size:12px;color:#374151;margin:10px 0 4px;font-weight:600}
-  .caja input,.caja select{width:100%;padding:11px;font-size:15px;border:1.5px solid var(--linea);border-radius:8px;font-family:inherit}
-  .caja input#m-destino{font-family:ui-monospace,Consolas,monospace;text-transform:uppercase;font-size:18px;letter-spacing:.6px}
-  .detalle{background:#f3f4f6;border-radius:9px;padding:10px 12px;font-size:13px}
+  .c-ubi{grid-column:1/-1;display:flex;gap:8px;align-items:center}
+  .c-ubi input{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;text-transform:uppercase;letter-spacing:.6px;font-size:17px;font-weight:700;text-align:center}
+  .c-ubi input.ok{border-color:var(--verde);background:#eaf5ee}
+  .c-ubi input.err{border-color:var(--rojo);background:#fdeaea}
+  .c-acc{grid-column:1/-1;display:flex;gap:8px}
+  .c-acc button{flex:1;font-size:14px}
+  .c-acc button.mover{background:var(--azul-claro);border-color:#c7d2fe;color:var(--azul)}
+  .vacio{padding:26px;text-align:center;color:var(--suave)}
+
+  /* ---------- bitácora ---------- */
+  .mov{background:var(--blanco);border:1px solid var(--linea);border-radius:10px;padding:10px;margin-bottom:8px;font-size:13px}
+  .mov.revertido{opacity:.55;text-decoration:line-through}
+  .mov .m1{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+  .mov .accion{font-weight:800;text-transform:uppercase;font-size:11px;letter-spacing:.5px;color:var(--azul)}
+  .mov .kg{background:#eef2ff;border-radius:999px;padding:1px 8px;font-weight:700;font-size:11px;color:var(--azul)}
+  .mov .m2{color:var(--suave);font-size:12px;margin-top:3px}
+  .mov .m3{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .mov .m3 button{min-height:36px;font-size:12px;padding:6px 10px}
+
+  /* ---------- modales ---------- */
+  .modal{position:fixed;inset:0;background:#111827aa;z-index:60;display:flex;align-items:flex-end;justify-content:center}
+  .caja{background:var(--blanco);width:100%;max-height:92dvh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+  .caja .cab{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .caja h2{margin:0;font-size:18px}
+  .caja h3{margin:16px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--suave)}
+  .caja label{display:block;font-size:13px;font-weight:700;color:#374151;margin:12px 0 6px}
+  .detalle{background:#f3f4f6;border-radius:10px;padding:10px 12px;font-size:13px}
   .detalle b{font-size:15px}
-  .detalle .de{font-family:ui-monospace,Consolas,monospace;font-size:17px;font-weight:700;color:var(--azul)}
+  .detalle .de{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:17px;font-weight:800;color:var(--azul)}
+  .cant-fila{display:flex;gap:8px;align-items:center}
+  .cant-fila input{font-size:18px;font-weight:700;text-align:right}
+  .cant-fila span{font-size:13px;color:var(--suave);white-space:nowrap}
+  .nota-parcial{background:#fff2cc;border-radius:10px;padding:8px 10px;font-size:12px;color:#7a5b00;margin-top:8px}
   .acciones-modal{display:flex;gap:8px;margin-top:16px}
   .acciones-modal button{flex:1}
-  .historial ol{padding-left:18px;margin:0;max-height:170px;overflow:auto}
-  .historial li{font-size:12px;color:#374151;margin:3px 0}
-  .resultado-busqueda div{padding:8px 10px;border:1px solid var(--linea);border-radius:8px;margin:5px 0;font-size:13px;cursor:pointer}
-  .resultado-busqueda div:hover{background:#eef2ff}
+  .historial ol{padding-left:18px;margin:0;max-height:180px;overflow:auto}
+  .historial li{font-size:12px;color:#374151;margin:4px 0}
+  .historial li.rev{opacity:.5;text-decoration:line-through}
+  .resultado div{padding:10px;border:1px solid var(--linea);border-radius:10px;margin:6px 0;font-size:14px}
+
+  /* ---------- usuarios ---------- */
+  .usuario-fila{background:var(--blanco);border:1px solid var(--linea);border-radius:10px;padding:10px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+  .usuario-fila .datos b{display:block;font-size:15px}
+  .usuario-fila .datos small{color:var(--suave);font-size:12px}
+  .usuario-fila select{min-height:40px;font-size:14px;width:auto}
+  .usuario-fila .acciones{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+
+  /* ---------- avisos ---------- */
+  .banda{background:var(--rojo);color:#fff;text-align:center;padding:6px 10px;font-size:12px;font-weight:800;letter-spacing:.4px;line-height:1.25}
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:90;box-shadow:0 12px 30px #0006;max-width:92vw}
+  .toast.ok{background:var(--verde)} .toast.err{background:var(--rojo)}
+  .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:40;width:auto;height:56px;padding:0 20px;border-radius:999px;background:var(--azul);color:#fff;border:none;font-size:15px;font-weight:800;box-shadow:0 10px 24px #1f3b7355;display:none}
+
+  /* ---------- tablet / escritorio ---------- */
+  @media (min-width:760px){
+    main{padding:16px 20px 120px}
+    .kpis{grid-template-columns:repeat(6,1fr)}
+    .lote{grid-template-columns:1.9fr 1.05fr .75fr 1.05fr 1.15fr auto;padding:8px 12px;gap:10px}
+    .lote .et{display:none}
+    .c-desc{grid-column:auto}
+    .c-ubi{grid-column:auto}
+    .c-ubi input{font-size:15px;text-align:left;padding:8px}
+    .c-acc{grid-column:auto;flex-direction:row}
+    .c-acc button{min-width:96px;flex:0 0 auto}
+    .cabecera-lista{display:grid;grid-template-columns:2.1fr .9fr .8fr 1.1fr 1.2fr auto;gap:10px;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#374151;font-weight:800}
+    .caja{max-width:560px;border-radius:18px;margin:auto}
+    .modal{align-items:center;padding:20px}
+    .fab{display:block;height:52px;font-size:14px}
+    nav.tabs{top:calc(58px + env(safe-area-inset-top))}
+  }
+  @media (min-width:1024px){
+    body{font-size:15px}
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>Ubicación de almacén · Materias primas</h1>
-  <div class="kpis">
-    <div><b id="k-total">–</b>lotes</div>
-    <div><b id="k-cobertura">–</b>con ubicación</div>
-    <div><b id="k-sin">–</b>sin ubicar</div>
-    <div><b id="k-vencidos">–</b>vencidos</div>
-    <div><b id="k-kg">–</b>kg</div>
-    <div><b id="k-pza">–</b>piezas</div>
-  </div>
-  <div id="quien" style="font-size:12px;opacity:.85"></div>
-</header>
 
-<div class="barra">
-  <input id="q" type="search" placeholder="Buscar material, lote, proveedor o código ERP…" autocomplete="off" autofocus>
-  <label><input type="checkbox" id="solo-sin"> solo sin ubicar</label>
-  <label><input type="checkbox" id="solo-venc"> solo vencidos</label>
-  <button id="btn-mover" class="primario" title="Cambiar un lote de ubicación">⇄ Registrar movimiento</button>
-  <div class="descargas">
-    <a href="/descargar/inventario">Inventario + ubicación</a>
-    <a href="/descargar/f01">Reporte F01</a>
-    <a href="/descargar/f01v3">F01 con caducidad (v3)</a>
-    <a href="/descargar/tabla_macro">Tabla macro + FEFO</a>
-    <a href="/descargar/bitacora">Bitácora</a>
-  </div>
-</div>
+<div id="banda-demo" class="banda" hidden>DEMO · DATOS DE DEMOSTRACIÓN — NO ES UN REGISTRO DE CALIDAD</div>
 
-<main>
-  <table>
-    <thead>
-      <tr>
-        <th style="width:34%">Material</th>
-        <th style="width:16%">Lote</th>
-        <th style="width:9%">Cantidad</th>
-        <th style="width:13%">Caducidad</th>
-        <th style="width:18%">Ubicación actual</th>
-        <th style="width:12%">Acciones</th>
-      </tr>
-    </thead>
-    <tbody id="filas">
-      <tr><td colspan="6" style="padding:24px;color:#6b7280">Cargando inventario…</td></tr>
-    </tbody>
-  </table>
-</main>
+<!-- ======================= LOGIN ======================= -->
+<section id="login">
+  <form class="tarjeta-login" id="form-login" autocomplete="on">
+    <h1>Control de ubicación</h1>
+    <p class="sub">Almacén de materias primas · Comercializadora MIGH</p>
 
-<section class="bitacora">
-  <h2>Últimos movimientos <span id="n-mov" style="font-weight:400;text-transform:none"></span></h2>
-  <ol id="movimientos" style="padding-left:18px"></ol>
+    <label for="l-usuario">Usuario</label>
+    <input id="l-usuario" name="username" autocomplete="username" autocapitalize="words"
+           enterkeyhint="next" required>
+
+    <label for="l-password">Contraseña</label>
+    <input id="l-password" name="password" type="password" autocomplete="current-password"
+           enterkeyhint="go" required>
+
+    <div id="l-error" class="error" hidden></div>
+
+    <div style="margin-top:18px">
+      <button class="primario" type="submit" style="width:100%">Entrar</button>
+    </div>
+    <p class="pie-login">Si no tienes usuario, pídelo al administrador del sistema.</p>
+  </form>
 </section>
 
-<footer>
-  Cada cambio de ubicación queda registrado con tu nombre y la hora (bitácora de auditoría).
-  Los botones de arriba generan el Excel en un clic.
-</footer>
+<!-- ======================= APP ======================= -->
+<div id="app" hidden>
+  <header class="top">
+    <div class="marca">Ubicación de almacén<small id="archivo">Materias primas</small></div>
+    <div class="usuario">
+      <div><b id="u-nombre">—</b><span id="u-rol">—</span></div>
+      <button type="button" id="btn-clave" title="Cambiar mi contraseña">Clave</button>
+      <button type="button" id="btn-salir" title="Salir">Salir</button>
+    </div>
+  </header>
 
-<div id="modal" class="modal" hidden>
+  <nav class="tabs">
+    <button data-vista="inventario" class="activo">Inventario</button>
+    <button data-vista="bitacora">Movimientos</button>
+    <button data-vista="usuarios" id="tab-usuarios" hidden>Usuarios</button>
+  </nav>
+
+  <main>
+    <!-- ---------- inventario ---------- -->
+    <section id="vista-inventario">
+      <div class="panel">
+        <input id="q" type="search" placeholder="Buscar material, lote, proveedor o ERP…"
+               autocomplete="off" enterkeyhint="search">
+        <div class="fila-filtros">
+          <label class="chip"><input type="checkbox" id="f-sin"> sin ubicar</label>
+          <label class="chip"><input type="checkbox" id="f-venc"> vencidos</label>
+          <label class="chip" id="chip-cero" hidden><input type="checkbox" id="f-cero"> anulados</label>
+          <button type="button" class="mini primario" id="btn-mover-global">⇄ Registrar movimiento</button>
+          <button type="button" class="mini" id="btn-refrescar">Actualizar</button>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><b id="k-total">–</b><span>lotes</span></div>
+          <div class="kpi"><b id="k-cob">–</b><span>con ubicación</span></div>
+          <div class="kpi"><b id="k-sin">–</b><span>sin ubicar</span></div>
+          <div class="kpi alerta"><b id="k-venc">–</b><span>vencidos</span></div>
+          <div class="kpi"><b id="k-kg">–</b><span>kg</span></div>
+          <div class="kpi"><b id="k-pza">–</b><span>piezas</span></div>
+        </div>
+        <div class="fila-filtros" style="margin-top:0">
+          <button type="button" class="mini" data-descarga="inventario">Inventario + ubicación</button>
+          <button type="button" class="mini" data-descarga="f01">Reporte F01</button>
+          <button type="button" class="mini" data-descarga="f01v3">F01 con caducidad</button>
+          <button type="button" class="mini" data-descarga="tabla_macro">Tabla macro + FEFO</button>
+          <button type="button" class="mini" data-descarga="bitacora">Bitácora</button>
+        </div>
+      </div>
+
+      <div class="cabecera-lista">
+        <div>Material</div><div>Lote</div><div>Cantidad</div><div>Caducidad</div>
+        <div>Ubicación</div><div>Acciones</div>
+      </div>
+      <div id="lista"></div>
+    </section>
+
+    <!-- ---------- bitácora ---------- -->
+    <section id="vista-bitacora" hidden>
+      <div class="panel">
+        <div class="fila-filtros" style="margin:0">
+          <button type="button" class="mini" id="btn-mas-mov">Cargar más</button>
+          <span style="font-size:12px;color:var(--suave)" id="mov-cuenta"></span>
+        </div>
+      </div>
+      <div id="movimientos"></div>
+    </section>
+
+    <!-- ---------- usuarios ---------- -->
+    <section id="vista-usuarios" hidden>
+      <div class="panel">
+        <b style="font-size:15px">Nuevo usuario</b>
+        <label for="nu-nombre" style="display:block;font-size:13px;margin:10px 0 4px">Nombre completo</label>
+        <input id="nu-nombre" autocapitalize="words" placeholder="Nombre y apellido">
+        <label for="nu-clave" style="display:block;font-size:13px;margin:10px 0 4px">Contraseña (mínimo 8)</label>
+        <input id="nu-clave" type="text" placeholder="Se la entregas a la persona">
+        <label for="nu-rol" style="display:block;font-size:13px;margin:10px 0 4px">Rol</label>
+        <select id="nu-rol">
+          <option value="almacen">Almacén (registra movimientos)</option>
+          <option value="consulta">Consulta (solo ver)</option>
+          <option value="admin">Administrador (todo)</option>
+        </select>
+        <div style="margin-top:12px"><button class="primario" type="button" id="btn-nuevo-usuario">Crear usuario</button></div>
+      </div>
+      <div id="lista-usuarios"></div>
+    </section>
+  </main>
+
+</div>
+
+<!-- ======================= MODAL MOVIMIENTO ======================= -->
+<div id="modal-mover" class="modal" hidden>
   <div class="caja">
     <div class="cab">
       <h2>Registrar movimiento</h2>
-      <button onclick="cerrarMover()" title="Cerrar">✕</button>
+      <button type="button" class="mini" onclick="cerrar('modal-mover')">Cerrar</button>
     </div>
 
     <div id="m-buscador">
-      <label>¿Qué lote se mueve?</label>
+      <label for="m-buscar">¿Qué lote se mueve?</label>
       <input id="m-buscar" type="search" placeholder="Material, lote o código ERP" autocomplete="off">
-      <div id="m-resultados" class="resultado-busqueda"></div>
+      <div id="m-resultados" class="resultado"></div>
     </div>
 
     <div id="m-form" hidden>
       <div id="m-detalle" class="detalle"></div>
 
-      <label>Destino (rack)</label>
-      <input id="m-destino" list="codigos" placeholder="MPA-A-005" autocomplete="off">
+      <label for="m-cantidad">Cantidad a mover</label>
+      <div class="cant-fila">
+        <input id="m-cantidad" type="number" inputmode="decimal" step="0.001" min="0">
+        <span id="m-unidad">kg</span>
+        <button type="button" class="mini" id="btn-todo">Todo</button>
+      </div>
+      <div id="m-nota-parcial" class="nota-parcial" hidden></div>
+
+      <label for="m-destino">Destino (rack)</label>
+      <input id="m-destino" list="codigos" placeholder="MPA-A-005" autocomplete="off" autocapitalize="characters">
       <datalist id="codigos"></datalist>
 
-      <label>Motivo del movimiento</label>
+      <label for="m-motivo">Motivo</label>
       <select id="m-motivo">
         <option value="reacomodo">Reacomodo por espacio</option>
         <option value="surtido">Surtido parcial / consumo</option>
@@ -158,112 +302,224 @@
         <option value="otro">Otro (explicar en la nota)</option>
       </select>
 
-      <label>Documento de referencia (opcional)</label>
+      <label for="m-ref">Documento de referencia (opcional)</label>
       <input id="m-ref" placeholder="OP-1234 · R-ALM-001" autocomplete="off">
 
-      <label>Nota (opcional)</label>
+      <label for="m-nota">Nota (opcional)</label>
       <input id="m-nota" placeholder="se juntan los lotes del mismo material" autocomplete="off">
 
       <div class="acciones-modal">
-        <button class="primario" onclick="registrarMovimiento()">Registrar movimiento</button>
-        <button onclick="cerrarMover()">Cancelar</button>
+        <button class="primario" type="button" id="btn-registrar">Registrar movimiento</button>
+        <button type="button" onclick="cerrar('modal-mover')">Cancelar</button>
       </div>
 
-      <div class="historial">
-        <h3>Historial de este lote</h3>
-        <ol id="m-historial"></ol>
-      </div>
+      <h3>Historial de este lote</h3>
+      <div class="historial"><ol id="m-historial"></ol></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL CONTRASEÑA ======================= -->
+<div id="modal-clave" class="modal" hidden>
+  <div class="caja" style="max-width:440px">
+    <div class="cab">
+      <h2 id="clave-titulo">Cambiar contraseña</h2>
+      <button type="button" class="mini" onclick="cerrar('modal-clave')">Cerrar</button>
+    </div>
+    <p id="clave-aviso" style="font-size:13px;color:var(--suave);margin:0 0 6px" hidden>
+      Tu contraseña es provisional: cámbiala antes de seguir.</p>
+    <label for="c-actual">Contraseña actual</label>
+    <input id="c-actual" type="password" autocomplete="current-password">
+    <label for="c-nueva">Contraseña nueva (mínimo 8)</label>
+    <input id="c-nueva" type="password" autocomplete="new-password">
+    <label for="c-repetir">Repetir la nueva</label>
+    <input id="c-repetir" type="password" autocomplete="new-password">
+    <div id="c-error" class="error" hidden></div>
+    <div class="acciones-modal">
+      <button class="primario" type="button" id="btn-cambiar-clave">Guardar</button>
+      <button type="button" onclick="cerrar('modal-clave')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL BORRAR MOVIMIENTO ======================= -->
+<div id="modal-purgar" class="modal" hidden>
+  <div class="caja" style="max-width:440px">
+    <div class="cab">
+      <h2>Borrar movimiento</h2>
+      <button type="button" class="mini" onclick="cerrar('modal-purgar')">Cerrar</button>
+    </div>
+    <p style="font-size:13px;color:var(--suave);margin:0">
+      Se revierte el efecto en el inventario y se borra el renglón de la bitácora.
+      Queda registro de quién lo borró y por qué (auditoría).</p>
+    <label for="p-motivo">Motivo del borrado</label>
+    <input id="p-motivo" placeholder="captura de prueba, equipo equivocado…">
+    <div id="p-error" class="error" hidden></div>
+    <div class="acciones-modal">
+      <button class="peligro" type="button" id="btn-confirmar-purgar">Borrar</button>
+      <button type="button" onclick="cerrar('modal-purgar')">Cancelar</button>
     </div>
   </div>
 </div>
 
 <script>
-const USUARIO = (localStorage.getItem("usuario") || prompt("Tu nombre (queda en la bitácora)") || "").trim();
-localStorage.setItem("usuario", USUARIO);
-document.getElementById("quien").textContent = USUARIO ? "· " + USUARIO : "";
-
+"use strict";
 const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = (v, d = 3) => (v === null || v === undefined || v === "") ? "" :
+  Number(v).toLocaleString("es-MX", {maximumFractionDigits: d});
 
+const estado = {usuario: null, lote: null, movimientos: [], limite: 60, purgarId: null, demo: false};
+
+/* ---------------- red ---------------- */
 async function api(ruta, opciones = {}) {
   const r = await fetch(ruta, {
+    credentials: "same-origin",
+    headers: {"Content-Type": "application/json"},
     ...opciones,
-    headers: {"Content-Type": "application/json", ...(opciones.headers || {})},
   });
-  const cuerpo = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(cuerpo.error || ("HTTP " + r.status));
+  let cuerpo = {};
+  try { cuerpo = await r.json(); } catch (e) { /* respuesta sin JSON */ }
+  if (r.status === 401 && !ruta.endsWith("/login")) {
+    mostrarLogin("Tu sesión terminó. Vuelve a entrar.");
+    throw new Error("sin sesión");
+  }
+  if (!r.ok) throw new Error(cuerpo.error || ("Error " + r.status));
   return cuerpo;
+}
+
+function aviso(texto, tipo = "") {
+  const caja = document.createElement("div");
+  caja.className = "toast " + tipo;
+  caja.textContent = texto;
+  document.body.appendChild(caja);
+  setTimeout(() => caja.remove(), 4200);
+}
+
+/* ---------------- sesión ---------------- */
+function mostrarLogin(mensaje) {
+  $("app").hidden = true;
+  $("login").hidden = false;
+  if (mensaje) { $("l-error").textContent = mensaje; $("l-error").hidden = false; }
+  setTimeout(() => $("l-usuario").focus(), 50);
+}
+
+async function entrar(evento) {
+  evento.preventDefault();
+  $("l-error").hidden = true;
+  try {
+    const datos = await api("/api/login", {
+      method: "POST",
+      body: JSON.stringify({usuario: $("l-usuario").value.trim(), password: $("l-password").value}),
+    });
+    $("l-password").value = "";
+    await iniciar(datos.usuario);
+  } catch (e) {
+    $("l-error").textContent = e.message;
+    $("l-error").hidden = false;
+  }
+}
+
+async function iniciar(usuario) {
+  estado.usuario = usuario;
+  $("login").hidden = true;
+  $("app").hidden = false;
+  $("u-nombre").textContent = usuario.nombre;
+  const etiquetasRol = {admin:"Administrador", almacen:"Almacén", consulta:"Consulta"};
+  $("u-rol").textContent = etiquetasRol[usuario.rol] || usuario.rol;
+  $("tab-usuarios").hidden = usuario.rol !== "admin";
+  $("chip-cero").hidden = usuario.rol !== "admin";
+  await Promise.all([cargarEstado(), cargarInventario(), cargarBitacora()]);
+  if (usuario.debe_cambiar) abrirClave(true);
+}
+
+async function salir() {
+  try { await api("/api/logout", {method: "POST"}); } catch (e) { /* da igual */ }
+  estado.usuario = null;
+  mostrarLogin("");
+}
+
+async function cargarEstado() {
+  try {
+    const e = await api("/api/estado");
+    $("archivo").textContent = e.archivo || "";
+    estado.demo = !!e.demo;
+    $("banda-demo").hidden = !e.demo;
+    if (e.demo) document.title = "DEMO · Ubicación de almacén";
+  } catch (e) { /* sin novedad */ }
+}
+
+/* ---------------- inventario ---------------- */
+async function cargarInventario() {
+  const params = new URLSearchParams({q: $("q").value.trim()});
+  if ($("f-sin").checked) params.set("sin_ubicar", "1");
+  if ($("f-venc").checked) params.set("vencidos", "1");
+  if ($("f-cero").checked) params.set("cero", "1");
+  try {
+    const datos = await api("/api/inventario?" + params);
+    pintarResumen(datos.resumen);
+    $("lista").innerHTML = datos.filas.length
+      ? datos.filas.map(tarjeta).join("")
+      : `<div class="vacio">Sin resultados con ese filtro.</div>`;
+  } catch (e) {
+    $("lista").innerHTML = `<div class="vacio">${esc(e.message)}</div>`;
+  }
 }
 
 function pintarResumen(r) {
   $("k-total").textContent = r.total;
-  $("k-cobertura").textContent = r.cobertura + "%";
+  $("k-cob").textContent = r.cobertura + "%";
   $("k-sin").textContent = r.sin_ubicacion;
-  $("k-vencidos").textContent = r.semaforo.VENCIDO;
-  $("k-kg").textContent = Number(r.kg).toLocaleString("es-MX");
-  const unidades = r.por_unidad || {};
-  const piezas = Number(unidades.pza || 0);
-  $("k-pza").textContent = piezas ? piezas.toLocaleString("es-MX") : "—";
+  $("k-venc").textContent = r.semaforo.VENCIDO;
+  $("k-kg").textContent = num(r.kg, 0);
+  $("k-pza").textContent = num((r.por_unidad || {}).pza, 0) || "—";
 }
 
 function semaforo(f) {
-  const cls = f.semaforo.replace(" ", "");
-  const etiqueta = f.caducidad ? f.caducidad : (f.caducidad_cruda || "sin dato");
-  const dias = (f.dias_restantes === null || f.dias_restantes === undefined)
-    ? "" : (f.dias_restantes < 0 ? ` (${-f.dias_restantes} d vencido)` : ` (${f.dias_restantes} d)`);
-  return `<span class="sem ${cls}">${esc(etiqueta)}</span><span style="color:#9ca3af;font-size:11px">${dias}</span>`;
+  const clase = (f.semaforo || "SIN").replace(" ", "");
+  const etiqueta = f.caducidad || f.caducidad_cruda || "sin dato";
+  const dias = (f.dias_restantes === null || f.dias_restantes === undefined) ? "" :
+    (f.dias_restantes < 0 ? ` · ${-f.dias_restantes} d vencido` : ` · ${f.dias_restantes} d`);
+  return `<span class="sem ${clase}">${esc(etiqueta)}</span><span style="font-size:11px;color:var(--suave)">${dias}</span>`;
 }
 
-function fila(f) {
-  const ubi = f.ubicacion
-    ? `<input class="u" data-fila="${f.fila}" value="${esc(f.ubicacion)}" spellcheck="false">`
-    : `<input class="u sin" data-fila="${f.fila}" value="" placeholder="asignar" spellcheck="false">`;
-  return `<tr>
-    <td class="desc">${esc(f.descripcion)}${f.proveedor ? `<div style="font-weight:400;color:#6b7280;font-size:11px">${esc(f.proveedor)} · ${esc(f.categoria || "")}</div>` : ""}</td>
-    <td class="lote">${esc(f.lote || "—")}</td>
-    <td class="num">${f.cantidad ?? ""} <span style="color:#9ca3af;font-size:11px">${esc(f.unidad || "")}</span></td>
-    <td>${semaforo(f)}</td>
-    <td class="ubi">${ubi}</td>
-    <td style="white-space:nowrap">
-      <button class="mini" data-mover="${f.fila}" title="Cambiar de ubicación y dejar registro">⇄ mover</button>
-      <button class="mini" data-noesta="${f.fila}" title="Marcar como no encontrado">no está</button>
-    </td>
-  </tr>`;
+function tarjeta(f) {
+  const deshabilitado = estado.usuario.rol === "consulta" ? "disabled" : "";
+  const valor = f.ubicacion || "";
+  return `<article class="lote" data-fila="${f.fila}">
+    <div class="c-desc">${esc(f.descripcion)}
+      <small>${esc(f.proveedor || "")}${f.categoria ? " · " + esc(f.categoria) : ""}${f.erp ? " · ERP " + esc(f.erp) : ""}</small>
+    </div>
+    <div class="c-lote"><span class="et">Lote</span><code>${esc(f.lote || "—")}</code></div>
+    <div class="c-cant"><span class="et">Cantidad</span>${num(f.cantidad)} <span style="font-size:11px;color:var(--suave)">${esc(f.unidad || "")}</span></div>
+    <div class="c-cad"><span class="et">Caducidad</span>${semaforo(f)}</div>
+    <div class="c-ubi">
+      <span class="et" style="min-width:64px">Ubicación</span>
+      <input class="u" data-fila="${f.fila}" value="${esc(valor)}" placeholder="asignar"
+             autocapitalize="characters" spellcheck="false" ${deshabilitado}>
+    </div>
+    <div class="c-acc">
+      <button type="button" class="mover" data-mover="${f.fila}" ${deshabilitado}>⇄ Mover</button>
+      <button type="button" data-noesta="${f.fila}" ${deshabilitado}>No está</button>
+    </div>
+  </article>`;
 }
 
-async function cargar() {
-  const params = new URLSearchParams({q: $("q").value});
-  if ($("solo-sin").checked) params.set("sin_ubicar", "1");
-  if ($("solo-venc").checked) params.set("vencidos", "1");
-  try {
-    const datos = await api("/api/inventario?" + params);
-    pintarResumen(datos.resumen);
-    $("filas").innerHTML = datos.filas.length
-      ? datos.filas.map(fila).join("")
-      : `<tr><td colspan="6" style="padding:24px;color:#6b7280">Sin resultados con ese filtro.</td></tr>`;
-  } catch (e) {
-    $("filas").innerHTML = `<tr><td colspan="6" style="padding:24px;color:#b01c1c">${esc(e.message)}</td></tr>`;
-  }
-}
-
-async function guardar(input) {
-  const fila = input.dataset.fila;
+async function guardarUbicacion(input) {
+  const fila = Number(input.dataset.fila);
   const ubicacion = input.value.trim();
   try {
-    const r = await api("/api/ubicar", {
-      method: "POST",
-      body: JSON.stringify({fila: Number(fila), ubicacion, usuario: USUARIO}),
-    });
-    input.value = r.nueva || "";
+    const r = await api("/api/ubicar", {method: "POST",
+      body: JSON.stringify({fila, ubicacion})});
+    if (r.nueva) input.value = r.nueva; else input.value = "";
     input.classList.add("ok");
-    input.classList.remove("err", "sin");
     setTimeout(() => input.classList.remove("ok"), 900);
     pintarResumen(r.resumen);
-    cargarBitacora();
-    if ($("solo-sin").checked) cargar();
+    aviso(r.accion === "CONFIRMAR" ? "Ubicación confirmada" : "Ubicación guardada", "ok");
   } catch (e) {
     input.classList.add("err");
-    alert(e.message);
+    setTimeout(() => input.classList.remove("err"), 1600);
+    aviso(e.message, "err");
   }
 }
 
@@ -271,206 +527,376 @@ async function noEsta(fila) {
   const nota = prompt("¿Qué pasó con este lote? (queda en la bitácora)");
   if (nota === null) return;
   try {
-    const r = await api("/api/no_encontrado", {
-      method: "POST",
-      body: JSON.stringify({fila: Number(fila), usuario: USUARIO, nota}),
-    });
+    const r = await api("/api/no_encontrado", {method: "POST",
+      body: JSON.stringify({fila: Number(fila), nota})});
     pintarResumen(r.resumen);
-    cargar();
+    cargarInventario();
     cargarBitacora();
-  } catch (e) { alert(e.message); }
+    aviso("Lote marcado como no encontrado", "");
+  } catch (e) { aviso(e.message, "err"); }
 }
 
-async function cargarBitacora() {
-  try {
-    const {movimientos} = await api("/api/bitacora?limite=10");
-    $("n-mov").textContent = movimientos.length ? `(${movimientos.length} más recientes)` : "";
-    $("movimientos").innerHTML = movimientos.map((m) =>
-      `<li><code>${esc(m.ts)}</code> <b>${esc(m.usuario)}</b> ${esc(m.accion.toLowerCase())}
-       ${esc(m.descripcion)} <span style="color:#6b7280">lote ${esc(m.lote || "—")}</span>
-       ${m.ubicacion_origen ? "de " + esc(m.ubicacion_origen) + " " : ""}
-       ${m.ubicacion_destino ? "→ " + esc(m.ubicacion_destino) : ""}
-       ${m.nota ? "· " + esc(m.nota) : ""}</li>`).join("");
-  } catch (e) { /* silencioso */ }
-}
-
-// eventos
-let temporizador;
-$("q").addEventListener("input", () => {
-  clearTimeout(temporizador);
-  temporizador = setTimeout(cargar, 180);
-});
-$("solo-sin").addEventListener("change", cargar);
-$("solo-venc").addEventListener("change", cargar);
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && e.target.classList.contains("u")) {
-    e.preventDefault();
-    guardar(e.target);
-  }
-});
-
-document.addEventListener("click", (e) => {
-  const boton = e.target.closest("[data-noesta]");
-  if (boton) noEsta(boton.dataset.noesta);
-});
-
-document.addEventListener("blur", (e) => {
-  if (e.target.classList && e.target.classList.contains("u")) {
-    const original = e.target.defaultValue;
-    if (e.target.value.trim().toUpperCase() !== (original || "").trim().toUpperCase()) {
-      guardar(e.target);
-    }
-  }
-}, true);
-
-cargar();
-cargarBitacora();
-
-// ---------- registrar movimiento entre ubicaciones ----------
-let loteSel = null;
-
+/* ---------------- modal de movimiento ---------------- */
 async function abrirMover(fila) {
-  document.getElementById("modal").hidden = false;
-  document.getElementById("m-form").hidden = true;
-  document.getElementById("m-buscador").hidden = false;
-  if (!document.getElementById("codigos").childElementCount) {
+  abrir("modal-mover");
+  $("m-form").hidden = true;
+  $("m-buscador").hidden = false;
+  if (!$("codigos").childElementCount) {
     try {
-      const { codigos } = await api("/api/ubicaciones");
-      document.getElementById("codigos").innerHTML =
-        codigos.map((c) => `<option value="${c}">`).join("");
-    } catch (e) { /* el catálogo se valida también en el servidor */ }
+      const {codigos} = await api("/api/ubicaciones");
+      $("codigos").innerHTML = codigos.map((c) => `<option value="${c}">`).join("");
+    } catch (e) { /* el servidor valida igual */ }
   }
   if (fila) {
     try {
-      const { lote } = await api(`/api/lote?fila=${fila}`);
+      const {lote} = await api(`/api/lote?fila=${fila}`);
       seleccionarLote(lote);
-    } catch (e) { alert(e.message); }
+    } catch (e) { aviso(e.message, "err"); }
   } else {
-    loteSel = null;
-    document.getElementById("m-buscar").value = "";
-    document.getElementById("m-resultados").innerHTML = "";
-    document.getElementById("m-buscar").focus();
+    estado.lote = null;
+    $("m-buscar").value = "";
+    $("m-resultados").innerHTML = "";
+    $("m-buscar").focus();
   }
-}
-
-function cerrarMover() {
-  document.getElementById("modal").hidden = true;
 }
 
 function seleccionarLote(lote) {
-  loteSel = lote;
-  document.getElementById("m-buscador").hidden = true;
-  document.getElementById("m-form").hidden = false;
-  document.getElementById("m-detalle").innerHTML = `
+  estado.lote = lote;
+  $("m-buscador").hidden = true;
+  $("m-form").hidden = false;
+  const unidad = lote.unidad || "kg";
+  $("m-unidad").textContent = unidad;
+  $("m-detalle").innerHTML = `
     <b>${esc(lote.descripcion)}</b><br>
-    lote <code>${esc(lote.lote || "—")}</code> · ${lote.cantidad ?? ""} ${esc(lote.unidad || "")}
+    lote <code>${esc(lote.lote || "—")}</code> · ${num(lote.cantidad)} ${esc(unidad)}
     · cad. ${esc(lote.caducidad || lote.caducidad_cruda || "sin dato")}<br>
     ubicación actual <span class="de">${esc(lote.ubicacion || "SIN UBICAR")}</span>`;
-  document.getElementById("m-destino").value = "";
-  document.getElementById("m-nota").value = "";
-  document.getElementById("m-ref").value = "";
-  document.getElementById("m-motivo").value = "reacomodo";
-  document.getElementById("m-destino").focus();
+  const cantidad = $("m-cantidad");
+  cantidad.value = lote.cantidad ?? "";
+  cantidad.max = lote.cantidad ?? "";
+  $("m-destino").value = "";
+  $("m-nota").value = "";
+  $("m-ref").value = "";
+  $("m-motivo").value = "reacomodo";
+  $("m-nota-parcial").hidden = true;
+  revisarParcial();
+  $("m-destino").focus();
   cargarHistorial(lote.fila);
 }
 
-async function cargarHistorial(fila) {
-  const lista = document.getElementById("m-historial");
-  try {
-    const { movimientos } = await api(`/api/historial?fila=${fila}`);
-    lista.innerHTML = movimientos.length
-      ? movimientos.map((m) => `<li><code>${esc(m.ts)}</code>
-          <b>${esc(m.accion.toLowerCase())}</b> ${esc(m.usuario)}
-          ${m.ubicacion_origen ? " · " + esc(m.ubicacion_origen) : ""}${m.ubicacion_destino ? " → " + esc(m.ubicacion_destino) : ""}
-          ${m.motivo ? " · " + esc(m.motivo) : ""}${m.ref_doc ? " · " + esc(m.ref_doc) : ""}
-          ${m.nota ? " · " + esc(m.nota) : ""}</li>`).join("")
-      : "<li>Sin movimientos registrados todavía.</li>";
-  } catch (e) {
-    lista.innerHTML = "";
+function revisarParcial() {
+  const lote = estado.lote;
+  if (!lote) return;
+  const total = Number(lote.cantidad || 0);
+  const movida = Number($("m-cantidad").value || 0);
+  const caja = $("m-nota-parcial");
+  if (!movida || movida >= total - 0.0001) {
+    caja.hidden = true;
+    return;
   }
+  caja.hidden = false;
+  caja.textContent = `Parcialidad: se moverán ${num(movida)} ${lote.unidad || "kg"} y quedarán ` +
+    `${num(total - movida)} ${lote.unidad || "kg"} en ${lote.ubicacion || "sin ubicación"}. ` +
+    `Se crea un renglón nuevo en el destino.`;
+}
+
+async function cargarHistorial(fila) {
+  const lista = $("m-historial");
+  try {
+    const {movimientos} = await api(`/api/historial?fila=${fila}&limite=20`);
+    lista.innerHTML = movimientos.length ? movimientos.map((m) => `
+      <li class="${m.revertido ? "rev" : ""}"><code>${esc(m.ts)}</code>
+        <b>${esc(m.accion.toLowerCase())}</b> ${esc(m.usuario)}
+        ${m.cantidad ? ` · ${num(m.cantidad)} ${esc(m.unidad || "")}` : ""}
+        ${m.ubicacion_origen ? " · " + esc(m.ubicacion_origen) : ""}${m.ubicacion_destino ? " → " + esc(m.ubicacion_destino) : ""}
+        ${m.motivo ? " · " + esc(m.motivo) : ""}${m.ref_doc ? " · " + esc(m.ref_doc) : ""}
+        ${m.nota ? " · " + esc(m.nota) : ""}</li>`).join("")
+      : "<li>Sin movimientos registrados.</li>";
+  } catch (e) { lista.innerHTML = ""; }
 }
 
 async function registrarMovimiento() {
-  if (!loteSel) { alert("Elige primero el lote."); return; }
-  const destino = document.getElementById("m-destino").value.trim().toUpperCase();
-  const motivo = document.getElementById("m-motivo").value;
-  const nota = document.getElementById("m-nota").value.trim();
-  if (!destino) { alert("Escribe el rack de destino."); return; }
-  if (destino === (loteSel.ubicacion || "")) {
-    alert("El destino es la ubicación actual: no hay movimiento que registrar.");
-    return;
+  if (!estado.lote) { aviso("Elige primero el lote", "err"); return; }
+  const destino = $("m-destino").value.trim().toUpperCase();
+  const cantidad = $("m-cantidad").value.trim();
+  const motivo = $("m-motivo").value;
+  const nota = $("m-nota").value.trim();
+  if (!destino) { aviso("Escribe el rack de destino", "err"); return; }
+  if (destino === (estado.lote.ubicacion || "")) {
+    aviso("El destino es la ubicación actual: no hay movimiento", "err"); return;
   }
-  if (motivo === "otro" && !nota) { alert("Con motivo «otro» escribe la nota."); return; }
+  if (motivo === "otro" && !nota) { aviso("Con motivo «otro» escribe la nota", "err"); return; }
   try {
-    const r = await api("/api/mover", {
-      method: "POST",
-      body: JSON.stringify({
-        fila: loteSel.fila, destino, motivo, usuario: USUARIO,
-        ref_doc: document.getElementById("m-ref").value.trim() || null,
-        nota: nota || null,
-      }),
-    });
-    cerrarMover();
+    const r = await api("/api/mover", {method: "POST", body: JSON.stringify({
+      fila: estado.lote.fila, destino, motivo, nota: nota || null,
+      cantidad: cantidad === "" ? null : Number(cantidad),
+      ref_doc: $("m-ref").value.trim() || null,
+    })});
+    cerrar("modal-mover");
     pintarResumen(r.resumen);
-    cargar();
+    cargarInventario();
     cargarBitacora();
-    const aviso = document.createElement("div");
-    aviso.className = "aviso";
-    aviso.style.cssText = "background:#eaf5ee;color:#1e6b3a;font-weight:700";
-    aviso.textContent = `Movimiento registrado: ${r.anterior} → ${r.nueva} · ${r.motivo} · ${r.ts}`;
-    document.body.insertBefore(aviso, document.body.firstChild);
-    setTimeout(() => aviso.remove(), 5000);
-  } catch (e) { alert(e.message); }
+    aviso(r.accion === "PARCIAL"
+      ? `Parcialidad registrada: ${num(r.cantidad)} ${r.unidad} → ${r.nueva}`
+      : `Movimiento registrado: ${r.anterior} → ${r.nueva}`, "ok");
+  } catch (e) { aviso(e.message, "err"); }
 }
 
-let temporizadorBusqueda;
-document.getElementById("m-buscar").addEventListener("input", (e) => {
-  clearTimeout(temporizadorBusqueda);
-  temporizadorBusqueda = setTimeout(async () => {
-    const q = e.target.value.trim();
-    const caja = document.getElementById("m-resultados");
-    if (q.length < 2) { caja.innerHTML = ""; return; }
-    const { filas } = await api(`/api/inventario?q=${encodeURIComponent(q)}`);
-    caja.innerHTML = filas.slice(0, 8).map((f) => `
-      <div data-sel="${f.fila}"><b>${esc(f.descripcion)}</b> · lote ${esc(f.lote || "—")} ·
-      ${esc(f.ubicacion || "sin ubicar")}</div>`).join("") || "<div>Sin resultados</div>";
-  }, 200);
+/* ---------------- bitácora ---------------- */
+async function cargarBitacora() {
+  try {
+    const {movimientos} = await api(`/api/bitacora?limite=${estado.limite}`);
+    estado.movimientos = movimientos;
+    $("mov-cuenta").textContent = `${movimientos.length} movimientos`;
+    $("movimientos").innerHTML = movimientos.length ? movimientos.map(movimiento).join("")
+      : `<div class="vacio">Todavía no hay movimientos.</div>`;
+  } catch (e) { $("movimientos").innerHTML = `<div class="vacio">${esc(e.message)}</div>`; }
+}
+
+function movimiento(m) {
+  const kg = m.cantidad ? `<span class="kg">${num(m.cantidad)} ${esc(m.unidad || "")}</span>` : "";
+  const ruta = m.ubicacion_destino || m.ubicacion_origen
+    ? `${m.ubicacion_origen ? esc(m.ubicacion_origen) : "—"} → ${m.ubicacion_destino ? esc(m.ubicacion_destino) : "—"}`
+    : "";
+  const acciones = [];
+  if (m.puede_deshacer) {
+    acciones.push(`<button type="button" class="mini" data-deshacer="${m.id}">Deshacer</button>`);
+  }
+  if (m.puede_purgar) {
+    acciones.push(`<button type="button" class="mini peligro" data-purgar="${m.id}">Borrar</button>`);
+  }
+  return `<article class="mov ${m.revertido ? "revertido" : ""}">
+    <div class="m1"><span class="accion">${esc(m.accion)}</span> ${kg}
+      <b>${esc(m.descripcion)}</b></div>
+    <div class="m2"><code>${esc(m.ts)}</code> · ${esc(m.usuario)}
+      ${ruta ? " · " + ruta : ""}
+      ${m.lote ? " · lote " + esc(m.lote) : ""}
+      ${m.motivo ? " · " + esc(m.motivo) : ""}${m.ref_doc ? " · " + esc(m.ref_doc) : ""}
+      ${m.nota ? "<br>" + esc(m.nota) : ""}
+      ${m.revertido ? "<br><i>deshecho</i>" : ""}</div>
+    ${acciones.length ? `<div class="m3">${acciones.join("")}</div>` : ""}
+  </article>`;
+}
+
+async function deshacer(id) {
+  if (!confirm("¿Deshacer este movimiento? Se revierte el efecto y queda registrado.")) return;
+  try {
+    const r = await api("/api/deshacer", {method: "POST", body: JSON.stringify({movimiento: Number(id)})});
+    pintarResumen(r.resumen);
+    cargarInventario();
+    cargarBitacora();
+    aviso(r.cantidad
+      ? `Deshecho: ${num(r.cantidad)} ${estado.lote ? estado.lote.unidad || "" : ""} devueltos a ${r.nueva || "sin ubicación"}`
+      : `Deshecho: ${r.anterior} → ${r.nueva || "sin ubicación"}`, "ok");
+  } catch (e) { aviso(e.message, "err"); }
+}
+
+async function purgar(id) {
+  estado.purgarId = Number(id);
+  $("p-motivo").value = "";
+  $("p-error").hidden = true;
+  abrir("modal-purgar");
+}
+
+async function confirmarPurgar() {
+  try {
+    const r = await api("/api/purgar", {method: "POST",
+      body: JSON.stringify({movimiento: estado.purgarId, motivo: $("p-motivo").value.trim()})});
+    cerrar("modal-purgar");
+    pintarResumen(r.resumen);
+    cargarInventario();
+    cargarBitacora();
+    aviso("Movimiento borrado y registrado en auditoría", "ok");
+  } catch (e) {
+    $("p-error").textContent = e.message;
+    $("p-error").hidden = false;
+  }
+}
+
+/* ---------------- usuarios ---------------- */
+async function cargarUsuarios() {
+  try {
+    const {usuarios} = await api("/api/usuarios");
+    $("lista-usuarios").innerHTML = usuarios.map((u) => `
+      <article class="usuario-fila">
+        <div class="datos"><b>${esc(u.nombre)}</b>
+          <small>${u.debe_cambiar ? "contraseña provisional · " : ""}${u.ultimo_acceso ? "último acceso " + esc(u.ultimo_acceso) : "sin acceso"}</small>
+        </div>
+        <div class="acciones">
+          <select data-rol="${u.id}" ${u.id === estado.usuario.id && u.rol === "admin" ? "" : ""}>
+            ${["admin", "almacen", "consulta"].map((r) =>
+              `<option value="${r}" ${u.rol === r ? "selected" : ""}>${r}</option>`).join("")}
+          </select>
+          <button type="button" class="mini" data-clave-usuario="${u.id}">Clave</button>
+          <button type="button" class="mini ${u.activo ? "" : "peligro"}" data-activo="${u.id}" data-estado="${u.activo ? 1 : 0}">
+            ${u.activo ? "Desactivar" : "Activar"}</button>
+        </div>
+      </article>`).join("");
+  } catch (e) { $("lista-usuarios").innerHTML = `<div class="vacio">${esc(e.message)}</div>`; }
+}
+
+async function crearUsuario() {
+  try {
+    await api("/api/usuarios", {method: "POST", body: JSON.stringify({
+      nombre: $("nu-nombre").value.trim(),
+      password: $("nu-clave").value,
+      rol: $("nu-rol").value,
+    })});
+    $("nu-nombre").value = ""; $("nu-clave").value = "";
+    cargarUsuarios();
+    aviso("Usuario creado", "ok");
+  } catch (e) { aviso(e.message, "err"); }
+}
+
+async function editarUsuario(id, cambios) {
+  try {
+    await api(`/api/usuarios/${id}`, {method: "PATCH", body: JSON.stringify(cambios)});
+    cargarUsuarios();
+    aviso("Usuario actualizado", "ok");
+  } catch (e) { aviso(e.message, "err"); cargarUsuarios(); }
+}
+
+async function claveDeUsuario(id) {
+  const nueva = prompt("Contraseña nueva (mínimo 8 caracteres):");
+  if (!nueva) return;
+  await editarUsuario(id, {password: nueva});
+}
+
+/* ---------------- contraseña propia ---------------- */
+function abrirClave(obligatorio) {
+  $("clave-aviso").hidden = !obligatorio;
+  $("c-actual").value = ""; $("c-nueva").value = ""; $("c-repetir").value = "";
+  $("c-error").hidden = true;
+  abrir("modal-clave");
+}
+
+async function cambiarClave() {
+  const actual = $("c-actual").value, nueva = $("c-nueva").value, repetir = $("c-repetir").value;
+  const error = $("c-error");
+  error.hidden = true;
+  if (nueva !== repetir) { error.textContent = "Las contraseñas nuevas no coinciden"; error.hidden = false; return; }
+  try {
+    await api("/api/password", {method: "POST", body: JSON.stringify({actual, nueva})});
+    cerrar("modal-clave");
+    aviso("Contraseña cambiada; vuelve a entrar", "ok");
+    setTimeout(() => mostrarLogin(""), 800);
+  } catch (e) { error.textContent = e.message; error.hidden = false; }
+}
+
+/* ---------------- modales y navegación ---------------- */
+function abrir(id) { $(id).hidden = false; document.body.style.overflow = "hidden"; }
+function cerrar(id) { $(id).hidden = true; document.body.style.overflow = ""; }
+
+function cambiarVista(nombre) {
+  document.querySelectorAll("nav.tabs button").forEach((b) =>
+    b.classList.toggle("activo", b.dataset.vista === nombre));
+  ["inventario", "bitacora", "usuarios"].forEach((v) =>
+    $("vista-" + v).hidden = v !== nombre);
+  if (nombre === "usuarios") cargarUsuarios();
+  if (nombre === "bitacora") cargarBitacora();
+}
+
+/* ---------------- eventos ---------------- */
+$("form-login").addEventListener("submit", entrar);
+$("btn-salir").addEventListener("click", salir);
+$("btn-clave").addEventListener("click", () => abrirClave(false));
+$("btn-cambiar-clave").addEventListener("click", cambiarClave);
+$("btn-registrar").addEventListener("click", registrarMovimiento);
+$("btn-todo").addEventListener("click", () => {
+  if (!estado.lote) return;
+  $("m-cantidad").value = estado.lote.cantidad ?? "";
+  revisarParcial();
 });
+$("m-cantidad").addEventListener("input", revisarParcial);
+$("btn-nuevo-usuario").addEventListener("click", crearUsuario);
+$("btn-confirmar-purgar").addEventListener("click", confirmarPurgar);
+$("btn-mover-global").addEventListener("click", () => abrirMover(null));
+$("btn-refrescar").addEventListener("click", () => { cargarInventario(); cargarBitacora(); });
+$("btn-mas-mov").addEventListener("click", () => { estado.limite += 60; cargarBitacora(); });
 
-document.getElementById("btn-mover").addEventListener("click", () => abrirMover(null));
+let temporizador;
+$("q").addEventListener("input", () => {
+  clearTimeout(temporizador);
+  temporizador = setTimeout(cargarInventario, 200);
+});
+["f-sin", "f-venc", "f-cero"].forEach((id) => $(id).addEventListener("change", cargarInventario));
 
-document.getElementById("m-destino").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") { e.preventDefault(); registrarMovimiento(); }
+document.querySelectorAll("nav.tabs button").forEach((b) =>
+  b.addEventListener("click", () => cambiarVista(b.dataset.vista)));
+
+let tempBuscar;
+$("m-buscar").addEventListener("input", (e) => {
+  clearTimeout(tempBuscar);
+  tempBuscar = setTimeout(async () => {
+    const q = e.target.value.trim();
+    if (q.length < 2) { $("m-resultados").innerHTML = ""; return; }
+    try {
+      const {filas} = await api(`/api/inventario?q=${encodeURIComponent(q)}`);
+      $("m-resultados").innerHTML = filas.slice(0, 8).map((f) => `
+        <div data-sel="${f.fila}"><b>${esc(f.descripcion)}</b> · lote ${esc(f.lote || "—")}
+          · ${esc(f.ubicacion || "sin ubicar")} · ${num(f.cantidad)} ${esc(f.unidad || "")}</div>`).join("")
+        || "<div>Sin resultados</div>";
+    } catch (err) { $("m-resultados").innerHTML = `<div>${esc(err.message)}</div>`; }
+  }, 220);
 });
 
 document.addEventListener("click", (e) => {
   const mover = e.target.closest("[data-mover]");
-  if (mover) { abrirMover(mover.dataset.mover); return; }
-  const elegido = e.target.closest("[data-sel]");
-  if (elegido) {
-    api(`/api/lote?fila=${elegido.dataset.sel}`)
-      .then((r) => seleccionarLote(r.lote))
-      .catch((err) => alert(err.message));
+  if (mover) { abrirMover(Number(mover.dataset.mover)); return; }
+  const noEstaBtn = e.target.closest("[data-noesta]");
+  if (noEstaBtn) { noEsta(Number(noEstaBtn.dataset.noesta)); return; }
+  const sel = e.target.closest("[data-sel]");
+  if (sel) {
+    api(`/api/lote?fila=${sel.dataset.sel}`).then((r) => seleccionarLote(r.lote))
+      .catch((err) => aviso(err.message, "err"));
+    return;
   }
+  const deshacerBtn = e.target.closest("[data-deshacer]");
+  if (deshacerBtn) { deshacer(deshacerBtn.dataset.deshacer); return; }
+  const purgarBtn = e.target.closest("[data-purgar]");
+  if (purgarBtn) { purgar(purgarBtn.dataset.purgar); return; }
+  const descarga = e.target.closest("[data-descarga]");
+  if (descarga) { window.location.href = `/descargar/${descarga.dataset.descarga}`; return; }
+  const claveUsuario = e.target.closest("[data-clave-usuario]");
+  if (claveUsuario) { claveDeUsuario(claveUsuario.dataset.claveUsuario); return; }
+  const activo = e.target.closest("[data-activo]");
+  if (activo) { editarUsuario(activo.dataset.activo, {activo: activo.dataset.estado === "0"}); return; }
+});
+
+document.addEventListener("change", (e) => {
+  const rol = e.target.closest("[data-rol]");
+  if (rol) editarUsuario(rol.dataset.rol, {rol: rol.value});
 });
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !document.getElementById("modal").hidden) cerrarMover();
+  if (e.key === "Escape") {
+    ["modal-mover", "modal-clave", "modal-purgar"].forEach((id) => { if (!$(id).hidden) cerrar(id); });
+  }
+  if (e.key === "Enter" && e.target.classList && e.target.classList.contains("u")) {
+    e.preventDefault();
+    guardarUbicacion(e.target);
+  }
+  if (e.key === "Enter" && e.target.id === "m-destino") {
+    e.preventDefault();
+    registrarMovimiento();
+  }
 });
 
-async function cargarEstado() {
+document.addEventListener("blur", (e) => {
+  if (e.target.classList && e.target.classList.contains("u")) {
+    const original = (e.target.defaultValue || "").trim().toUpperCase();
+    if (e.target.value.trim().toUpperCase() !== original) guardarUbicacion(e.target);
+  }
+}, true);
+
+/* ---------------- arranque ---------------- */
+(async function arrancar() {
   try {
-    const e = await api("/api/estado");
-    if (e.demo) {
-      document.body.insertAdjacentHTML("afterbegin",
-        `<div class="aviso demo">DEMO · DATOS DE DEMOSTRACIÓN — NO ES UN REGISTRO DE CALIDAD
-         <span>· ${e.movimientos} movimientos · ${e.lotes} lotes</span></div>`);
-      document.title = "DEMO · Ubicación de almacén";
-    }
-  } catch (e) { /* la app real no necesita aviso */ }
-}
-cargarEstado();
+    const yo = await api("/api/yo");
+    if (yo.autenticado) { await iniciar(yo.usuario); return; }
+  } catch (e) { /* sin sesión */ }
+  mostrarLogin("");
+})();
 </script>
 </body>
 </html>

@@ -153,6 +153,7 @@ def sembrar():
             "fila": r,
             "descripcion": str(descripcion).strip(),
             "lote": ws.cell(row=r, column=7).value,
+            "cantidad": ws.cell(row=r, column=5).value,
             "observaciones": ws.cell(row=r, column=9).value,
             "es_nueva": r in nuevas,
         })
@@ -254,14 +255,14 @@ def sembrar():
     # ---------- bitácora ----------
     if DEMO_DB.exists():
         DEMO_DB.unlink()
-    con = sqlite3.connect(DEMO_DB)
-    con.executescript("""
-    CREATE TABLE movimiento (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
-        accion TEXT NOT NULL, fila INTEGER, descripcion TEXT NOT NULL, lote TEXT,
-        ubicacion_origen TEXT, ubicacion_destino TEXT, usuario TEXT NOT NULL, nota TEXT,
-        motivo TEXT, ref_doc TEXT);
-    """)
+    from app import bitacora, usuarios
+    con = bitacora.conectar(DEMO_DB)
+    credenciales = [("admin", "Demo.Admin.2026", "admin"),
+                    ("Esteban", "Demo.Almacen.2026", "almacen"),
+                    ("Galilea", "Demo.Almacen.2026b", "almacen"),
+                    ("Auditor", "Demo.Consulta.2026", "consulta")]
+    for nombre, clave, rol in credenciales:
+        usuarios.crear(con, nombre, clave, rol)
 
     eventos = []
     for f in filas:
@@ -324,12 +325,13 @@ def sembrar():
 
     for ts, accion, f, origen, destino, nota in eventos:
         motivo, ref = motivo_de(accion, nota)
+        cantidad = f.get("cantidad") if accion in ("UBICAR", "MOVER", "PARCIAL") else None
         con.execute(
             "INSERT INTO movimiento (ts, accion, fila, descripcion, lote, ubicacion_origen, "
-            "ubicacion_destino, usuario, nota, motivo, ref_doc) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            "ubicacion_destino, usuario, nota, motivo, ref_doc, cantidad) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (ts.isoformat(sep=" ", timespec="seconds"), accion, f["fila"], f["descripcion"],
-             f["lote"], origen, destino, random.choice(USUARIOS), nota, motivo, ref))
+             f["lote"], origen, destino, random.choice(USUARIOS), nota, motivo, ref, cantidad))
     con.commit()
 
     total_mov = con.execute("SELECT COUNT(*) FROM movimiento").fetchone()[0]
@@ -353,6 +355,9 @@ def sembrar():
     for zona, n in sorted(por_zona.items(), key=lambda kv: -kv[1]):
         print(f"  {zona:<16}{n:>4}")
     print(f"movimientos  : {total_mov} {acciones}")
+    print("\nusuarios del demo:")
+    for nombre, clave, rol in credenciales:
+        print(f"  {nombre:<10} {clave:<22} ({rol})")
     return 0
 
 

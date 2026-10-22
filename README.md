@@ -11,7 +11,8 @@ Doble clic en **`arrancar.cmd`** (o desde consola):
 arrancar.cmd
 ```
 
-Abre el navegador en **http://127.0.0.1:8300** y pide tu nombre una sola vez (queda en la bitácora).
+Abre el navegador en **http://127.0.0.1:8300** y pide **usuario y contraseña**. Cada movimiento queda
+firmado con el usuario que lo hizo; hay tres roles (administrador, almacén, consulta).
 
 ## Qué hace
 
@@ -36,6 +37,15 @@ Todo se guarda en `data\salidas\` con marca de fecha y hora, y también se desca
 3. **Registrar movimiento**. Queda en el Excel del área y en la bitácora con tu nombre y la hora.
    El modal muestra el **historial del lote** antes de moverlo.
 
+**Mover solo unos kilos (parcialidad):** en el mismo modal, la cantidad viene completa; si escribes
+menos (por ejemplo 5 de 1,458 kg), el sistema deja el resto en el rack original y **crea un renglón
+nuevo** con los kilos movidos en el destino, con el mismo lote. Se registra como `PARCIAL` y muestra
+en pantalla cuánto queda y dónde. No se parte ninguna celda: son dos renglones, como pide ALM-PNO-002 §V.2.2.
+
+**Deshacer:** en **Movimientos**, botón *Deshacer* sobre el último movimiento vigente de ese lote
+(devuelve la cantidad exacta a su ubicación anterior). El administrador puede además *Borrar* una
+captura equivocada, con motivo obligatorio y registro en la tabla de auditoría.
+
 **Asignar la primera ubicación** (lote que llega sin rack): escribes el código en la columna
 **UBICACIÓN ACTUAL** y das **Enter**. Se registra como `UBICAR`.
 
@@ -46,6 +56,17 @@ Los códigos válidos son los del procedimiento ALM-PNO-002 §V.2.1.4: 376 posic
 (MPA-A-001 a 040, MPNA-A-041 a MPNA-B-136, MPT-B-001 a 020, MEP-B-001 a MEP-E-220)
 más las zonas especiales (PASILLO-A, JAULA-MP, JAULA-PT, LAB-RETENCION, CUARENTENA-MP, ADUANA-MP, ANDEN).
 Si escribes un código que no existe, el sistema lo rechaza con el motivo.
+
+## Usuarios, contraseñas y teléfonos
+
+- **Roles:** `admin` (todo), `almacen` (registra y deshace lo propio), `consulta` (solo lee y descarga).
+- Se administran en la pestaña **Usuarios** o por consola:
+  `python scripts\crear_usuario.py --nombre "Esteban Soto" --rol almacen`
+  (`--listar`, `--reset` para contraseña olvidada).
+- Contraseñas con PBKDF2-SHA256 y sal por usuario; sesión de 12 h en cookie HttpOnly.
+- **Interfaz adaptable:** en teléfono cada lote es una tarjeta con botones de 46 px, en tablet y
+  computadora es una tabla. Funciona en Chrome/Safari de Android, iPhone y iPad sin instalar nada;
+  se puede agregar a la pantalla de inicio. Probado a 390×844, 820×1180 y 1280×900.
 
 ## Archivos y respaldo
 
@@ -103,9 +124,12 @@ demo.cmd
 
 Abre en **http://127.0.0.1:8301** con datos poblados: 156 lotes, 149 con ubicación (95.5 %), empaque y producto
 terminado en sus zonas, 5 zonas especiales usadas (cuarentena, jaula MP, jaula PT, retención de laboratorio,
-pasillo A) y **276 movimientos** en la bitácora. El archivo demo lleva una hoja `DEMO` en rojo y la pantalla
+pasillo A) y **267 movimientos** en la bitácora. El archivo demo lleva una hoja `DEMO` en rojo y la pantalla
 una banda roja: **las ubicaciones y el empaque son ficticios; las 137 filas de materia prima son las reales
 del archivo del área**. Guion de la demostración en `docs\guion_demo.md`.
+
+Usuarios del demo: `admin` / `Demo.Admin.2026`, `Esteban` / `Demo.Almacen.2026`,
+`Galilea` / `Demo.Almacen.2026b`, `Auditor` / `Demo.Consulta.2026`.
 
 Generar o regenerar el demo (determinista, semilla 42):
 
