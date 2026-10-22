@@ -20,6 +20,12 @@ def manejar(estado, metodo, ruta, params, cuerpo):
     if metodo == "GET" and ruta == "/api/resumen":
         return 200, inv.resumen()
 
+    if metodo == "GET" and ruta == "/api/estado":
+        return 200, {"archivo": getattr(estado, "archivo", ""),
+                     "demo": bool(getattr(estado, "demo", False)),
+                     "lotes": len(inv.filas),
+                     "movimientos": bitacora.contar(estado.con)}
+
     if metodo == "GET" and ruta == "/api/ubicaciones":
         return 200, {"codigos": ubicaciones.CODIGOS,
                      "zonas": {z: len(c) for z, c in ubicaciones.por_zona().items()}}

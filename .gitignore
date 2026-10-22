@@ -9,3 +9,4 @@ data/pruebas/
 data/respaldos/
 data/*.tmp.xlsx
 .py_path
+data/demo/

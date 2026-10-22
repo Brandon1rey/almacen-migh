@@ -1,5 +1,6 @@
 """Salidas en Excel: inventario con ubicación, reporte F01, tabla macro y bitácora."""
 import datetime as dt
+import os
 import pathlib
 
 import openpyxl
@@ -9,7 +10,7 @@ from openpyxl.utils import get_column_letter
 from app import fechas, ubicaciones
 
 RAIZ = pathlib.Path(__file__).resolve().parents[1]
-SALIDAS = RAIZ / "data" / "salidas"
+SALIDAS = pathlib.Path(os.environ.get("ALMACEN_SALIDAS") or (RAIZ / "data" / "salidas"))
 AZUL = PatternFill("solid", fgColor="1F3B73")
 GRIS = PatternFill("solid", fgColor="D9D9D9")
 AMBAR = PatternFill("solid", fgColor="FFF2CC")
@@ -29,7 +30,7 @@ def _ruta(nombre):
     return SALIDAS / nombre
 
 
-def _encabezado_f01(ws, version, paginas=1):
+def _encabezado_f01(ws, version, total_filas=0):
     ws["A1"] = "COMERCIALIZADORA MIGH DE MÉXICO S.A. DE C.V."
     ws["A1"].font = Font(bold=True, size=10)
     ws["A2"] = "TIPO DE DOCUMENTO: FORMATO"
@@ -40,10 +41,9 @@ def _encabezado_f01(ws, version, paginas=1):
     ws["A4"].font = NEGRITA
     ws["A5"] = f"VERSIÓN: {version}"
     ws["A5"].font = NEGRITA
-    ws["C5"] = f"FECHA: {dt.date.today().isoformat()}"
+    pagina = "PÁGINA: ____ de ____" if total_filas > 30 else "PÁGINA 1 de 1"
+    ws["C5"] = f"FECHA: {dt.date.today().isoformat()} · {pagina}"
     ws["C5"].font = NEGRITA
-    ws["F5"] = f"PÁGINA 1 de {paginas}"
-    ws["F5"].font = NEGRITA
 
 
 def _tabla(ws, fila_inicio, encabezados):
@@ -80,12 +80,21 @@ def generar_f01(inv, version="2", destino=None):
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Hoja1"
-    _encabezado_f01(ws, version)
+    _encabezado_f01(ws, version, len(inv.filas))
 
-    encabezados = ["UBICACIÓN", "MATERIAL", "CANTIDAD", "LOTE"]
     if version == "3":
-        encabezados += ["CADUCIDAD", "DÍAS"]
+        encabezados = ["UBICACIÓN", "MATERIAL", "CANTIDAD", "UNIDAD", "LOTE",
+                       "CADUCIDAD", "DÍAS"]
+    else:
+        encabezados = ["UBICACIÓN", "MATERIAL", "CANTIDAD", "LOTE"]
     fila = _tabla(ws, 6, encabezados)
+
+    def valores_de(f, es_sin_ubicar=False):
+        ubicacion = "(sin ubicación)" if es_sin_ubicar else f["ubicacion"]
+        if version == "3":
+            return [ubicacion, f["descripcion"], f["cantidad"], f["unidad"], f["lote"],
+                    f["caducidad"], f["dias_restantes"]]
+        return [ubicacion, f["descripcion"], f["cantidad"], f["lote"]]
 
     por_zona = ubicaciones.por_zona()
     sin_ubicar = [f for f in inv.filas if not f["ubicacion"]]
@@ -104,9 +113,7 @@ def generar_f01(inv, version="2", destino=None):
                 ws.cell(row=fila, column=col).fill = GRIS
                 ws.cell(row=fila, column=col).border = BORDE
             fila += 1
-        valores = [f["ubicacion"], f["descripcion"], f["cantidad"], f["lote"]]
-        if version == "3":
-            valores += [f["caducidad"], f["dias_restantes"]]
+        valores = valores_de(f)
         for i, v in enumerate(valores, start=1):
             c = ws.cell(row=fila, column=i, value=v)
             c.font = NORMAL
@@ -120,9 +127,7 @@ def generar_f01(inv, version="2", destino=None):
             ws.cell(row=fila, column=col).border = BORDE
         fila += 1
         for f in sin_ubicar:
-            valores = ["(sin ubicación)", f["descripcion"], f["cantidad"], f["lote"]]
-            if version == "3":
-                valores += [f["caducidad"], f["dias_restantes"]]
+            valores = valores_de(f, es_sin_ubicar=True)
             for i, v in enumerate(valores, start=1):
                 c = ws.cell(row=fila, column=i, value=v)
                 c.font = NORMAL
@@ -138,10 +143,12 @@ def generar_f01(inv, version="2", destino=None):
     fila += 2
     _firmas(ws, fila)
 
-    _anchos(ws, [16, 48, 12, 22, 14, 8, 8])
+    anchos = [16, 48, 12, 8, 22, 14, 8] if version == "3" else [16, 48, 12, 22, 8, 8, 8]
+    _anchos(ws, anchos)
     ws.page_setup.orientation = "landscape"
     ws.page_setup.fitToWidth = 1
     ws.print_title_rows = "1:6"
+    ws.print_area = f"A1:{get_column_letter(len(encabezados))}{ws.max_row}"
 
     destino = pathlib.Path(destino) if destino else _ruta(
         f"F01-ALM-PNO-002_v{version}_{_marca()}.xlsx")
@@ -155,6 +162,9 @@ def exportar_inventario(inv, destino=None):
     inv.guardar()
     wb = ox.load_workbook(inv.ruta)
     resumen = inv.resumen()
+    for previa in ("Resumen", "Sin ubicar"):
+        if previa in wb.sheetnames:
+            del wb[previa]
 
     hoja = wb.create_sheet("Resumen")
     hoja["A1"] = "RESUMEN DE UBICACIÓN — INVENTARIO DE MATERIAS PRIMAS"
@@ -220,7 +230,7 @@ def tabla_macro(inv, destino=None):
     ws["A2"] = f"Generada {dt.datetime.now():%Y-%m-%d %H:%M} · fuente: Inventario_MP.xlsx"
     ws["A2"].font = NORMAL
 
-    encabezados = ["MATERIAL", "PROVEEDOR"] + zonas + ["TOTAL kg", "CADUCIDAD MÁS PRÓXIMA"]
+    encabezados = ["MATERIAL", "PROVEEDOR"] + zonas + ["TOTAL", "CADUCIDAD MÁS PRÓXIMA"]
     fila = _tabla(ws, 4, encabezados)
 
     materiales = {}

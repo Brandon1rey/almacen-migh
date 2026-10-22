@@ -47,6 +47,8 @@
   .bitacora li{font-size:12px;color:#374151;margin:3px 0}
   code{background:#eef0f3;padding:1px 5px;border-radius:4px}
   .aviso{padding:10px 16px;background:#fff2cc;border-bottom:1px solid #f0d98a;font-size:13px}
+  .aviso.demo{background:#b01c1c;color:#fff;font-weight:700;letter-spacing:.4px;text-align:center}
+  .aviso.demo span{font-weight:400;opacity:.9}
 </style>
 </head>
 <body>
@@ -58,6 +60,7 @@
     <div><b id="k-sin">–</b>sin ubicar</div>
     <div><b id="k-vencidos">–</b>vencidos</div>
     <div><b id="k-kg">–</b>kg</div>
+    <div><b id="k-pza">–</b>piezas</div>
   </div>
   <div id="quien" style="font-size:12px;opacity:.85"></div>
 </header>
@@ -127,6 +130,9 @@ function pintarResumen(r) {
   $("k-sin").textContent = r.sin_ubicacion;
   $("k-vencidos").textContent = r.semaforo.VENCIDO;
   $("k-kg").textContent = Number(r.kg).toLocaleString("es-MX");
+  const unidades = r.por_unidad || {};
+  const piezas = Number(unidades.pza || 0);
+  $("k-pza").textContent = piezas ? piezas.toLocaleString("es-MX") : "—";
 }
 
 function semaforo(f) {
@@ -246,6 +252,19 @@ document.addEventListener("blur", (e) => {
 
 cargar();
 cargarBitacora();
+
+async function cargarEstado() {
+  try {
+    const e = await api("/api/estado");
+    if (e.demo) {
+      document.body.insertAdjacentHTML("afterbegin",
+        `<div class="aviso demo">DEMO · DATOS DE DEMOSTRACIÓN — NO ES UN REGISTRO DE CALIDAD
+         <span>· ${e.movimientos} movimientos · ${e.lotes} lotes</span></div>`);
+      document.title = "DEMO · Ubicación de almacén";
+    }
+  } catch (e) { /* la app real no necesita aviso */ }
+}
+cargarEstado();
 </script>
 </body>
 </html>

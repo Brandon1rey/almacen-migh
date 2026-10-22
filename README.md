@@ -62,6 +62,24 @@ Respaldo manual: copiar `data\Inventario_MP.xlsx` y `data\bitacora.db`.
 python -m unittest discover -s tests
 ```
 
+## Modo demo (para presentar)
+
+```bat
+demo.cmd
+```
+
+Abre en **http://127.0.0.1:8301** con datos poblados: 156 lotes, 149 con ubicación (95.5 %), empaque y producto
+terminado en sus zonas, 5 zonas especiales usadas (cuarentena, jaula MP, jaula PT, retención de laboratorio,
+pasillo A) y **276 movimientos** en la bitácora. El archivo demo lleva una hoja `DEMO` en rojo y la pantalla
+una banda roja: **las ubicaciones y el empaque son ficticios; las 137 filas de materia prima son las reales
+del archivo del área**. Guion de la demostración en `docs\guion_demo.md`.
+
+Generar o regenerar el demo (determinista, semilla 42):
+
+```bat
+python scripts\sembrar_demo.py
+```
+
 ## Límites conocidos (honestos)
 
 - **No valida alérgenos contra la zona**: la lista maestra F02-ALM-PNO-001 identifica por SKU

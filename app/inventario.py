@@ -70,11 +70,19 @@ class Inventario:
         if not self.ruta.exists():
             raise FileNotFoundError(f"no existe el inventario: {self.ruta}")
         self.wb = openpyxl.load_workbook(self.ruta)
-        self.ws = self.wb.worksheets[0]
+        self.ws = self._hoja_inventario()
         self.columnas = self._detectar_columnas()
         self.filas = self._leer()
 
     # ---------- estructura ----------
+    def _hoja_inventario(self):
+        """La hoja del inventario es la que tiene 'Descripción' en la fila 3, no siempre la primera."""
+        for hoja in self.wb.worksheets:
+            for col in range(1, min(hoja.max_column, 15) + 1):
+                if normalizar(hoja.cell(row=FILA_ENCABEZADO, column=col).value) == "DESCRIPCION":
+                    return hoja
+        return self.wb.worksheets[0]
+
     def _detectar_columnas(self):
         columnas = {}
         for col in range(1, self.ws.max_column + 1):
@@ -194,17 +202,21 @@ class Inventario:
     def resumen(self):
         total = len(self.filas)
         con = [f for f in self.filas if f["ubicacion"]]
-        sin = [f for f in self.filas if not f["ubicacion"]]
         semaforo = {"VENCIDO": 0, "CRITICO": 0, "AVISO": 0, "OK": 0, "SIN DATO": 0}
         for f in self.filas:
             semaforo[f["semaforo"]] += 1
-        kg = sum(f["cantidad"] for f in self.filas if isinstance(f["cantidad"], (int, float)))
+        por_unidad = {}
+        for f in self.filas:
+            if isinstance(f["cantidad"], (int, float)):
+                unidad = (f["unidad"] or "kg").strip().lower() or "kg"
+                por_unidad[unidad] = round(por_unidad.get(unidad, 0) + f["cantidad"], 3)
         return {
             "total": total,
             "con_ubicacion": len(con),
-            "sin_ubicacion": len(sin),
+            "sin_ubicacion": total - len(con),
             "cobertura": round(100 * len(con) / total, 1) if total else 0.0,
-            "kg": round(kg, 1),
+            "kg": round(por_unidad.get("kg", 0.0), 1),
+            "por_unidad": {k: round(v, 3) for k, v in por_unidad.items()},
             "semaforo": semaforo,
             "sin_lote": sum(1 for f in self.filas if not f["lote"]),
             "sin_caducidad": sum(1 for f in self.filas if not f["caducidad"]),

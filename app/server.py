@@ -26,9 +26,12 @@ class Estado:
     def __init__(self, ruta=None):
         self._lock = threading.RLock()
         self._ruta = pathlib.Path(ruta or inventario.RUTA)
+        self.demo = "demo" in str(self._ruta).lower()
+        self.archivo = self._ruta.name
         self._inv = inventario.Inventario(self._ruta)
         self._mtime = self._ruta.stat().st_mtime
-        self.con = bitacora.conectar()
+        ruta_bitacora = (self._ruta.parent / "bitacora_demo.db") if self.demo else None
+        self.con = bitacora.conectar(ruta_bitacora)
 
     def inventario(self):
         with self._lock:
@@ -134,6 +137,8 @@ def main():
 
     print("=" * 66)
     print("  CONTROL DE UBICACIÓN — ALMACÉN DE MATERIAS PRIMAS MIGH")
+    if ESTADO.demo:
+        print("  *** MODO DEMO — DATOS DE DEMOSTRACIÓN, NO ES UN REGISTRO ***")
     print("=" * 66)
     print(f"  Archivo      : {ruta}")
     print(f"  Lotes        : {resumen['total']}")
