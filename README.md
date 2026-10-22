@@ -71,6 +71,30 @@ Respaldo manual: copiar `data\Inventario_MP.xlsx` y `data\bitacora.db`.
 python -m unittest discover -s tests
 ```
 
+## Instalación
+
+El sistema se instala en una PC y las demás entran por red. Guía paso a paso y solución de problemas:
+**`LEEME_INSTALACION.md`** (o `docs\Manual_instalacion_almacen.pdf`).
+
+```bat
+instalar.cmd        :: crea .venv, instala openpyxl, prepara los datos y verifica
+arrancar.cmd        :: uso normal en http://127.0.0.1:8300
+servidor_lan.cmd    :: una PC con los datos, las demás por navegador
+arranque_automatico.cmd
+respaldo.cmd        :: respaldo con manifiesto SHA-256
+```
+
+Dependencias: `requirements.txt` (solo `openpyxl`). Para PC sin internet ni pip, el paquete trae
+`vendor\` con las librerías y el servidor las usa solo.
+
+Empaquetar para llevar a otra PC:
+
+```bat
+python scripts\empaquetar.py --vendor
+```
+
+Genera `dist\almacen-ubicaciones_<fecha>.zip` con `MANIFIESTO.txt` (SHA-256 de cada archivo).
+
 ## Modo demo (para presentar)
 
 ```bat

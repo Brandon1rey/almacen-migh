@@ -12,12 +12,28 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 RAIZ = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
+_VENDOR = RAIZ / "vendor"          # dependencias copiadas para PC sin internet ni pip
+if _VENDOR.exists():
+    sys.path.insert(0, str(_VENDOR))
 
 from app import api, bitacora, inventario  # noqa: E402
 
 PUERTO = int(os.environ.get("ALMACEN_PUERTO", 8300))
+HOST = os.environ.get("ALMACEN_HOST", "127.0.0.1")
 STATIC = pathlib.Path(__file__).parent / "static"
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+def ip_local():
+    """IP de esta PC en la red local (para el modo servidor de LAN)."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except OSError:
+        return "127.0.0.1"
 
 
 class Estado:
@@ -133,7 +149,7 @@ def main():
     ruta = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else inventario.RUTA
     ESTADO = Estado(ruta)
     resumen = ESTADO.inventario().resumen()
-    servidor = ThreadingHTTPServer(("127.0.0.1", PUERTO), Handler)
+    servidor = ThreadingHTTPServer((HOST, PUERTO), Handler)
 
     print("=" * 66)
     print("  CONTROL DE UBICACIÓN — ALMACÉN DE MATERIAS PRIMAS MIGH")
@@ -146,7 +162,13 @@ def main():
     print(f"  Sin ubicar   : {resumen['sin_ubicacion']}")
     print(f"  Vencidos     : {resumen['semaforo']['VENCIDO']}")
     print("-" * 66)
-    print(f"  Abre en el navegador:  http://127.0.0.1:{PUERTO}")
+    if HOST in ("127.0.0.1", "localhost"):
+        print(f"  Abre en el navegador:  http://127.0.0.1:{PUERTO}")
+    else:
+        print(f"  Esta PC     : http://127.0.0.1:{PUERTO}")
+        print(f"  Otras PC    : http://{ip_local()}:{PUERTO}")
+        print("  AVISO: modo red. Cualquiera en la LAN puede capturar con su nombre.")
+        print("         No exponer fuera de la red de la planta.")
     print("  Ctrl+C para detener.")
     print("=" * 66)
     try:

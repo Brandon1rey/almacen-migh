@@ -1,0 +1,14 @@
+# Dependencias de ejecución del sistema de ubicación de almacén.
+#
+# El servidor y la interfaz usan SOLO la biblioteca estándar de Python
+# (http.server, sqlite3, json). openpyxl es la única dependencia externa:
+# sirve para leer y escribir el Excel del área.
+#
+# Instalación:
+#   python -m pip install -r requirements.txt
+#
+# Sin internet ni pip: copiar la carpeta vendor\ (generada con
+# scripts\empaquetar.py --vendor) junto a app\ y el sistema arranca igual.
+
+openpyxl==3.1.5
+et-xmlfile==2.0.0

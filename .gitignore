@@ -10,3 +10,8 @@ data/respaldos/
 data/*.tmp.xlsx
 .py_path
 data/demo/
+.venv/
+dist/
+vendor/
+datos_iniciales/
+data/.prueba_escritura

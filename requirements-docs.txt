@@ -1,0 +1,9 @@
+# Dependencias SOLO para generar los documentos (guía, manual, memo) en Word y PDF.
+# No hacen falta para operar el sistema de ubicación.
+#
+#   python -m pip install -r requirements-docs.txt
+
+openpyxl==3.1.5
+python-docx==1.2.0
+pywin32==311; sys_platform == "win32"
+pymupdf==1.28.2
