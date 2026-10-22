@@ -25,13 +25,22 @@ Abre el navegador en **http://127.0.0.1:8300** y pide tu nombre una sola vez (qu
 
 Todo se guarda en `data\salidas\` con marca de fecha y hora, y también se descarga desde el navegador.
 
-## Cómo se captura (regla de los 15 segundos)
+## Cómo se captura
 
-1. Escribes en el buscador (material, lote, proveedor o código ERP).
-2. En la columna **UBICACIÓN** tecleas el código del rack (ej. `MPA-A-005`) y das **Enter**.
-   Se guarda en el Excel y en la bitácora al instante.
-3. Si no aparece, botón **no está**: queda registrado como *no encontrado* con tu nota.
-   Nunca se inventa una ubicación.
+**Registrar un movimiento de ubicación** (lo normal cuando algo se mueve dentro del almacén):
+
+1. Botón **⇄ mover** en el renglón, o **⇄ Registrar movimiento** arriba (busca el lote por material,
+   lote o código ERP).
+2. Escribes el rack destino, eliges el **motivo** (reacomodo, surtido parcial, devolución de restos,
+   liberación de rack, cuarentena) y, si aplica, el **documento de referencia** y una nota.
+3. **Registrar movimiento**. Queda en el Excel del área y en la bitácora con tu nombre y la hora.
+   El modal muestra el **historial del lote** antes de moverlo.
+
+**Asignar la primera ubicación** (lote que llega sin rack): escribes el código en la columna
+**UBICACIÓN ACTUAL** y das **Enter**. Se registra como `UBICAR`.
+
+**Si no aparece** en el rack: botón **no está**; el lote queda sin ubicación, con tu nota, y se ve en el
+tablero como pendiente. Nunca se inventa una ubicación.
 
 Los códigos válidos son los del procedimiento ALM-PNO-002 §V.2.1.4: 376 posiciones
 (MPA-A-001 a 040, MPNA-A-041 a MPNA-B-136, MPT-B-001 a 020, MEP-B-001 a MEP-E-220)

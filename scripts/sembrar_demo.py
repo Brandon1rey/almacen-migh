@@ -259,7 +259,8 @@ def sembrar():
     CREATE TABLE movimiento (
         id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
         accion TEXT NOT NULL, fila INTEGER, descripcion TEXT NOT NULL, lote TEXT,
-        ubicacion_origen TEXT, ubicacion_destino TEXT, usuario TEXT NOT NULL, nota TEXT);
+        ubicacion_origen TEXT, ubicacion_destino TEXT, usuario TEXT NOT NULL, nota TEXT,
+        motivo TEXT, ref_doc TEXT);
     """)
 
     eventos = []
@@ -280,7 +281,8 @@ def sembrar():
                             "MOVER", f, previo, final,
                             random.choice(["reacomodo por espacio en el pasillo",
                                            "se juntan los lotes del mismo material",
-                                           "se recorre para liberar rack de surtido"])))
+                                           "se recorre para liberar rack de surtido",
+                                           "queda el resto del surtido y se reacomoda"])))
             if random.random() < 0.4:
                 eventos.append((inicio + dt.timedelta(days=random.randint(6, 8),
                                                       hours=random.randint(1, 3)),
@@ -307,12 +309,27 @@ def sembrar():
                         "alta de recepción; pendiente de asignar rack"))
 
     eventos.sort(key=lambda e: e[0])
+
+    def motivo_de(accion, nota):
+        texto = (nota or "").lower()
+        if accion == "UBICAR":
+            return None, "F01-ALM-PNO-001"
+        if accion == "MOVER":
+            if "liberar" in texto:
+                return "liberacion", None
+            if "surtido" in texto:
+                return "surtido", None
+            return "reacomodo", None
+        return None, None
+
     for ts, accion, f, origen, destino, nota in eventos:
+        motivo, ref = motivo_de(accion, nota)
         con.execute(
             "INSERT INTO movimiento (ts, accion, fila, descripcion, lote, ubicacion_origen, "
-            "ubicacion_destino, usuario, nota) VALUES (?,?,?,?,?,?,?,?,?)",
+            "ubicacion_destino, usuario, nota, motivo, ref_doc) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
             (ts.isoformat(sep=" ", timespec="seconds"), accion, f["fila"], f["descripcion"],
-             f["lote"], origen, destino, random.choice(USUARIOS), nota))
+             f["lote"], origen, destino, random.choice(USUARIOS), nota, motivo, ref))
     con.commit()
 
     total_mov = con.execute("SELECT COUNT(*) FROM movimiento").fetchone()[0]

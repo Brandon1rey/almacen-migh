@@ -31,11 +31,19 @@ Teclear `lactosa` en el buscador.
 
 > «Dos lotes. Uno en `PASILLO-A` —que es el área de rechazo de alérgenos— y otro en `MPA-A-008` con 65 días vencido. El sistema no esconde lo que está mal: lo pone en rojo.»
 
-## 1:00 — Mover (el corazón del sistema)
+## 1:00 — Registrar el movimiento (el corazón del sistema)
 
-En la fila de `MPA-A-008`, borrar el código, escribir `MPA-A-020` y **Enter**.
+Botón **⇄ mover** en la fila (o **⇄ Registrar movimiento** arriba, que permite buscar el lote):
 
-> «Un movimiento: dos toques. Se guarda en el Excel del área y en la bitácora con mi nombre y la hora. Abajo aparece el registro: *Esteban Soto mover LACTOSA de MPA-A-008 a MPA-A-020*. Eso es lo que el auditor va a muestrear.»
+1. El modal muestra el lote y su **ubicación actual**.
+2. Escribir el rack destino (`MPA-A-023`), elegir **motivo** (reacomodo, surtido parcial, devolución de
+   restos, liberación de rack, cuarentena), y opcionalmente **documento de referencia** (OP-1234) y nota.
+3. **Registrar movimiento** → banda verde de confirmación y el renglón cambia de ubicación.
+
+> «Dos toques y un motivo. Abajo del modal está el **historial del lote**: de dónde vino, quién lo movió y
+> por qué. Eso es lo que el auditor muestrea, y es lo que hoy no existe en ningún lado.»
+
+Si el destino es igual a la ubicación actual, el sistema lo rechaza: no se registran movimientos falsos.
 
 ## 1:30 — «No está» (el fracaso honesto)
 

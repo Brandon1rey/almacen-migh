@@ -34,19 +34,31 @@ def conectar(ruta=None):
     con = sqlite3.connect(str(ruta), timeout=10, check_same_thread=False)
     con.row_factory = sqlite3.Row
     con.executescript(ESQUEMA)
+    _migrar(con)
     return con
 
 
-def registrar(con, accion, registro, usuario, destino=None, origen=None, nota=None):
+def _migrar(con):
+    """Agrega columnas nuevas a bitácoras creadas con la versión anterior."""
+    existentes = {fila["name"] for fila in con.execute("PRAGMA table_info(movimiento)")}
+    for columna in ("motivo", "ref_doc"):
+        if columna not in existentes:
+            con.execute(f"ALTER TABLE movimiento ADD COLUMN {columna} TEXT")
+    con.commit()
+
+
+def registrar(con, accion, registro, usuario, destino=None, origen=None, nota=None,
+              motivo=None, ref_doc=None):
     if not (usuario or "").strip():
         raise ValueError("usuario requerido: la bitácora es el rastro de auditoría")
     ts = dt.datetime.now().isoformat(sep=" ", timespec="seconds")
     with _LOCK:
         cur = con.execute(
             "INSERT INTO movimiento (ts, accion, fila, descripcion, lote, ubicacion_origen, "
-            "ubicacion_destino, usuario, nota) VALUES (?,?,?,?,?,?,?,?,?)",
+            "ubicacion_destino, usuario, nota, motivo, ref_doc) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
             (ts, accion, registro.get("fila"), registro["descripcion"], registro.get("lote"),
-             origen, destino, usuario.strip(), nota))
+             origen, destino, usuario.strip(), nota, motivo, ref_doc))
         con.commit()
     return ts, cur.lastrowid
 
@@ -61,6 +73,14 @@ def ultimos(con, limite=100):
     with _LOCK:
         return [dict(r) for r in con.execute(
             "SELECT * FROM movimiento ORDER BY id DESC LIMIT ?", (int(limite),)).fetchall()]
+
+
+def por_fila(con, fila, limite=12):
+    """Historial de un lote, del movimiento más reciente al más viejo."""
+    with _LOCK:
+        return [dict(r) for r in con.execute(
+            "SELECT * FROM movimiento WHERE fila=? ORDER BY id DESC LIMIT ?",
+            (int(fila), int(limite))).fetchall()]
 
 
 def contar(con):

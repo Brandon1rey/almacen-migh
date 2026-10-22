@@ -49,6 +49,27 @@
   .aviso{padding:10px 16px;background:#fff2cc;border-bottom:1px solid #f0d98a;font-size:13px}
   .aviso.demo{background:#b01c1c;color:#fff;font-weight:700;letter-spacing:.4px;text-align:center}
   .aviso.demo span{font-weight:400;opacity:.9}
+  /* --- botón primario y modal de movimiento --- */
+  button.primario{background:var(--azul);color:#fff;border-color:var(--azul);font-weight:700;padding:11px 14px}
+  button.primario:hover{background:#16295a}
+  .modal{position:fixed;inset:0;background:#111827aa;display:flex;align-items:flex-start;justify-content:center;padding:24px;z-index:50;overflow:auto}
+  .modal[hidden]{display:none}
+  .caja{background:#fff;border-radius:12px;max-width:520px;width:100%;padding:18px;box-shadow:0 20px 50px #0004}
+  .caja .cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .caja h2{margin:0;font-size:17px}
+  .caja h3{margin:16px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280}
+  .caja label{display:block;font-size:12px;color:#374151;margin:10px 0 4px;font-weight:600}
+  .caja input,.caja select{width:100%;padding:11px;font-size:15px;border:1.5px solid var(--linea);border-radius:8px;font-family:inherit}
+  .caja input#m-destino{font-family:ui-monospace,Consolas,monospace;text-transform:uppercase;font-size:18px;letter-spacing:.6px}
+  .detalle{background:#f3f4f6;border-radius:9px;padding:10px 12px;font-size:13px}
+  .detalle b{font-size:15px}
+  .detalle .de{font-family:ui-monospace,Consolas,monospace;font-size:17px;font-weight:700;color:var(--azul)}
+  .acciones-modal{display:flex;gap:8px;margin-top:16px}
+  .acciones-modal button{flex:1}
+  .historial ol{padding-left:18px;margin:0;max-height:170px;overflow:auto}
+  .historial li{font-size:12px;color:#374151;margin:3px 0}
+  .resultado-busqueda div{padding:8px 10px;border:1px solid var(--linea);border-radius:8px;margin:5px 0;font-size:13px;cursor:pointer}
+  .resultado-busqueda div:hover{background:#eef2ff}
 </style>
 </head>
 <body>
@@ -69,6 +90,7 @@
   <input id="q" type="search" placeholder="Buscar material, lote, proveedor o código ERP…" autocomplete="off" autofocus>
   <label><input type="checkbox" id="solo-sin"> solo sin ubicar</label>
   <label><input type="checkbox" id="solo-venc"> solo vencidos</label>
+  <button id="btn-mover" class="primario" title="Cambiar un lote de ubicación">⇄ Registrar movimiento</button>
   <div class="descargas">
     <a href="/descargar/inventario">Inventario + ubicación</a>
     <a href="/descargar/f01">Reporte F01</a>
@@ -86,8 +108,8 @@
         <th style="width:16%">Lote</th>
         <th style="width:9%">Cantidad</th>
         <th style="width:13%">Caducidad</th>
-        <th style="width:18%">Ubicación</th>
-        <th style="width:10%"></th>
+        <th style="width:18%">Ubicación actual</th>
+        <th style="width:12%">Acciones</th>
       </tr>
     </thead>
     <tbody id="filas">
@@ -105,6 +127,55 @@
   Cada cambio de ubicación queda registrado con tu nombre y la hora (bitácora de auditoría).
   Los botones de arriba generan el Excel en un clic.
 </footer>
+
+<div id="modal" class="modal" hidden>
+  <div class="caja">
+    <div class="cab">
+      <h2>Registrar movimiento</h2>
+      <button onclick="cerrarMover()" title="Cerrar">✕</button>
+    </div>
+
+    <div id="m-buscador">
+      <label>¿Qué lote se mueve?</label>
+      <input id="m-buscar" type="search" placeholder="Material, lote o código ERP" autocomplete="off">
+      <div id="m-resultados" class="resultado-busqueda"></div>
+    </div>
+
+    <div id="m-form" hidden>
+      <div id="m-detalle" class="detalle"></div>
+
+      <label>Destino (rack)</label>
+      <input id="m-destino" list="codigos" placeholder="MPA-A-005" autocomplete="off">
+      <datalist id="codigos"></datalist>
+
+      <label>Motivo del movimiento</label>
+      <select id="m-motivo">
+        <option value="reacomodo">Reacomodo por espacio</option>
+        <option value="surtido">Surtido parcial / consumo</option>
+        <option value="devolucion">Devolución de restos al almacén</option>
+        <option value="liberacion">Liberación de rack o pasillo</option>
+        <option value="cuarentena">Envío a cuarentena o retención</option>
+        <option value="otro">Otro (explicar en la nota)</option>
+      </select>
+
+      <label>Documento de referencia (opcional)</label>
+      <input id="m-ref" placeholder="OP-1234 · R-ALM-001" autocomplete="off">
+
+      <label>Nota (opcional)</label>
+      <input id="m-nota" placeholder="se juntan los lotes del mismo material" autocomplete="off">
+
+      <div class="acciones-modal">
+        <button class="primario" onclick="registrarMovimiento()">Registrar movimiento</button>
+        <button onclick="cerrarMover()">Cancelar</button>
+      </div>
+
+      <div class="historial">
+        <h3>Historial de este lote</h3>
+        <ol id="m-historial"></ol>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 const USUARIO = (localStorage.getItem("usuario") || prompt("Tu nombre (queda en la bitácora)") || "").trim();
@@ -153,7 +224,10 @@ function fila(f) {
     <td class="num">${f.cantidad ?? ""} <span style="color:#9ca3af;font-size:11px">${esc(f.unidad || "")}</span></td>
     <td>${semaforo(f)}</td>
     <td class="ubi">${ubi}</td>
-    <td><button class="mini" data-noesta="${f.fila}" title="Marcar como no encontrado">no está</button></td>
+    <td style="white-space:nowrap">
+      <button class="mini" data-mover="${f.fila}" title="Cambiar de ubicación y dejar registro">⇄ mover</button>
+      <button class="mini" data-noesta="${f.fila}" title="Marcar como no encontrado">no está</button>
+    </td>
   </tr>`;
 }
 
@@ -252,6 +326,138 @@ document.addEventListener("blur", (e) => {
 
 cargar();
 cargarBitacora();
+
+// ---------- registrar movimiento entre ubicaciones ----------
+let loteSel = null;
+
+async function abrirMover(fila) {
+  document.getElementById("modal").hidden = false;
+  document.getElementById("m-form").hidden = true;
+  document.getElementById("m-buscador").hidden = false;
+  if (!document.getElementById("codigos").childElementCount) {
+    try {
+      const { codigos } = await api("/api/ubicaciones");
+      document.getElementById("codigos").innerHTML =
+        codigos.map((c) => `<option value="${c}">`).join("");
+    } catch (e) { /* el catálogo se valida también en el servidor */ }
+  }
+  if (fila) {
+    try {
+      const { lote } = await api(`/api/lote?fila=${fila}`);
+      seleccionarLote(lote);
+    } catch (e) { alert(e.message); }
+  } else {
+    loteSel = null;
+    document.getElementById("m-buscar").value = "";
+    document.getElementById("m-resultados").innerHTML = "";
+    document.getElementById("m-buscar").focus();
+  }
+}
+
+function cerrarMover() {
+  document.getElementById("modal").hidden = true;
+}
+
+function seleccionarLote(lote) {
+  loteSel = lote;
+  document.getElementById("m-buscador").hidden = true;
+  document.getElementById("m-form").hidden = false;
+  document.getElementById("m-detalle").innerHTML = `
+    <b>${esc(lote.descripcion)}</b><br>
+    lote <code>${esc(lote.lote || "—")}</code> · ${lote.cantidad ?? ""} ${esc(lote.unidad || "")}
+    · cad. ${esc(lote.caducidad || lote.caducidad_cruda || "sin dato")}<br>
+    ubicación actual <span class="de">${esc(lote.ubicacion || "SIN UBICAR")}</span>`;
+  document.getElementById("m-destino").value = "";
+  document.getElementById("m-nota").value = "";
+  document.getElementById("m-ref").value = "";
+  document.getElementById("m-motivo").value = "reacomodo";
+  document.getElementById("m-destino").focus();
+  cargarHistorial(lote.fila);
+}
+
+async function cargarHistorial(fila) {
+  const lista = document.getElementById("m-historial");
+  try {
+    const { movimientos } = await api(`/api/historial?fila=${fila}`);
+    lista.innerHTML = movimientos.length
+      ? movimientos.map((m) => `<li><code>${esc(m.ts)}</code>
+          <b>${esc(m.accion.toLowerCase())}</b> ${esc(m.usuario)}
+          ${m.ubicacion_origen ? " · " + esc(m.ubicacion_origen) : ""}${m.ubicacion_destino ? " → " + esc(m.ubicacion_destino) : ""}
+          ${m.motivo ? " · " + esc(m.motivo) : ""}${m.ref_doc ? " · " + esc(m.ref_doc) : ""}
+          ${m.nota ? " · " + esc(m.nota) : ""}</li>`).join("")
+      : "<li>Sin movimientos registrados todavía.</li>";
+  } catch (e) {
+    lista.innerHTML = "";
+  }
+}
+
+async function registrarMovimiento() {
+  if (!loteSel) { alert("Elige primero el lote."); return; }
+  const destino = document.getElementById("m-destino").value.trim().toUpperCase();
+  const motivo = document.getElementById("m-motivo").value;
+  const nota = document.getElementById("m-nota").value.trim();
+  if (!destino) { alert("Escribe el rack de destino."); return; }
+  if (destino === (loteSel.ubicacion || "")) {
+    alert("El destino es la ubicación actual: no hay movimiento que registrar.");
+    return;
+  }
+  if (motivo === "otro" && !nota) { alert("Con motivo «otro» escribe la nota."); return; }
+  try {
+    const r = await api("/api/mover", {
+      method: "POST",
+      body: JSON.stringify({
+        fila: loteSel.fila, destino, motivo, usuario: USUARIO,
+        ref_doc: document.getElementById("m-ref").value.trim() || null,
+        nota: nota || null,
+      }),
+    });
+    cerrarMover();
+    pintarResumen(r.resumen);
+    cargar();
+    cargarBitacora();
+    const aviso = document.createElement("div");
+    aviso.className = "aviso";
+    aviso.style.cssText = "background:#eaf5ee;color:#1e6b3a;font-weight:700";
+    aviso.textContent = `Movimiento registrado: ${r.anterior} → ${r.nueva} · ${r.motivo} · ${r.ts}`;
+    document.body.insertBefore(aviso, document.body.firstChild);
+    setTimeout(() => aviso.remove(), 5000);
+  } catch (e) { alert(e.message); }
+}
+
+let temporizadorBusqueda;
+document.getElementById("m-buscar").addEventListener("input", (e) => {
+  clearTimeout(temporizadorBusqueda);
+  temporizadorBusqueda = setTimeout(async () => {
+    const q = e.target.value.trim();
+    const caja = document.getElementById("m-resultados");
+    if (q.length < 2) { caja.innerHTML = ""; return; }
+    const { filas } = await api(`/api/inventario?q=${encodeURIComponent(q)}`);
+    caja.innerHTML = filas.slice(0, 8).map((f) => `
+      <div data-sel="${f.fila}"><b>${esc(f.descripcion)}</b> · lote ${esc(f.lote || "—")} ·
+      ${esc(f.ubicacion || "sin ubicar")}</div>`).join("") || "<div>Sin resultados</div>";
+  }, 200);
+});
+
+document.getElementById("btn-mover").addEventListener("click", () => abrirMover(null));
+
+document.getElementById("m-destino").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); registrarMovimiento(); }
+});
+
+document.addEventListener("click", (e) => {
+  const mover = e.target.closest("[data-mover]");
+  if (mover) { abrirMover(mover.dataset.mover); return; }
+  const elegido = e.target.closest("[data-sel]");
+  if (elegido) {
+    api(`/api/lote?fila=${elegido.dataset.sel}`)
+      .then((r) => seleccionarLote(r.lote))
+      .catch((err) => alert(err.message));
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !document.getElementById("modal").hidden) cerrarMover();
+});
 
 async function cargarEstado() {
   try {

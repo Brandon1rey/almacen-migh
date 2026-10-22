@@ -309,19 +309,20 @@ def exportar_bitacora(con, destino=None):
     ws["A1"].font = Font(bold=True, size=13)
     ws["A2"] = f"Exportada {dt.datetime.now():%Y-%m-%d %H:%M} · {len(movimientos)} movimientos"
     encabezados = ["ID", "FECHA-HORA", "ACCIÓN", "DESCRIPCIÓN", "LOTE", "ORIGEN",
-                   "DESTINO", "USUARIO", "NOTA"]
+                   "DESTINO", "MOTIVO", "REF. DOCUMENTO", "USUARIO", "NOTA"]
     fila = _tabla(ws, 4, encabezados)
     for m in movimientos:
         valores = [m["id"], m["ts"], m["accion"], m["descripcion"], m["lote"],
-                   m["ubicacion_origen"], m["ubicacion_destino"], m["usuario"], m["nota"]]
+                   m["ubicacion_origen"], m["ubicacion_destino"], m["motivo"],
+                   m["ref_doc"], m["usuario"], m["nota"]]
         for i, v in enumerate(valores, start=1):
             c = ws.cell(row=fila, column=i, value=v)
             c.font = NORMAL
             c.border = BORDE
         fila += 1
-    _anchos(ws, [6, 20, 15, 44, 20, 16, 16, 22, 40])
+    _anchos(ws, [6, 20, 15, 44, 20, 16, 16, 18, 16, 22, 40])
     ws.freeze_panes = "A5"
-    ws.auto_filter.ref = f"A4:I{max(fila - 1, 4)}"
+    ws.auto_filter.ref = f"A4:K{max(fila - 1, 4)}"
     destino = pathlib.Path(destino) if destino else _ruta(f"Bitacora_movimientos_{_marca()}.xlsx")
     wb.save(destino)
     return destino

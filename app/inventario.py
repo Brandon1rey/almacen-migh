@@ -70,11 +70,24 @@ class Inventario:
         if not self.ruta.exists():
             raise FileNotFoundError(f"no existe el inventario: {self.ruta}")
         self.wb = openpyxl.load_workbook(self.ruta)
+        self._fijar_imagenes()
         self.ws = self._hoja_inventario()
         self.columnas = self._detectar_columnas()
         self.filas = self._leer()
 
     # ---------- estructura ----------
+    def _fijar_imagenes(self):
+        """openpyxl reutiliza el buffer de las imágenes del libro y la segunda escritura
+        falla con 'I/O operation on closed file'. Se congelan los bytes al cargar."""
+        for hoja in self.wb.worksheets:
+            for imagen in getattr(hoja, "_images", []):
+                datos = imagen._data()
+
+                def congelar(d):
+                    return lambda: d
+
+                imagen._data = congelar(datos)
+
     def _hoja_inventario(self):
         """La hoja del inventario es la que tiene 'Descripción' en la fila 3, no siempre la primera."""
         for hoja in self.wb.worksheets:
