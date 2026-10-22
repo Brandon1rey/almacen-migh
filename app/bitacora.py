@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS movimiento (
     accion            TEXT NOT NULL CHECK (accion IN
                       ('UBICAR','MOVER','PARCIAL','CONFIRMAR','NO_ENCONTRADO','LIMPIAR','IMPORTAR',
                        'DESHACER','PURGAR')),
+    inventario        TEXT NOT NULL DEFAULT 'mp',
     fila              INTEGER,
     descripcion       TEXT NOT NULL,
     lote              TEXT,
@@ -92,6 +93,7 @@ def _migrar(con):
     """Pone al día bases creadas con versiones anteriores, sin perder movimientos."""
     columnas = {fila["name"] for fila in con.execute("PRAGMA table_info(movimiento)")}
     nuevas = {
+        "inventario": "TEXT NOT NULL DEFAULT 'mp'",
         "motivo": "TEXT", "ref_doc": "TEXT", "usuario_id": "INTEGER",
         "cantidad": "REAL", "fila_destino": "INTEGER",
         "revertido": "INTEGER NOT NULL DEFAULT 0", "revertido_por": "INTEGER",
@@ -104,6 +106,8 @@ def _migrar(con):
         "SELECT sql FROM sqlite_master WHERE type='table' AND name='movimiento'").fetchone()
     if definicion and not ("DESHACER" in definicion["sql"] and "PARCIAL" in definicion["sql"]):
         _reconstruir_movimiento(con)
+    # el índice va aquí, después del ALTER: en bases viejas la columna todavía no existía
+    con.execute("CREATE INDEX IF NOT EXISTS ix_mov_inv ON movimiento(inventario, fila)")
     con.commit()
 
 
@@ -121,7 +125,8 @@ def _reconstruir_movimiento(con):
 
 # ---------------------------------------------------------------- bitácora
 def registrar(con, accion, registro, usuario, destino=None, origen=None, nota=None,
-              motivo=None, ref_doc=None, usuario_id=None, cantidad=None, fila_destino=None):
+              motivo=None, ref_doc=None, usuario_id=None, cantidad=None, fila_destino=None,
+              inventario=None):
     if not (usuario or "").strip():
         raise ValueError("usuario requerido: la bitácora es el rastro de auditoría")
     if accion not in ACCIONES:
@@ -129,27 +134,38 @@ def registrar(con, accion, registro, usuario, destino=None, origen=None, nota=No
     ts = _ahora()
     with _LOCK:
         cur = con.execute(
-            "INSERT INTO movimiento (ts, accion, fila, descripcion, lote, ubicacion_origen, "
-            "ubicacion_destino, cantidad, fila_destino, usuario, usuario_id, nota, motivo, ref_doc) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (ts, accion, registro.get("fila"), registro["descripcion"], registro.get("lote"),
-             origen, destino, cantidad, fila_destino, usuario.strip(), usuario_id, nota,
-             motivo, ref_doc))
+            "INSERT INTO movimiento (ts, accion, inventario, fila, descripcion, lote, "
+            "ubicacion_origen, ubicacion_destino, cantidad, fila_destino, usuario, usuario_id, "
+            "nota, motivo, ref_doc) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (ts, accion, inventario or registro.get("tipo") or "mp", registro.get("fila"),
+             registro["descripcion"], registro.get("lote"), origen, destino, cantidad,
+             fila_destino, usuario.strip(), usuario_id, nota, motivo, ref_doc))
         con.commit()
     return ts, cur.lastrowid
 
 
-def ultimos(con, limite=100):
+def ultimos(con, limite=100, inventario=None):
+    sql = "SELECT * FROM movimiento"
+    params = []
+    if inventario:
+        sql += " WHERE inventario=?"
+        params.append(inventario)
+    sql += " ORDER BY id DESC LIMIT ?"
+    params.append(int(limite))
     with _LOCK:
-        return [dict(r) for r in con.execute(
-            "SELECT * FROM movimiento ORDER BY id DESC LIMIT ?", (int(limite),)).fetchall()]
+        return [dict(r) for r in con.execute(sql, params).fetchall()]
 
 
-def por_fila(con, fila, limite=12):
+def por_fila(con, fila, limite=12, inventario=None):
+    sql = "SELECT * FROM movimiento WHERE fila=?"
+    params = [int(fila)]
+    if inventario:
+        sql += " AND inventario=?"
+        params.append(inventario)
+    sql += " ORDER BY id DESC LIMIT ?"
+    params.append(int(limite))
     with _LOCK:
-        return [dict(r) for r in con.execute(
-            "SELECT * FROM movimiento WHERE fila=? ORDER BY id DESC LIMIT ?",
-            (int(fila), int(limite))).fetchall()]
+        return [dict(r) for r in con.execute(sql, params).fetchall()]
 
 
 def por_id(con, movimiento_id):
@@ -159,13 +175,16 @@ def por_id(con, movimiento_id):
     return dict(fila) if fila else None
 
 
-def ultimo_vigente(con, fila=None):
+def ultimo_vigente(con, fila=None, inventario=None):
     """Último movimiento no revertido (de un lote o de todo el almacén)."""
     sql = "SELECT * FROM movimiento WHERE revertido=0 AND accion <> 'DESHACER'"
     params = []
     if fila is not None:
         sql += " AND fila=?"
         params.append(int(fila))
+    if inventario:
+        sql += " AND inventario=?"
+        params.append(inventario)
     sql += " ORDER BY id DESC LIMIT 1"
     with _LOCK:
         resultado = con.execute(sql, params).fetchone()
@@ -191,8 +210,11 @@ def borrar(con, movimiento_id):
     return dict(fila)
 
 
-def contar(con):
+def contar(con, inventario=None):
     with _LOCK:
+        if inventario:
+            return con.execute("SELECT COUNT(*) FROM movimiento WHERE inventario=?",
+                               (inventario,)).fetchone()[0]
         return con.execute("SELECT COUNT(*) FROM movimiento").fetchone()[0]
 
 

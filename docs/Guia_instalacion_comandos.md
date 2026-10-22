@@ -102,19 +102,39 @@ python -c "import openpyxl, sys; print('openpyxl', openpyxl.__version__, 'python
 
 ### 3.3 Preparar el inventario
 
-Si el Excel del área está en el escritorio:
+El sistema maneja tres inventarios (ALM-PNO-002): materias primas, material de empaque y producto
+terminado. Cada uno es un archivo en `data\` y se prepara igual:
 
 ```bat
-python scripts\preparar_inventario.py --origen "%USERPROFILE%\Desktop\INVENTARIO MP.xlsx"
+python scripts\preparar_inventario.py --tipo mp  --origen "%USERPROFILE%\Desktop\INVENTARIO MP.xlsx"
+python scripts\preparar_inventario.py --tipo mep --origen "D:\inventarios\INVENTARIO MEP.xlsx"
+python scripts\preparar_inventario.py --tipo pt  --origen "D:\inventarios\INVENTARIO PT.xlsx"
 ```
 
-Si ya lo copiaste a `datos_iniciales\Inventario_MP.xlsx`:
+Si todavía no hay archivo de empaque o de producto terminado, se crea la plantilla vacía:
 
 ```bat
-python scripts\preparar_inventario.py --origen datos_iniciales\Inventario_MP.xlsx
+python scripts\plantilla_inventario.py --tipo mep --vacia
+python scripts\plantilla_inventario.py --tipo pt --vacia
+```
+
+PowerShell es idéntico (solo cambian las comillas si la ruta tiene espacios):
+
+```powershell
+python scripts\preparar_inventario.py --tipo mep --origen "D:\inventarios\INVENTARIO MEP.xlsx"
+python scripts\plantilla_inventario.py --tipo pt --vacia
 ```
 
 El script agrega la columna **UBICACIÓN**, no toca las demás columnas y reporta cuántos lotes quedaron.
+Reconoce los encabezados por nombre (`Descripción`/`Producto`/`Material`, `Cantidad`/`Conteo`/`Stock`,
+`Lote`, `Caducidad`, `Unidad`/`UM`), así que una tabla del área entra sin reformatear. Con
+`--reimportar` toma el archivo nuevo y conserva las ubicaciones ya capturadas.
+
+| Inventario | Archivo | Reporte que exige el procedimiento |
+|---|---|---|
+| MP — materias primas | `data\Inventario_MP.xlsx` | mensual (§V.2.1.8) |
+| MEP — material de empaque | `data\Inventario_MEP.xlsx` | mensual (§V.2.1.8) |
+| PT — producto terminado | `data\Inventario_PT.xlsx` | semanal (§V.2.3.8) |
 
 ### 3.4 Sin internet ni pip (carpeta vendor)
 

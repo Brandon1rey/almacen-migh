@@ -50,6 +50,27 @@
   nav.tabs button.activo{background:var(--azul);color:#fff;border-color:var(--azul)}
   main{padding:10px 10px 96px;max-width:1100px;margin:0 auto}
 
+  /* ---------- selector de inventario ---------- */
+  .selector-inv{display:flex;gap:6px;padding:8px 10px;background:#e9edf5;border-bottom:1px solid var(--linea);
+                position:sticky;top:calc(56px + env(safe-area-inset-top));z-index:18;overflow-x:auto}
+  .selector-inv button{flex:1 0 auto;min-height:44px;font-size:14px;border-radius:10px;background:var(--blanco);
+                       border-color:#cfd8e6;color:var(--azul);padding:6px 12px;line-height:1.1}
+  .selector-inv button b{display:block;font-size:11px;font-weight:600;color:var(--suave);margin-top:2px}
+  .selector-inv button.activo{background:var(--azul);border-color:var(--azul);color:#fff}
+  .selector-inv button.activo b{color:#dbe4f5}
+  .selector-inv button.vacio{opacity:.55}
+  .tarjetas-inv{display:grid;grid-template-columns:1fr;gap:10px}
+  .tarjeta-inv{background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);padding:12px}
+  .tarjeta-inv h3{margin:0 0 2px;font-size:16px}
+  .tarjeta-inv .sub{font-size:12px;color:var(--suave);margin-bottom:8px}
+  .tarjeta-inv .nums{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+  .tarjeta-inv .nums div{background:#f5f7fb;border-radius:8px;padding:6px}
+  .tarjeta-inv .nums b{display:block;font-size:17px;line-height:1.1}
+  .tarjeta-inv .nums .cant{font-size:12.5px;font-weight:700;line-height:1.25}
+  .tarjeta-inv .nums span{font-size:10px;color:var(--suave);text-transform:uppercase;letter-spacing:.4px}
+  .tarjeta-inv .acciones{display:flex;gap:8px}
+  .tarjeta-inv .acciones button{flex:1}
+
   /* ---------- buscador y filtros ---------- */
   .panel{background:var(--blanco);border:1px solid var(--linea);border-radius:var(--radio);padding:10px;margin-bottom:10px}
   .fila-filtros{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
@@ -193,7 +214,20 @@
     <button data-vista="usuarios" id="tab-usuarios" hidden>Usuarios</button>
   </nav>
 
+  <div class="selector-inv" id="selector-inv"></div>
+
   <main>
+    <!-- ---------- tablero de los tres inventarios ---------- -->
+    <section id="vista-todos" hidden>
+      <div class="panel">
+        <b style="font-size:15px">Almacén completo</b>
+        <p style="margin:6px 0 0;font-size:12px;color:var(--suave)">
+          Tres inventarios bajo el mismo procedimiento ALM-PNO-002: materias primas (reporte mensual),
+          material de empaque (mensual) y producto terminado (semanal). El reporte F01 los consolida.</p>
+      </div>
+      <div class="tarjetas-inv" id="tarjetas-inv"></div>
+    </section>
+
     <!-- ---------- inventario ---------- -->
     <section id="vista-inventario">
       <div class="panel">
@@ -369,7 +403,11 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":
 const num = (v, d = 3) => (v === null || v === undefined || v === "") ? "" :
   Number(v).toLocaleString("es-MX", {maximumFractionDigits: d});
 
-const estado = {usuario: null, lote: null, movimientos: [], limite: 60, purgarId: null, demo: false};
+const estado = {usuario: null, lote: null, movimientos: [], limite: 60, purgarId: null,
+                demo: false, tipo: "mp", inventarios: []};
+
+/* agrega el inventario activo a cualquier ruta */
+const conTipo = (ruta) => ruta + (ruta.includes("?") ? "&" : "?") + "tipo=" + estado.tipo;
 
 /* ---------------- red ---------------- */
 async function api(ruta, opciones = {}) {
@@ -429,7 +467,9 @@ async function iniciar(usuario) {
   $("u-rol").textContent = etiquetasRol[usuario.rol] || usuario.rol;
   $("tab-usuarios").hidden = usuario.rol !== "admin";
   $("chip-cero").hidden = usuario.rol !== "admin";
-  await Promise.all([cargarEstado(), cargarInventario(), cargarBitacora()]);
+  await cargarEstado();
+  await cargarInventarios();
+  await Promise.all([cargarInventario(), cargarBitacora()]);
   if (usuario.debe_cambiar) abrirClave(true);
 }
 
@@ -437,6 +477,69 @@ async function salir() {
   try { await api("/api/logout", {method: "POST"}); } catch (e) { /* da igual */ }
   estado.usuario = null;
   mostrarLogin("");
+}
+
+async function cargarInventarios() {
+  try {
+    const datos = await api("/api/inventarios");
+    estado.inventarios = datos.inventarios || [];
+    if (!estado.inventarios.some((i) => i.clave === estado.tipo && i.cargado)) {
+      const primero = estado.inventarios.find((i) => i.cargado);
+      if (primero) estado.tipo = primero.clave;
+    }
+    pintarSelector();
+  } catch (e) { /* el servidor avisa en cada llamada */ }
+}
+
+function pintarSelector() {
+  const caja = $("selector-inv");
+  const botones = estado.inventarios.map((i) => `
+    <button type="button" data-inv="${i.clave}" class="${(i.clave === estado.tipo && $("vista-todos").hidden) ? "activo" : ""} ${i.cargado ? "" : "vacio"}">
+      ${esc(i.corto)}<b>${i.cargado ? (i.lotes ? num(i.lotes, 0) + " lotes" : "vacío") : "sin cargar"}</b>
+    </button>`).join("");
+  const varios = estado.inventarios.filter((i) => i.cargado).length > 1;
+  caja.innerHTML = botones + (varios
+    ? `<button type="button" data-vista-todos class="${!$("vista-todos").hidden ? "activo" : ""}">Tablero<b>los tres</b></button>`
+    : "");
+  const actual = estado.inventarios.find((i) => i.clave === estado.tipo);
+  if (actual) $("archivo").textContent = `${actual.nombre} · reporte ${actual.reporte}`;
+}
+
+function seleccionarInventario(clave) {
+  if (clave === estado.tipo) { cambiarVista("inventario"); return; }
+  estado.tipo = clave;
+  estado.limite = 60;
+  $("q").value = "";
+  pintarSelector();
+  cambiarVista("inventario");
+  cargarInventario();
+  cargarBitacora();
+}
+
+async function cargarTablero() {
+  try {
+    const {inventarios} = await api("/api/inventarios");
+    estado.inventarios = inventarios;
+    $("tarjetas-inv").innerHTML = inventarios.map((i) => {
+      const cantidades = Object.entries(i.por_unidad || {})
+        .map(([u, v]) => `${num(v, 0)} ${esc(u)}`).join(" · ") || "—";
+      return `<article class="tarjeta-inv">
+        <h3>${esc(i.nombre)}</h3>
+        <div class="sub">${i.cargado ? "reporte " + esc(i.reporte) : "todavía sin archivo"}</div>
+        <div class="nums">
+          <div><b>${num(i.lotes, 0)}</b><span>lotes</span></div>
+          <div><b>${i.cobertura}%</b><span>ubicados</span></div>
+          <div><b>${num(i.vencidos, 0)}</b><span>vencidos</span></div>
+          <div><b class="cant">${esc(cantidades)}</b><span>existencia</span></div>
+        </div>
+        <div class="acciones">
+          ${i.cargado
+            ? `<button type="button" class="primario" data-inv="${i.clave}">Abrir ${esc(i.corto)}</button>`
+            : `<button type="button" disabled>Falta el archivo</button>`}
+        </div>
+      </article>`;
+    }).join("") || `<div class="vacio">Sin inventarios cargados.</div>`;
+  } catch (e) { $("tarjetas-inv").innerHTML = `<div class="vacio">${esc(e.message)}</div>`; }
 }
 
 async function cargarEstado() {
@@ -455,12 +558,16 @@ async function cargarInventario() {
   if ($("f-sin").checked) params.set("sin_ubicar", "1");
   if ($("f-venc").checked) params.set("vencidos", "1");
   if ($("f-cero").checked) params.set("cero", "1");
+  params.set("tipo", estado.tipo);
   try {
     const datos = await api("/api/inventario?" + params);
     pintarResumen(datos.resumen);
+    const sinDatos = !datos.resumen.total;
     $("lista").innerHTML = datos.filas.length
       ? datos.filas.map(tarjeta).join("")
-      : `<div class="vacio">Sin resultados con ese filtro.</div>`;
+      : `<div class="vacio">${sinDatos
+          ? "Este inventario todavía no tiene lotes. Carga su tabla con <code>scripts\\preparar_inventario.py</code> (ver LEEME) y recarga."
+          : "Sin resultados con ese filtro."}</div>`;
   } catch (e) {
     $("lista").innerHTML = `<div class="vacio">${esc(e.message)}</div>`;
   }
@@ -510,7 +617,7 @@ async function guardarUbicacion(input) {
   const ubicacion = input.value.trim();
   try {
     const r = await api("/api/ubicar", {method: "POST",
-      body: JSON.stringify({fila, ubicacion})});
+      body: JSON.stringify({fila, ubicacion, tipo: estado.tipo})});
     if (r.nueva) input.value = r.nueva; else input.value = "";
     input.classList.add("ok");
     setTimeout(() => input.classList.remove("ok"), 900);
@@ -528,7 +635,7 @@ async function noEsta(fila) {
   if (nota === null) return;
   try {
     const r = await api("/api/no_encontrado", {method: "POST",
-      body: JSON.stringify({fila: Number(fila), nota})});
+      body: JSON.stringify({fila: Number(fila), nota, tipo: estado.tipo})});
     pintarResumen(r.resumen);
     cargarInventario();
     cargarBitacora();
@@ -549,7 +656,7 @@ async function abrirMover(fila) {
   }
   if (fila) {
     try {
-      const {lote} = await api(`/api/lote?fila=${fila}`);
+      const {lote} = await api(conTipo(`/api/lote?fila=${fila}`));
       seleccionarLote(lote);
     } catch (e) { aviso(e.message, "err"); }
   } else {
@@ -562,6 +669,7 @@ async function abrirMover(fila) {
 
 function seleccionarLote(lote) {
   estado.lote = lote;
+  if (lote && lote.tipo) estado.tipo = lote.tipo;
   $("m-buscador").hidden = true;
   $("m-form").hidden = false;
   const unidad = lote.unidad || "kg";
@@ -603,7 +711,7 @@ function revisarParcial() {
 async function cargarHistorial(fila) {
   const lista = $("m-historial");
   try {
-    const {movimientos} = await api(`/api/historial?fila=${fila}&limite=20`);
+    const {movimientos} = await api(conTipo(`/api/historial?fila=${fila}&limite=20`));
     lista.innerHTML = movimientos.length ? movimientos.map((m) => `
       <li class="${m.revertido ? "rev" : ""}"><code>${esc(m.ts)}</code>
         <b>${esc(m.accion.toLowerCase())}</b> ${esc(m.usuario)}
@@ -628,7 +736,7 @@ async function registrarMovimiento() {
   if (motivo === "otro" && !nota) { aviso("Con motivo «otro» escribe la nota", "err"); return; }
   try {
     const r = await api("/api/mover", {method: "POST", body: JSON.stringify({
-      fila: estado.lote.fila, destino, motivo, nota: nota || null,
+      fila: estado.lote.fila, destino, motivo, nota: nota || null, tipo: estado.tipo,
       cantidad: cantidad === "" ? null : Number(cantidad),
       ref_doc: $("m-ref").value.trim() || null,
     })});
@@ -645,7 +753,7 @@ async function registrarMovimiento() {
 /* ---------------- bitácora ---------------- */
 async function cargarBitacora() {
   try {
-    const {movimientos} = await api(`/api/bitacora?limite=${estado.limite}`);
+    const {movimientos} = await api(`/api/bitacora?limite=${estado.limite}&tipo=${estado.tipo}`);
     estado.movimientos = movimientos;
     $("mov-cuenta").textContent = `${movimientos.length} movimientos`;
     $("movimientos").innerHTML = movimientos.length ? movimientos.map(movimiento).join("")
@@ -790,8 +898,10 @@ function cerrar(id) { $(id).hidden = true; document.body.style.overflow = ""; }
 function cambiarVista(nombre) {
   document.querySelectorAll("nav.tabs button").forEach((b) =>
     b.classList.toggle("activo", b.dataset.vista === nombre));
-  ["inventario", "bitacora", "usuarios"].forEach((v) =>
+  ["inventario", "bitacora", "usuarios", "todos"].forEach((v) =>
     $("vista-" + v).hidden = v !== nombre);
+  $("selector-inv").hidden = nombre === "usuarios" || nombre === "bitacora";
+  if (nombre === "todos") cargarTablero();
   if (nombre === "usuarios") cargarUsuarios();
   if (nombre === "bitacora") cargarBitacora();
 }
@@ -841,6 +951,9 @@ $("m-buscar").addEventListener("input", (e) => {
 });
 
 document.addEventListener("click", (e) => {
+  const invBtn = e.target.closest("[data-inv]");
+  if (invBtn) { seleccionarInventario(invBtn.dataset.inv); return; }
+  if (e.target.closest("[data-vista-todos]")) { cambiarVista("todos"); pintarSelector(); return; }
   const mover = e.target.closest("[data-mover]");
   if (mover) { abrirMover(Number(mover.dataset.mover)); return; }
   const noEstaBtn = e.target.closest("[data-noesta]");
@@ -856,7 +969,12 @@ document.addEventListener("click", (e) => {
   const purgarBtn = e.target.closest("[data-purgar]");
   if (purgarBtn) { purgar(purgarBtn.dataset.purgar); return; }
   const descarga = e.target.closest("[data-descarga]");
-  if (descarga) { window.location.href = `/descargar/${descarga.dataset.descarga}`; return; }
+  if (descarga) {
+    const cual = descarga.dataset.descarga;
+    const consolidado = cual === "f01" || cual === "f01v3" || cual === "bitacora";
+    window.location.href = `/descargar/${cual}` + (consolidado ? "" : `?tipo=${estado.tipo}`);
+    return;
+  }
   const claveUsuario = e.target.closest("[data-clave-usuario]");
   if (claveUsuario) { claveDeUsuario(claveUsuario.dataset.claveUsuario); return; }
   const activo = e.target.closest("[data-activo]");

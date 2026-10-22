@@ -16,7 +16,7 @@ _VENDOR = RAIZ / "vendor"          # dependencias copiadas para PC sin internet 
 if _VENDOR.exists():
     sys.path.insert(0, str(_VENDOR))
 
-from app import api, bitacora, inventario, usuarios  # noqa: E402
+from app import api, bitacora, inventario, inventarios, usuarios  # noqa: E402
 
 PUERTO = int(os.environ.get("ALMACEN_PUERTO", 8300))
 HOST = os.environ.get("ALMACEN_HOST", "127.0.0.1")
@@ -37,31 +37,59 @@ def ip_local():
 
 
 class Estado:
-    """Una sola instancia del Excel en memoria, recargada si el archivo cambia en disco."""
+    """Los tres inventarios del almacén, recargados si el archivo cambia en disco."""
 
-    def __init__(self, ruta=None):
+    def __init__(self, ruta=None, carpeta=None):
         self._lock = threading.RLock()
-        self._ruta = pathlib.Path(ruta or inventario.RUTA)
-        self.demo = "demo" in str(self._ruta).lower()
-        self.archivo = self._ruta.name
-        self._inv = inventario.Inventario(self._ruta)
-        self._mtime = self._ruta.stat().st_mtime
-        ruta_bitacora = (self._ruta.parent / "bitacora_demo.db") if self.demo else None
+        if carpeta is None:
+            carpeta = pathlib.Path(ruta).parent if ruta else inventarios.CARPETA_DATOS
+        self.carpeta_datos = pathlib.Path(carpeta)
+        self._rutas = {t: inventarios.ruta(t, self.carpeta_datos) for t in inventarios.TIPOS}
+        if ruta and pathlib.Path(ruta).is_file():
+            self._rutas["mp"] = pathlib.Path(ruta)
+        self.demo = "demo" in str(self.carpeta_datos).lower()
+        self._invs, self._mtimes = {}, {}
+        for tipo, ruta_tipo in self._rutas.items():
+            if ruta_tipo.exists():
+                self._cargar(tipo)
+        if not self._invs:
+            raise FileNotFoundError(f"no hay ningún inventario en {self.carpeta_datos}")
+        self.archivo = self._rutas["mp"].name if "mp" in self._invs else \
+            ", ".join(r.name for t, r in self._rutas.items() if t in self._invs)
+        ruta_bitacora = (self.carpeta_datos / "bitacora_demo.db") if self.demo else None
         self.con = bitacora.conectar(ruta_bitacora)
 
-    def inventario(self):
+    def _cargar(self, tipo):
+        ruta = self._rutas[tipo]
+        self._invs[tipo] = inventario.Inventario(ruta, tipo=tipo)
+        self._mtimes[tipo] = ruta.stat().st_mtime
+
+    def inventario(self, tipo=None):
+        clave = inventarios.normalizar_tipo(tipo or "mp")
+        ruta = self._rutas.get(clave)
+        if ruta is None or not ruta.exists():
+            raise FileNotFoundError(f"el inventario {clave.upper()} no está cargado")
         with self._lock:
-            mtime = self._ruta.stat().st_mtime
-            if mtime != self._mtime:
-                self._inv = inventario.Inventario(self._ruta)
-                self._mtime = mtime
-            return self._inv
+            mtime = ruta.stat().st_mtime
+            if self._invs.get(clave) is None or mtime != self._mtimes.get(clave):
+                self._cargar(clave)
+            return self._invs[clave]
+
+    def cargados(self):
+        """[(tipo, inventario)] en orden, solo de los archivos que existen."""
+        salida = []
+        for tipo in sorted(inventarios.TIPOS, key=lambda t: inventarios.TIPOS[t]["orden"]):
+            try:
+                salida.append((tipo, self.inventario(tipo)))
+            except FileNotFoundError:
+                continue
+        return salida
 
     def recargar(self):
         with self._lock:
-            self._inv = inventario.Inventario(self._ruta)
-            self._mtime = self._ruta.stat().st_mtime
-            return self._inv
+            for tipo in list(self._invs):
+                self._cargar(tipo)
+            return self._invs
 
 
 ESTADO = None
@@ -130,9 +158,11 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(401, {"error": "inicia sesión para descargar"})
             tipo = ruta.rsplit("/", 1)[-1]
             try:
-                destino = api.descargar(ESTADO, tipo)
+                destino = api.descargar(ESTADO, tipo, params.get("tipo"))
             except KeyError:
                 return self._json(404, {"error": f"reporte desconocido: {tipo}"})
+            except FileNotFoundError as e:
+                return self._json(409, {"error": str(e)})
             except PermissionError:
                 return self._json(409, {"error": "cierra el Excel antes de descargar"})
             bitacora.auditar(ESTADO.con, sesion["nombre"], "DESCARGA", tipo)
@@ -169,21 +199,28 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     global ESTADO
-    ruta = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else inventario.RUTA
-    ESTADO = Estado(ruta)
-    resumen = ESTADO.inventario().resumen()
+    argumento = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else None
+    if argumento is not None and argumento.is_dir():
+        ESTADO = Estado(carpeta=argumento)
+    else:
+        ESTADO = Estado(ruta=argumento)
     servidor = ThreadingHTTPServer((HOST, PUERTO), Handler)
 
     print("=" * 66)
-    print("  CONTROL DE UBICACIÓN — ALMACÉN DE MATERIAS PRIMAS MIGH")
+    print("  CONTROL DE UBICACIÓN — ALMACÉN MIGH")
     if ESTADO.demo:
         print("  *** MODO DEMO — DATOS DE DEMOSTRACIÓN, NO ES UN REGISTRO ***")
     print("=" * 66)
-    print(f"  Archivo      : {ruta}")
-    print(f"  Lotes        : {resumen['total']}")
-    print(f"  Con ubicación: {resumen['con_ubicacion']} ({resumen['cobertura']} %)")
-    print(f"  Sin ubicar   : {resumen['sin_ubicacion']}")
-    print(f"  Vencidos     : {resumen['semaforo']['VENCIDO']}")
+    print(f"  Datos        : {ESTADO.carpeta_datos}")
+    for tipo, inv in ESTADO.cargados():
+        r = inv.resumen()
+        print(f"  {tipo.upper():<3} {inv.nombre:<20} {r['total']:>5} lotes · "
+              f"{r['con_ubicacion']:>5} con ubicación ({r['cobertura']:>5} %) · "
+              f"{r['semaforo']['VENCIDO']:>3} vencidos")
+    faltan = [t for t in inventarios.TIPOS if t not in {t for t, _ in ESTADO.cargados()}]
+    if faltan:
+        print(f"  Sin cargar   : {', '.join(t.upper() for t in faltan)} "
+              f"(crea la plantilla con scripts\\plantilla_inventario.py --tipo {faltan[0]})")
 
     nombre, clave, creada = usuarios.bootstrap(ESTADO.con)
     if creada:

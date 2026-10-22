@@ -1,7 +1,7 @@
 """API JSON con usuarios, sesiones, movimientos y deshacer."""
 import time
 
-from app import bitacora, reportes, ubicaciones, usuarios
+from app import bitacora, inventarios, reportes, ubicaciones, usuarios
 
 MOTIVOS = {
     "reacomodo": "Reacomodo por espacio",
@@ -20,9 +20,34 @@ def _r(codigo, cuerpo, cookies=None):
     return codigo, cuerpo, {"cookies": cookies or []}
 
 
+def _tipo(params=None, cuerpo=None):
+    """Inventario pedido en la petición (mp por omisión)."""
+    valor = (cuerpo or {}).get("tipo") or (params or {}).get("tipo") or "mp"
+    return inventarios.normalizar_tipo(valor)
+
+
+def _estado_json(estado, inv):
+    """Resumen de todos los inventarios cargados, para el selector de la interfaz."""
+    salida = []
+    for ficha in inventarios.lista(estado.carpeta_datos):
+        item = {k: ficha[k] for k in ("clave", "nombre", "corto", "reporte", "orden")}
+        try:
+            r = estado.inventario(ficha["clave"]).resumen()
+            item.update({"cargado": True, "lotes": r["total"],
+                         "con_ubicacion": r["con_ubicacion"], "sin_ubicacion": r["sin_ubicacion"],
+                         "cobertura": r["cobertura"], "vencidos": r["semaforo"]["VENCIDO"],
+                         "por_unidad": r["por_unidad"]})
+        except (FileNotFoundError, KeyError, ValueError):
+            item.update({"cargado": False, "lotes": 0, "con_ubicacion": 0, "sin_ubicacion": 0,
+                         "cobertura": 0.0, "vencidos": 0, "por_unidad": {}})
+        salida.append(item)
+    return salida
+
+
 def manejar(estado, metodo, ruta, params, cuerpo, sesion=None, galleta=None):
-    inv = estado.inventario()
     cuerpo = cuerpo or {}
+    tipo = _tipo(params, cuerpo)
+    inv = None
 
     # ---------- público ----------
     if metodo == "POST" and ruta == "/api/login":
@@ -40,6 +65,16 @@ def manejar(estado, metodo, ruta, params, cuerpo, sesion=None, galleta=None):
     # ---------- de aquí en adelante hace falta sesión ----------
     if not sesion:
         return _r(401, {"error": "sesión expirada o inexistente; vuelve a entrar"})
+
+    if metodo == "GET" and ruta == "/api/inventarios":
+        return _r(200, {"inventarios": _estado_json(estado, None),
+                        "actual": tipo,
+                        "demo": bool(getattr(estado, "demo", False))})
+
+    try:
+        inv = estado.inventario(tipo)
+    except (FileNotFoundError, KeyError):
+        return _r(404, {"error": f"el inventario {tipo.upper()} no está cargado todavía"})
 
     usuario = sesion["nombre"]
     uid = sesion["usuario_id"]
@@ -61,11 +96,12 @@ def manejar(estado, metodo, ruta, params, cuerpo, sesion=None, galleta=None):
             solo_vencidos=params.get("vencidos") in ("1", "true", "si"),
             incluir_cero=params.get("cero") in ("1", "true", "si"),
         )
-        return _r(200, {"filas": filas, "resumen": inv.resumen(), "total_filtrado": len(filas)})
+        return _r(200, {"filas": filas, "resumen": inv.resumen(), "tipo": tipo,
+                        "total_filtrado": len(filas)})
 
     if metodo == "GET" and ruta == "/api/lote":
         try:
-            return _r(200, {"lote": inv.por_fila(int(params.get("fila", 0)))})
+            return _r(200, {"lote": inv.por_fila(int(params.get("fila", 0))), "tipo": tipo})
         except (KeyError, TypeError, ValueError) as e:
             return _r(400, {"error": str(e)})
 
@@ -75,15 +111,18 @@ def manejar(estado, metodo, ruta, params, cuerpo, sesion=None, galleta=None):
         except (TypeError, ValueError):
             return _r(400, {"error": "fila inválida"})
         return _r(200, {"movimientos": _con_permisos(
-            bitacora.por_fila(estado.con, fila, int(params.get("limite", 20))), sesion)})
+            bitacora.por_fila(estado.con, fila, int(params.get("limite", 20)), inventario=tipo),
+            sesion)})
 
     if metodo == "GET" and ruta == "/api/resumen":
         return _r(200, inv.resumen())
 
     if metodo == "GET" and ruta == "/api/estado":
         return _r(200, {"archivo": getattr(estado, "archivo", ""),
+                        "tipo": tipo, "inventario": inv.nombre,
                         "demo": bool(getattr(estado, "demo", False)),
                         "lotes": len(inv.filas),
+                        "inventarios": _estado_json(estado, inv),
                         "movimientos": bitacora.contar(estado.con),
                         "usuarios": len(usuarios.listar(estado.con))})
 
@@ -94,8 +133,13 @@ def manejar(estado, metodo, ruta, params, cuerpo, sesion=None, galleta=None):
 
     if metodo == "GET" and ruta == "/api/bitacora":
         limite = int(params.get("limite", 60))
-        return _r(200, {"movimientos": _con_permisos(bitacora.ultimos(estado.con, limite), sesion),
-                        "puede_purgar": rol == "admin"})
+        filtro = params.get("tipo") or None
+        if filtro:
+            filtro = inventarios.normalizar_tipo(filtro)
+        return _r(200, {"movimientos": _con_permisos(
+                            bitacora.ultimos(estado.con, limite, inventario=filtro), sesion),
+                        "puede_purgar": rol == "admin",
+                        "tipo": filtro})
 
     # ---------- escrituras ----------
     if metodo == "POST" and rol == "consulta":
@@ -108,10 +152,10 @@ def manejar(estado, metodo, ruta, params, cuerpo, sesion=None, galleta=None):
         return _movimiento(estado, inv, ruta, cuerpo, usuario, uid)
 
     if metodo == "POST" and ruta == "/api/deshacer":
-        return _deshacer(estado, inv, cuerpo, sesion)
+        return _deshacer(estado, cuerpo, sesion)
 
     if metodo == "POST" and ruta == "/api/purgar":
-        return _purgar(estado, inv, cuerpo, sesion)
+        return _purgar(estado, cuerpo, sesion)
 
     return _r(404, {"error": f"ruta no encontrada: {metodo} {ruta}"})
 
@@ -301,7 +345,7 @@ def _movimiento(estado, inv, ruta, cuerpo, usuario, uid):
                     "resumen": inv.resumen(), "bitacora": bitacora.contar(estado.con)})
 
 
-def _deshacer(estado, inv, cuerpo, sesion):
+def _deshacer(estado, cuerpo, sesion):
     mov = bitacora.por_id(estado.con, cuerpo.get("movimiento", 0))
     if mov is None:
         return _r(404, {"error": "ese movimiento no existe"})
@@ -313,7 +357,13 @@ def _deshacer(estado, inv, cuerpo, sesion):
     if not admin and (mov["usuario_id"] != sesion["usuario_id"] or sesion["rol"] != "almacen"):
         return _r(403, {"error": "solo puedes deshacer tus propios movimientos"})
 
-    ultimo = bitacora.ultimo_vigente(estado.con, mov["fila"])
+    tipo = mov.get("inventario") or "mp"
+    try:
+        inv = estado.inventario(tipo)
+    except (FileNotFoundError, KeyError):
+        return _r(409, {"error": f"el inventario {tipo.upper()} de ese movimiento no está cargado"})
+
+    ultimo = bitacora.ultimo_vigente(estado.con, mov["fila"], inventario=tipo)
     if ultimo is None or ultimo["id"] != mov["id"]:
         return _r(409, {"error": "hay movimientos posteriores de ese lote; deshaz primero el último"})
 
@@ -405,7 +455,7 @@ def _deshacer_parcial(estado, inv, mov, registro, sesion):
                                                sesion)})
 
 
-def _purgar(estado, inv, cuerpo, sesion):
+def _purgar(estado, cuerpo, sesion):
     """Borrado físico (solo admin): revierte el efecto, borra el renglón y deja auditoría."""
     if sesion["rol"] != "admin":
         return _r(403, {"error": "solo un administrador puede borrar movimientos"})
@@ -416,7 +466,13 @@ def _purgar(estado, inv, cuerpo, sesion):
     if len(motivo) < 5:
         return _r(400, {"error": "escribe el motivo del borrado (mínimo 5 caracteres)"})
 
-    ultimo = bitacora.ultimo_vigente(estado.con, mov["fila"])
+    tipo = mov.get("inventario") or "mp"
+    try:
+        inv = estado.inventario(tipo)
+    except (FileNotFoundError, KeyError):
+        return _r(409, {"error": f"el inventario {tipo.upper()} de ese movimiento no está cargado"})
+
+    ultimo = bitacora.ultimo_vigente(estado.con, mov["fila"], inventario=tipo)
     if ultimo and ultimo["id"] != mov["id"]:
         return _r(409, {"error": "hay movimientos posteriores de ese lote; deshaz primero el último"})
 
@@ -461,7 +517,8 @@ def _persistir(estado, inv, fila, accion, usuario, uid, anterior, nueva, motivo,
         ts, mov_id = bitacora.registrar(estado.con, accion, registro, usuario,
                                         destino=nueva, origen=anterior, nota=nota,
                                         motivo=motivo, ref_doc=ref_doc, usuario_id=uid,
-                                        cantidad=cantidad, fila_destino=fila_destino)
+                                        cantidad=cantidad, fila_destino=fila_destino,
+                                        inventario=inv.tipo)
     except Exception as e:
         revertir()
         return None, _r(500, {"error": f"no se pudo registrar en la bitácora, cambio "
@@ -469,18 +526,30 @@ def _persistir(estado, inv, fila, accion, usuario, uid, anterior, nueva, motivo,
     return {"ts": ts, "id": mov_id}, None
 
 
-def descargar(estado, tipo):
-    inv = estado.inventario()
+def descargar(estado, tipo, inventario_tipo=None):
+    """Genera un reporte. f01/f01v3 salen consolidados de todos los inventarios cargados."""
+    invs = []
+    for ficha in inventarios.lista(estado.carpeta_datos):
+        try:
+            invs.append((ficha["clave"], estado.inventario(ficha["clave"])))
+        except (FileNotFoundError, KeyError):
+            continue
+    if not invs:
+        raise FileNotFoundError("no hay inventarios cargados")
+
+    elegido = inventarios.normalizar_tipo(inventario_tipo) if inventario_tipo else None
     if tipo == "inventario":
+        inv = dict(invs)[elegido or invs[0][0]]
         ruta = reportes.exportar_inventario(inv)
     elif tipo == "f01":
-        ruta = reportes.generar_f01(inv, version="2")
+        ruta = reportes.generar_f01(invs, version="2")
     elif tipo == "f01v3":
-        ruta = reportes.generar_f01(inv, version="3")
+        ruta = reportes.generar_f01(invs, version="3")
     elif tipo == "tabla_macro":
+        inv = dict(invs)[elegido or invs[0][0]]
         ruta = reportes.tabla_macro(inv)
     elif tipo == "bitacora":
-        ruta = reportes.exportar_bitacora(estado.con)
+        ruta = reportes.exportar_bitacora(estado.con, inventario=elegido)
     else:
         raise KeyError(tipo)
     time.sleep(0)

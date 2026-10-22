@@ -15,6 +15,10 @@ if not exist "data\demo\Inventario_MP_demo.xlsx" (
   echo Generando datos de demostracion...
   "%PY%" scripts\sembrar_demo.py
 )
+if not exist "data\demo\Inventario_MEP.xlsx" (
+  echo Generando empaque y producto terminado...
+  "%PY%" scripts\sembrar_demo_mep_pt.py
+)
 
 echo.
 echo   MODO DEMO: puerto 8301. Los datos reales no se tocan.

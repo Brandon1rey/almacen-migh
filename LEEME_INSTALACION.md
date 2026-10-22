@@ -30,6 +30,35 @@
    `data\CREDENCIALES_INICIALES.txt`). Entra con ella, cámbiala y borra ese archivo.
 6. Crea los usuarios del almacén (ver abajo). **Cada movimiento queda firmado con el usuario que lo hizo.**
 
+## Los tres inventarios: MP, MEP y PT
+
+ALM-PNO-002 cubre materias primas, material de empaque y producto terminado, y pide el F01 «de todos
+los materiales almacenados». El sistema los maneja como tres inventarios separados que comparten
+catálogo de ubicaciones, usuarios y bitácora:
+
+| Inventario | Archivo en `data\` | Reporte |
+|---|---|---|
+| MP — Materias primas | `Inventario_MP.xlsx` | mensual (§V.2.1.8) |
+| MEP — Material de empaque | `Inventario_MEP.xlsx` | mensual (§V.2.1.8) |
+| PT — Producto terminado | `Inventario_PT.xlsx` | semanal (§V.2.3.8) |
+
+En la pantalla hay un selector **MP · MEP · PT** y una pestaña **Tablero** con los tres. El botón
+**Reporte F01** genera un archivo con portada, totales y una hoja por inventario.
+
+Cargar la tabla de empaque o de producto terminado (una sola vez, o cada vez que el área la actualice):
+
+```bat
+python scripts\plantilla_inventario.py --tipo mep --vacia
+python scripts\preparar_inventario.py --tipo mep --origen "C:\ruta\INVENTARIO MEP.xlsx"
+python scripts\preparar_inventario.py --tipo pt  --origen "C:\ruta\INVENTARIO PT.xlsx"
+python scripts\preparar_inventario.py --tipo mep --reimportar
+```
+
+Se reconocen los encabezados por nombre, no por posición: `Descripción`/`Producto`/`Material`,
+`Cantidad`/`Conteo`/`Stock`, `Lote`, `Caducidad`, `Unidad`/`UM`, `Presentación`, `Piezas`. Si la tabla
+no trae `UBICACIÓN`, se agrega. Si un archivo no existe, el sistema arranca igual y ese inventario
+aparece como «vacío» hasta que se cargue.
+
 ## Usuarios, contraseñas y roles
 
 ```bat

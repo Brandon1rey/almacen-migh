@@ -14,6 +14,36 @@ arrancar.cmd
 Abre el navegador en **http://127.0.0.1:8300** y pide **usuario y contraseña**. Cada movimiento queda
 firmado con el usuario que lo hizo; hay tres roles (administrador, almacén, consulta).
 
+## Los tres inventarios (ALM-PNO-002)
+
+El procedimiento cubre materias primas, material de empaque y producto terminado; el sistema también.
+Cada uno es **su propio Excel** (el del área, con la misma forma) y comparte catálogo de ubicaciones,
+usuarios y bitácora:
+
+| Inventario | Archivo | Zonas | Reporte F01 |
+|---|---|---|---|
+| Materias primas (MP) | `data\Inventario_MP.xlsx` | MPA-A, MPNA-A/B, pasillo A, jaulas | mensual (§V.2.1.8) |
+| Material de empaque (MEP) | `data\Inventario_MEP.xlsx` | MEP-B a MEP-E, jaula de empaque | mensual (§V.2.1.8) |
+| Producto terminado (PT) | `data\Inventario_PT.xlsx` | MPT-B, jaula PT, andén | **semanal** (§V.2.3.8) |
+
+- La interfaz trae un selector **MP · MEP · PT** y una pestaña **Tablero** con los tres de un vistazo.
+- El botón **Reporte F01** entrega **un solo archivo** con portada, totales y una hoja por inventario:
+  es el reporte de «todos los materiales» que pide el procedimiento.
+- Los movimientos de cada inventario se guardan con su tipo; deshacer y borrar respetan de dónde vino
+  el movimiento aunque los números de fila se repitan.
+
+Para cargar empaque o producto terminado:
+
+```bat
+python scripts\plantilla_inventario.py --tipo mep --vacia     :: plantilla con los encabezados
+python scripts\preparar_inventario.py --tipo pt --origen "C:\ruta\INVENTARIO PT.xlsx"
+python scripts\preparar_inventario.py --tipo mep --reimportar  :: toma el archivo nuevo del área
+```
+
+El sistema reconoce los encabezados por nombre (`Descripción`/`Producto`/`Material`, `Cantidad`/`Conteo`/`Stock`,
+`Lote`, `Caducidad`, `Unidad`/`UM`), así que una tabla del área entra sin reformatear. Si falta
+`UBICACIÓN`, la agrega.
+
 ## Qué hace
 
 | Botón | Archivo que genera |

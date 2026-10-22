@@ -19,9 +19,15 @@ class EstadoFalso:
         self.con = bitacora.conectar(ruta_db)
         self.archivo = pathlib.Path(ruta_xlsx).name
         self.demo = True
+        self.carpeta_datos = pathlib.Path(ruta_xlsx).parent
 
-    def inventario(self):
+    def inventario(self, tipo=None):
+        if tipo not in (None, "mp"):
+            raise FileNotFoundError(f"el inventario {tipo} no está cargado")
         return self._inv
+
+    def cargados(self):
+        return [("mp", self._inv)]
 
 
 def sesion_de(con, nombre):

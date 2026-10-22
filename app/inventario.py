@@ -10,7 +10,7 @@ from copy import copy
 import openpyxl
 from openpyxl.utils import get_column_letter
 
-from app import fechas, ubicaciones
+from app import fechas, inventarios, ubicaciones
 
 RAIZ = pathlib.Path(__file__).resolve().parents[1]
 RUTA = RAIZ / "data" / "Inventario_MP.xlsx"
@@ -21,11 +21,23 @@ ENCABEZADO_UBICACION = "UBICACIÓN"
 # encabezado del Excel del área  ->  nombre interno
 MAPA_COLUMNAS = {
     "descripcion": "descripcion",
+    "producto": "descripcion",
+    "material": "descripcion",
+    "nombre del material": "descripcion",
+    "presentacion": "presentacion",
+    "piezas por caja": "piezas",
+    "piezas": "piezas",
+    "sku": "erp",
+    "clave erp": "erp",
     "categoria": "categoria",
     "proveedor": "proveedor",
     "unidad de medida": "unidad",
     "unidad": "unidad",
     "conteo": "cantidad",
+    "cantidad": "cantidad",
+    "stock": "cantidad",
+    "existencia": "cantidad",
+    "um": "unidad",
     "caducidad vigente": "caducidad",
     "caducidad": "caducidad",
     "lote actual": "lote",
@@ -34,6 +46,18 @@ MAPA_COLUMNAS = {
     "observaciones": "observaciones",
     "ubicacion": "ubicacion",
 }
+
+
+UNIDADES = {"pz": "pza", "pzas": "pza", "pieza": "pza", "piezas": "pza", "pza": "pza",
+            "kg": "kg", "kgs": "kg", "kilogramo": "kg", "kilogramos": "kg",
+            "lt": "lt", "l": "lt", "litro": "lt", "litros": "lt",
+            "m": "m", "ml": "ml", "g": "g", "caja": "caja", "millar": "millar"}
+
+
+def normalizar_unidad(valor, defecto="kg"):
+    """'PZ', 'Piezas', 'KG ' -> unidad canónica, para no sumar peras con manzanas."""
+    clave = str(valor or "").strip().lower()
+    return UNIDADES.get(clave, clave or defecto)
 
 
 def normalizar(texto):
@@ -65,8 +89,11 @@ def evaluar_formula(texto):
 class Inventario:
     """Carga el libro del área, expone sus filas y escribe la columna UBICACIÓN."""
 
-    def __init__(self, ruta=None):
-        self.ruta = pathlib.Path(ruta or RUTA)
+    def __init__(self, ruta=None, tipo="mp"):
+        self.tipo = inventarios.normalizar_tipo(tipo)
+        self.ruta = pathlib.Path(ruta or inventarios.ruta(self.tipo))
+        self.fila_encabezado = FILA_ENCABEZADO
+        self.nombre = inventarios.TIPOS[self.tipo]["nombre"]
         if not self.ruta.exists():
             raise FileNotFoundError(f"no existe el inventario: {self.ruta}")
         self.wb = openpyxl.load_workbook(self.ruta)
@@ -89,24 +116,31 @@ class Inventario:
                 imagen._data = congelar(datos)
 
     def _hoja_inventario(self):
-        """La hoja del inventario es la que tiene 'Descripción' en la fila 3, no siempre la primera."""
+        """La hoja del inventario es la que trae el encabezado del material, no siempre la primera.
+
+        Acepta 'Descripción', 'Producto' o 'Material' y busca en las primeras filas, porque las
+        tablas de empaque y producto terminado no siempre repiten el formato del archivo de MP.
+        """
+        validos = {"DESCRIPCION", "PRODUCTO", "MATERIAL", "NOMBRE DEL MATERIAL"}
         for hoja in self.wb.worksheets:
-            for col in range(1, min(hoja.max_column, 15) + 1):
-                if normalizar(hoja.cell(row=FILA_ENCABEZADO, column=col).value) == "DESCRIPCION":
-                    return hoja
+            for fila in range(1, min(hoja.max_row, 8) + 1):
+                for col in range(1, min(hoja.max_column, 15) + 1):
+                    if normalizar(hoja.cell(row=fila, column=col).value) in validos:
+                        self.fila_encabezado = fila
+                        return hoja
         return self.wb.worksheets[0]
 
     def _detectar_columnas(self):
         columnas = {}
         for col in range(1, self.ws.max_column + 1):
-            valor = self.ws.cell(row=FILA_ENCABEZADO, column=col).value
+            valor = self.ws.cell(row=self.fila_encabezado, column=col).value
             if not valor:
                 continue
             clave = MAPA_COLUMNAS.get(normalizar(valor).lower())
             if clave and clave not in columnas:
                 columnas[clave] = col
         if "descripcion" not in columnas:
-            raise ValueError("no se encontró la columna 'Descripción' en la fila 3")
+            raise ValueError(f"no se encontró la columna de descripción en la fila {self.fila_encabezado}")
         if "ubicacion" not in columnas:
             col = max(columnas.values()) + 1
             self._crear_columna_ubicacion(col)
@@ -114,13 +148,13 @@ class Inventario:
         return columnas
 
     def _crear_columna_ubicacion(self, col):
-        origen = self.ws.cell(row=FILA_ENCABEZADO, column=col - 1)
-        celda = self.ws.cell(row=FILA_ENCABEZADO, column=col, value=ENCABEZADO_UBICACION)
+        origen = self.ws.cell(row=self.fila_encabezado, column=col - 1)
+        celda = self.ws.cell(row=self.fila_encabezado, column=col, value=ENCABEZADO_UBICACION)
         if origen.has_style:
             celda._style = copy(origen._style)
         celda.value = ENCABEZADO_UBICACION
         self.ws.column_dimensions[get_column_letter(col)].width = 16
-        for fila in range(FILA_DATOS, self.ws.max_row + 1):
+        for fila in range(self.fila_encabezado + 1, self.ws.max_row + 1):
             modelo = self.ws.cell(row=fila, column=col - 1)
             nueva = self.ws.cell(row=fila, column=col)
             if modelo.has_style:
@@ -128,7 +162,7 @@ class Inventario:
 
     def _leer(self):
         filas, ocurrencias = [], {}
-        for fila in range(FILA_DATOS, self.ws.max_row + 1):
+        for fila in range(self.fila_encabezado + 1, self.ws.max_row + 1):
             descripcion = self.ws.cell(row=fila, column=self.columnas["descripcion"]).value
             if descripcion in (None, ""):
                 continue
@@ -140,7 +174,8 @@ class Inventario:
                 "descripcion": str(descripcion).strip(),
                 "categoria": self._valor(fila, "categoria"),
                 "proveedor": self._valor(fila, "proveedor"),
-                "unidad": (self._valor(fila, "unidad") or "kg"),
+                "unidad": normalizar_unidad(self._valor(fila, "unidad"),
+                                            inventarios.TIPOS[self.tipo]["unidad"]),
                 "cantidad": self._valor(fila, "cantidad"),
                 "caducidad": iso,
                 "caducidad_cruda": (crudo.date().isoformat() if isinstance(crudo, dt.datetime)
@@ -151,6 +186,9 @@ class Inventario:
                 "observaciones": self._valor(fila, "observaciones"),
                 "ubicacion": self._ubicacion_actual(fila),
                 "cantidad_formula": self._es_formula(fila, "cantidad"),
+                "presentacion": self._valor(fila, "presentacion"),
+                "piezas": self._valor(fila, "piezas"),
+                "tipo": self.tipo,
             }
             dias, sem = fechas.semaforo(iso)
             registro["dias_restantes"] = dias
@@ -232,6 +270,8 @@ class Inventario:
                 unidad = (f["unidad"] or "kg").strip().lower() or "kg"
                 por_unidad[unidad] = round(por_unidad.get(unidad, 0) + f["cantidad"], 3)
         return {
+            "tipo": self.tipo,
+            "nombre": inventarios.TIPOS[self.tipo]["nombre"],
             "total": total,
             "registros": len(self.filas),
             "anulados": len(self.filas) - total,
@@ -310,7 +350,7 @@ class Inventario:
 
         fila = self.ws.max_row + 1
         col_desc = self.columnas["descripcion"]
-        while fila > FILA_DATOS and not self.ws.cell(row=fila - 1, column=col_desc).value:
+        while fila > self.fila_encabezado + 1 and not self.ws.cell(row=fila - 1, column=col_desc).value:
             fila -= 1
 
         for campo, col in self.columnas.items():
@@ -319,6 +359,8 @@ class Inventario:
                 valor = round(float(cantidad), 3)
             elif campo == "ubicacion":
                 valor = destino
+            elif campo in ("presentacion", "piezas"):
+                valor = self.ws.cell(row=fila_origen, column=col).value
             elif campo == "observaciones":
                 previo = str(valor).strip() if valor not in (None, "") else ""
                 marca = nota or f"parcialidad de la fila {fila_origen}"

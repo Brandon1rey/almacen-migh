@@ -5,6 +5,7 @@ import pathlib
 
 import openpyxl
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.worksheet.properties import PageSetupProperties
 from openpyxl.utils import get_column_letter
 
 from app import fechas, ubicaciones
@@ -75,12 +76,10 @@ def _firmas(ws, fila):
     return fila + 4
 
 
-def generar_f01(inv, version="2", destino=None):
-    """Reporte de inventario agrupado por ubicación. v2 = columnas del formato vigente."""
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Hoja1"
+def _hoja_inventario(ws, inv, version):
+    """Escribe el reporte de un inventario en una hoja (formato F01 vigente)."""
     _encabezado_f01(ws, version, len(inv.filas))
+    ws.cell(row=2, column=5, value=f"INVENTARIO: {inv.nombre}").font = NEGRITA
 
     if version == "3":
         encabezados = ["UBICACIÓN", "MATERIAL", "CANTIDAD", "UNIDAD", "LOTE",
@@ -96,9 +95,9 @@ def generar_f01(inv, version="2", destino=None):
                     f["caducidad"], f["dias_restantes"]]
         return [ubicacion, f["descripcion"], f["cantidad"], f["lote"]]
 
-    por_zona = ubicaciones.por_zona()
+    orden = {"MP-ALERGENO": 1, "MP-NO-ALERGENO": 2, "PT": 3, "EM": 4, "ESPECIAL": 5,
+             "SIN UBICAR": 9}
     sin_ubicar = [f for f in inv.filas if not f["ubicacion"]]
-    orden = {"MP-ALERGENO": 1, "MP-NO-ALERGENO": 2, "PT": 3, "EM": 4, "ESPECIAL": 5, "SIN UBICAR": 9}
     filas = [f for f in inv.filas if f["ubicacion"]]
     filas.sort(key=lambda f: (orden.get(ubicaciones.zona_de(f["ubicacion"]), 8),
                               f["ubicacion"], str(f["lote"] or "")))
@@ -113,9 +112,8 @@ def generar_f01(inv, version="2", destino=None):
                 ws.cell(row=fila, column=col).fill = GRIS
                 ws.cell(row=fila, column=col).border = BORDE
             fila += 1
-        valores = valores_de(f)
-        for i, v in enumerate(valores, start=1):
-            c = ws.cell(row=fila, column=i, value=v)
+        for k, v in enumerate(valores_de(f), start=1):
+            c = ws.cell(row=fila, column=k, value=v)
             c.font = NORMAL
             c.border = BORDE
         fila += 1
@@ -127,9 +125,8 @@ def generar_f01(inv, version="2", destino=None):
             ws.cell(row=fila, column=col).border = BORDE
         fila += 1
         for f in sin_ubicar:
-            valores = valores_de(f, es_sin_ubicar=True)
-            for i, v in enumerate(valores, start=1):
-                c = ws.cell(row=fila, column=i, value=v)
+            for k, v in enumerate(valores_de(f, es_sin_ubicar=True), start=1):
+                c = ws.cell(row=fila, column=k, value=v)
                 c.font = NORMAL
                 c.border = BORDE
             fila += 1
@@ -150,8 +147,84 @@ def generar_f01(inv, version="2", destino=None):
     ws.print_title_rows = "1:6"
     ws.print_area = f"A1:{get_column_letter(len(encabezados))}{ws.max_row}"
 
-    destino = pathlib.Path(destino) if destino else _ruta(
-        f"F01-ALM-PNO-002_v{version}_{_marca()}.xlsx")
+
+def _portada(wb, pares, version):
+    """Resumen de todos los materiales: es la primera página que firma jefatura."""
+    ws = wb.create_sheet("Portada", 0)
+    _encabezado_f01(ws, version, 99)
+    ws["A3"] = "TÍTULO DEL DOCUMENTO: REPORTE DE INVENTARIOS — TODOS LOS MATERIALES"
+    ws["A3"].font = Font(bold=True, size=11)
+    ws["E2"] = "ALMACÉN: MP · MEP · PT"
+    ws["E2"].font = NEGRITA
+
+    encabezados = ["INVENTARIO", "LOTES", "CON UBICACIÓN", "SIN UBICAR", "COBERTURA",
+                   "VENCIDOS", "POR VENCER 30 D", "CANTIDAD"]
+    fila = _tabla(ws, 6, encabezados)
+    totales = {"lotes": 0, "con": 0, "sin": 0, "vencidos": 0, "criticos": 0, "unidades": {}}
+    for tipo, inv in pares:
+        r = inv.resumen()
+        totales["lotes"] += r["total"]
+        totales["con"] += r["con_ubicacion"]
+        totales["sin"] += r["sin_ubicacion"]
+        totales["vencidos"] += r["semaforo"]["VENCIDO"]
+        totales["criticos"] += r["semaforo"]["CRITICO"]
+        for unidad, valor in r["por_unidad"].items():
+            totales["unidades"][unidad] = totales["unidades"].get(unidad, 0) + valor
+        cantidad = " · ".join(f"{v:,.1f} {u}" for u, v in sorted(r["por_unidad"].items()))
+        valores = [f"{tipo.upper()} — {inv.nombre}", r["total"], r["con_ubicacion"],
+                   r["sin_ubicacion"], f"{r['cobertura']} %", r["semaforo"]["VENCIDO"],
+                   r["semaforo"]["CRITICO"], cantidad]
+        for k, v in enumerate(valores, start=1):
+            c = ws.cell(row=fila, column=k, value=v)
+            c.font = NORMAL
+            c.border = BORDE
+        fila += 1
+
+    cobertura = round(100 * totales["con"] / totales["lotes"], 1) if totales["lotes"] else 0.0
+    cantidad_total = " · ".join(f"{v:,.1f} {u}" for u, v in sorted(totales["unidades"].items()))
+    valores = ["TOTAL", totales["lotes"], totales["con"], totales["sin"], f"{cobertura} %",
+               totales["vencidos"], totales["criticos"], cantidad_total]
+    for k, v in enumerate(valores, start=1):
+        c = ws.cell(row=fila, column=k, value=v)
+        c.font = NEGRITA
+        c.border = BORDE
+        c.fill = GRIS
+    fila += 2
+    ws.cell(row=fila, column=1,
+            value="Incluye restos y parcialidades de cada inventario (§V.2.2.6). "
+                  "Reporte mensual para MP y MEP (§V.2.1.8); semanal para PT (§V.2.3.8).").font = NORMAL
+    fila += 2
+    _firmas(ws, fila)
+    _anchos(ws, [40, 9, 13, 11, 11, 10, 15, 34])
+    for fila_tabla in range(7, fila + 1):
+        ws.cell(row=fila_tabla, column=8).font = Font(size=8)
+    ws.page_setup.orientation = "landscape"
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 1
+    ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+    ws.print_area = f"A1:H{ws.max_row}"
+
+
+def generar_f01(inv, version="2", destino=None):
+    """Reporte F01. Con una lista [(tipo, inventario)] genera el consolidado de todo el almacén."""
+    pares = [(t, i) for t, i in inv] if isinstance(inv, (list, tuple)) else None
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Hoja1"
+
+    if pares is None:
+        _hoja_inventario(ws, inv, version)
+        nombre = f"F01-ALM-PNO-002_{inv.tipo.upper()}_v{version}_{_marca()}.xlsx"
+    else:
+        _portada(wb, pares, version)
+        for tipo, inventario_tipo in pares:
+            _hoja_inventario(wb.create_sheet(tipo.upper()), inventario_tipo, version)
+        del wb["Hoja1"]
+        wb.move_sheet("Portada", offset=-wb.sheetnames.index("Portada"))
+        nombre = f"F01-ALM-PNO-002_TODOS_v{version}_{_marca()}.xlsx"
+
+    destino = pathlib.Path(destino) if destino else _ruta(nombre)
     wb.save(destino)
     return destino
 
@@ -167,7 +240,7 @@ def exportar_inventario(inv, destino=None):
             del wb[previa]
 
     hoja = wb.create_sheet("Resumen")
-    hoja["A1"] = "RESUMEN DE UBICACIÓN — INVENTARIO DE MATERIAS PRIMAS"
+    hoja["A1"] = f"RESUMEN DE UBICACIÓN — {inv.nombre.upper()}"
     hoja["A1"].font = Font(bold=True, size=13)
     hoja["A2"] = f"Generado {resumen['actualizado']} · fuente: {inv.ruta.name}"
     datos = [
@@ -214,7 +287,7 @@ def exportar_inventario(inv, destino=None):
     pendientes.freeze_panes = "A2"
 
     destino = pathlib.Path(destino) if destino else _ruta(
-        f"Inventario_MP_con_ubicacion_{_marca()}.xlsx")
+        f"Inventario_{inv.tipo.upper()}_con_ubicacion_{_marca()}.xlsx")
     wb.save(destino)
     return destino
 
@@ -225,9 +298,9 @@ def tabla_macro(inv, destino=None):
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Tabla macro"
-    ws["A1"] = "TABLA MACRO DE OCUPACIÓN — ALMACÉN DE MATERIAS PRIMAS"
+    ws["A1"] = f"TABLA MACRO DE OCUPACIÓN — {inv.nombre.upper()}"
     ws["A1"].font = Font(bold=True, size=14)
-    ws["A2"] = f"Generada {dt.datetime.now():%Y-%m-%d %H:%M} · fuente: Inventario_MP.xlsx"
+    ws["A2"] = f"Generada {dt.datetime.now():%Y-%m-%d %H:%M} · fuente: {inv.ruta.name}"
     ws["A2"].font = NORMAL
 
     encabezados = ["MATERIAL", "PROVEEDOR"] + zonas + ["TOTAL", "CADUCIDAD MÁS PRÓXIMA"]
@@ -293,14 +366,15 @@ def tabla_macro(inv, destino=None):
     hoja.freeze_panes = "A4"
     hoja.auto_filter.ref = f"A3:H{fila - 1}"
 
-    destino = pathlib.Path(destino) if destino else _ruta(f"Tabla_macro_{_marca()}.xlsx")
+    destino = pathlib.Path(destino) if destino else _ruta(
+        f"Tabla_macro_{inv.tipo.upper()}_{_marca()}.xlsx")
     wb.save(destino)
     return destino
 
 
-def exportar_bitacora(con, destino=None):
+def exportar_bitacora(con, destino=None, inventario=None):
     from app import bitacora
-    movimientos = bitacora.ultimos(con, limite=100000)
+    movimientos = bitacora.ultimos(con, limite=100000, inventario=inventario)
     movimientos.sort(key=lambda m: m["id"])
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -308,21 +382,21 @@ def exportar_bitacora(con, destino=None):
     ws["A1"] = "BITÁCORA DE MOVIMIENTOS DE UBICACIÓN — ALMACÉN DE MATERIAS PRIMAS"
     ws["A1"].font = Font(bold=True, size=13)
     ws["A2"] = f"Exportada {dt.datetime.now():%Y-%m-%d %H:%M} · {len(movimientos)} movimientos"
-    encabezados = ["ID", "FECHA-HORA", "ACCIÓN", "DESCRIPCIÓN", "LOTE", "ORIGEN",
-                   "DESTINO", "MOTIVO", "REF. DOCUMENTO", "USUARIO", "NOTA"]
+    encabezados = ["ID", "FECHA-HORA", "INVENTARIO", "ACCIÓN", "DESCRIPCIÓN", "LOTE", "ORIGEN",
+                   "DESTINO", "CANTIDAD", "MOTIVO", "REF. DOCUMENTO", "USUARIO", "NOTA"]
     fila = _tabla(ws, 4, encabezados)
     for m in movimientos:
-        valores = [m["id"], m["ts"], m["accion"], m["descripcion"], m["lote"],
-                   m["ubicacion_origen"], m["ubicacion_destino"], m["motivo"],
-                   m["ref_doc"], m["usuario"], m["nota"]]
+        valores = [m["id"], m["ts"], m.get("inventario") or "mp", m["accion"], m["descripcion"],
+                   m["lote"], m["ubicacion_origen"], m["ubicacion_destino"], m.get("cantidad"),
+                   m["motivo"], m["ref_doc"], m["usuario"], m["nota"]]
         for i, v in enumerate(valores, start=1):
             c = ws.cell(row=fila, column=i, value=v)
             c.font = NORMAL
             c.border = BORDE
         fila += 1
-    _anchos(ws, [6, 20, 15, 44, 20, 16, 16, 18, 16, 22, 40])
+    _anchos(ws, [6, 20, 11, 15, 44, 20, 16, 16, 10, 18, 16, 22, 40])
     ws.freeze_panes = "A5"
-    ws.auto_filter.ref = f"A4:K{max(fila - 1, 4)}"
+    ws.auto_filter.ref = f"A4:M{max(fila - 1, 4)}"
     destino = pathlib.Path(destino) if destino else _ruta(f"Bitacora_movimientos_{_marca()}.xlsx")
     wb.save(destino)
     return destino
