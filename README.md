@@ -1,0 +1,75 @@
+# Control de ubicación — almacén de materias primas MIGH
+
+Sistema local (localhost, sin internet, sin licencias) que le agrega **una columna: UBICACIÓN**
+al Excel de inventario que ya usa el área, y produce los Excel del reporte con un clic.
+
+## Arrancar
+
+Doble clic en **`arrancar.cmd`** (o desde consola):
+
+```bat
+arrancar.cmd
+```
+
+Abre el navegador en **http://127.0.0.1:8300** y pide tu nombre una sola vez (queda en la bitácora).
+
+## Qué hace
+
+| Botón | Archivo que genera |
+|---|---|
+| Inventario + ubicación | El Excel del área tal cual, con la columna UBICACIÓN + hojas **Resumen** y **Sin ubicar** |
+| Reporte F01 | F01-ALM-PNO-002 **versión 2** (columnas del formato vigente: Ubicación, Material, Cantidad, Lote) agrupado por zona, con bloque de firmas |
+| F01 con caducidad (v3) | La propuesta de versión siguiente: agrega Caducidad y Días |
+| Tabla macro + FEFO | Matriz material × zona en A3 + hoja de caducidades ordenada por lo que vence primero |
+| Bitácora | Todos los movimientos con usuario, fecha-hora, origen y destino |
+
+Todo se guarda en `data\salidas\` con marca de fecha y hora, y también se descarga desde el navegador.
+
+## Cómo se captura (regla de los 15 segundos)
+
+1. Escribes en el buscador (material, lote, proveedor o código ERP).
+2. En la columna **UBICACIÓN** tecleas el código del rack (ej. `MPA-A-005`) y das **Enter**.
+   Se guarda en el Excel y en la bitácora al instante.
+3. Si no aparece, botón **no está**: queda registrado como *no encontrado* con tu nota.
+   Nunca se inventa una ubicación.
+
+Los códigos válidos son los del procedimiento ALM-PNO-002 §V.2.1.4: 376 posiciones
+(MPA-A-001 a 040, MPNA-A-041 a MPNA-B-136, MPT-B-001 a 020, MEP-B-001 a MEP-E-220)
+más las zonas especiales (PASILLO-A, JAULA-MP, JAULA-PT, LAB-RETENCION, CUARENTENA-MP, ADUANA-MP, ANDEN).
+Si escribes un código que no existe, el sistema lo rechaza con el motivo.
+
+## Archivos y respaldo
+
+```
+data\Inventario_MP.xlsx     ← el inventario con la columna UBICACIÓN (fuente de verdad)
+data\bitacora.db            ← movimientos (SQLite, se puede abrir con cualquier visor)
+data\salidas\               ← los Excel generados
+data\respaldos\             ← copia automática antes de cada reimportación
+```
+
+Respaldo manual: copiar `data\Inventario_MP.xlsx` y `data\bitacora.db`.
+
+## Si el área actualiza su Excel
+
+1. Cierra el archivo en Excel.
+2. `python scripts\preparar_inventario.py --origen "C:\ruta\archivo_nuevo.xlsx" --reimportar`
+3. Las ubicaciones ya capturadas se conservan (se empatan por descripción + lote), y el archivo
+   anterior queda respaldado en `data\respaldos\`.
+
+## Verificación
+
+```bat
+python -m unittest discover -s tests
+```
+
+## Límites conocidos (honestos)
+
+- **No valida alérgenos contra la zona**: la lista maestra F02-ALM-PNO-001 identifica por SKU
+  `MIGH-*` y el Excel del área no tiene esa columna. Mientras no se agregue el SKU, la regla
+  "MPA = alérgeno" no se puede verificar automáticamente.
+- **4 lotes del archivo original traen la cantidad como fórmula** (`=16.46+24.14+25`) sin valor
+  calculado; el sistema las evalúa para no perder 639 kg del total (72,215.4 kg), pero conviene
+  convertir esas celdas a número en el archivo del área.
+- **7 lotes no tienen caducidad legible** (5 vacías y 2 con texto imposible: `26/17/07`,
+  `2028/07/2028`). Se muestran como "sin dato"; no se adivinan.
+- Si el archivo está abierto en Excel, no se puede escribir: el sistema avisa y pide cerrarlo.

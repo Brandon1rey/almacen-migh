@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+data/bitacora.db
+data/bitacora.db-journal
+data/bitacora.db-wal
+data/bitacora.db-shm
+data/salidas/
+data/pruebas/
+data/respaldos/
+data/*.tmp.xlsx
+.py_path

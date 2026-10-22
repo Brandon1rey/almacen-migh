@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ubicación de almacén · MIGH</title>
+<style>
+  :root{
+    --tinta:#111827; --suave:#6b7280; --linea:#d1d5db; --fondo:#f3f4f6; --blanco:#fff;
+    --azul:#1f3b73; --verde:#1e6b3a; --ambar:#b45309; --rojo:#b01c1c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--fondo);color:var(--tinta)}
+  header{background:var(--azul);color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+  header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.3px}
+  .kpis{display:flex;gap:16px;flex-wrap:wrap;font-size:12px}
+  .kpis b{display:block;font-size:18px;line-height:1.1}
+  .barra{position:sticky;top:0;z-index:5;background:var(--blanco);border-bottom:1px solid var(--linea);padding:10px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .barra input[type=search]{flex:1 1 260px;padding:12px 14px;font-size:17px;border:2px solid var(--linea);border-radius:9px}
+  .barra label{font-size:13px;display:flex;gap:6px;align-items:center;white-space:nowrap}
+  .descargas{display:flex;gap:8px;flex-wrap:wrap}
+  .descargas a{background:#eef2ff;border:1px solid #c7d2fe;color:var(--azul);text-decoration:none;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600}
+  .descargas a:hover{background:#e0e7ff}
+  main{padding:10px 16px 60px;max-width:1100px}
+  table{width:100%;border-collapse:collapse;background:var(--blanco);font-size:14px}
+  th{position:sticky;top:64px;background:#e5e7eb;text-align:left;font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:#374151;padding:8px;border-bottom:1px solid var(--linea)}
+  td{padding:8px;border-bottom:1px solid #eef0f3;vertical-align:middle}
+  tr:hover td{background:#fafafa}
+  .desc{font-weight:600}
+  .lote{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#374151;text-align:left;white-space:nowrap}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ubi input{width:130px;padding:9px;font-size:15px;font-family:ui-monospace,Consolas,monospace;text-transform:uppercase;border:1.5px solid var(--linea);border-radius:7px;letter-spacing:.5px}
+  .ubi input:focus{outline:none;border-color:var(--azul);box-shadow:0 0 0 3px #1f3b7322}
+  .ubi input.ok{border-color:var(--verde);background:#eaf5ee}
+  .ubi input.err{border-color:var(--rojo);background:#fdeaea}
+  button{cursor:pointer;font-size:13px;padding:8px 10px;border-radius:7px;border:1px solid var(--linea);background:var(--blanco);white-space:nowrap}
+  button.mini{padding:6px 8px;font-size:12px}
+  button:hover{background:#f3f4f6}
+  .sem{display:inline-block;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:700}
+  .VENCIDO{background:#fdeaea;color:var(--rojo)} .CRITICO{background:#fff2cc;color:var(--ambar)}
+  .AVISO{background:#fef9e7;color:#8a6d00} .OK{background:#eaf5ee;color:var(--verde)}
+  .SIN{background:#eef0f3;color:var(--suave)}
+  .sin{color:#b45309;font-style:italic}
+  footer{padding:16px;color:var(--suave);font-size:12px}
+  .bitacora{max-width:1100px;padding:0 16px 40px}
+  .bitacora h2{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:#374151}
+  .bitacora li{font-size:12px;color:#374151;margin:3px 0}
+  code{background:#eef0f3;padding:1px 5px;border-radius:4px}
+  .aviso{padding:10px 16px;background:#fff2cc;border-bottom:1px solid #f0d98a;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Ubicación de almacén · Materias primas</h1>
+  <div class="kpis">
+    <div><b id="k-total">–</b>lotes</div>
+    <div><b id="k-cobertura">–</b>con ubicación</div>
+    <div><b id="k-sin">–</b>sin ubicar</div>
+    <div><b id="k-vencidos">–</b>vencidos</div>
+    <div><b id="k-kg">–</b>kg</div>
+  </div>
+  <div id="quien" style="font-size:12px;opacity:.85"></div>
+</header>
+
+<div class="barra">
+  <input id="q" type="search" placeholder="Buscar material, lote, proveedor o código ERP…" autocomplete="off" autofocus>
+  <label><input type="checkbox" id="solo-sin"> solo sin ubicar</label>
+  <label><input type="checkbox" id="solo-venc"> solo vencidos</label>
+  <div class="descargas">
+    <a href="/descargar/inventario">Inventario + ubicación</a>
+    <a href="/descargar/f01">Reporte F01</a>
+    <a href="/descargar/f01v3">F01 con caducidad (v3)</a>
+    <a href="/descargar/tabla_macro">Tabla macro + FEFO</a>
+    <a href="/descargar/bitacora">Bitácora</a>
+  </div>
+</div>
+
+<main>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:34%">Material</th>
+        <th style="width:16%">Lote</th>
+        <th style="width:9%">Cantidad</th>
+        <th style="width:13%">Caducidad</th>
+        <th style="width:18%">Ubicación</th>
+        <th style="width:10%"></th>
+      </tr>
+    </thead>
+    <tbody id="filas">
+      <tr><td colspan="6" style="padding:24px;color:#6b7280">Cargando inventario…</td></tr>
+    </tbody>
+  </table>
+</main>
+
+<section class="bitacora">
+  <h2>Últimos movimientos <span id="n-mov" style="font-weight:400;text-transform:none"></span></h2>
+  <ol id="movimientos" style="padding-left:18px"></ol>
+</section>
+
+<footer>
+  Cada cambio de ubicación queda registrado con tu nombre y la hora (bitácora de auditoría).
+  Los botones de arriba generan el Excel en un clic.
+</footer>
+
+<script>
+const USUARIO = (localStorage.getItem("usuario") || prompt("Tu nombre (queda en la bitácora)") || "").trim();
+localStorage.setItem("usuario", USUARIO);
+document.getElementById("quien").textContent = USUARIO ? "· " + USUARIO : "";
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+async function api(ruta, opciones = {}) {
+  const r = await fetch(ruta, {
+    ...opciones,
+    headers: {"Content-Type": "application/json", ...(opciones.headers || {})},
+  });
+  const cuerpo = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(cuerpo.error || ("HTTP " + r.status));
+  return cuerpo;
+}
+
+function pintarResumen(r) {
+  $("k-total").textContent = r.total;
+  $("k-cobertura").textContent = r.cobertura + "%";
+  $("k-sin").textContent = r.sin_ubicacion;
+  $("k-vencidos").textContent = r.semaforo.VENCIDO;
+  $("k-kg").textContent = Number(r.kg).toLocaleString("es-MX");
+}
+
+function semaforo(f) {
+  const cls = f.semaforo.replace(" ", "");
+  const etiqueta = f.caducidad ? f.caducidad : (f.caducidad_cruda || "sin dato");
+  const dias = (f.dias_restantes === null || f.dias_restantes === undefined)
+    ? "" : (f.dias_restantes < 0 ? ` (${-f.dias_restantes} d vencido)` : ` (${f.dias_restantes} d)`);
+  return `<span class="sem ${cls}">${esc(etiqueta)}</span><span style="color:#9ca3af;font-size:11px">${dias}</span>`;
+}
+
+function fila(f) {
+  const ubi = f.ubicacion
+    ? `<input class="u" data-fila="${f.fila}" value="${esc(f.ubicacion)}" spellcheck="false">`
+    : `<input class="u sin" data-fila="${f.fila}" value="" placeholder="asignar" spellcheck="false">`;
+  return `<tr>
+    <td class="desc">${esc(f.descripcion)}${f.proveedor ? `<div style="font-weight:400;color:#6b7280;font-size:11px">${esc(f.proveedor)} · ${esc(f.categoria || "")}</div>` : ""}</td>
+    <td class="lote">${esc(f.lote || "—")}</td>
+    <td class="num">${f.cantidad ?? ""} <span style="color:#9ca3af;font-size:11px">${esc(f.unidad || "")}</span></td>
+    <td>${semaforo(f)}</td>
+    <td class="ubi">${ubi}</td>
+    <td><button class="mini" data-noesta="${f.fila}" title="Marcar como no encontrado">no está</button></td>
+  </tr>`;
+}
+
+async function cargar() {
+  const params = new URLSearchParams({q: $("q").value});
+  if ($("solo-sin").checked) params.set("sin_ubicar", "1");
+  if ($("solo-venc").checked) params.set("vencidos", "1");
+  try {
+    const datos = await api("/api/inventario?" + params);
+    pintarResumen(datos.resumen);
+    $("filas").innerHTML = datos.filas.length
+      ? datos.filas.map(fila).join("")
+      : `<tr><td colspan="6" style="padding:24px;color:#6b7280">Sin resultados con ese filtro.</td></tr>`;
+  } catch (e) {
+    $("filas").innerHTML = `<tr><td colspan="6" style="padding:24px;color:#b01c1c">${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function guardar(input) {
+  const fila = input.dataset.fila;
+  const ubicacion = input.value.trim();
+  try {
+    const r = await api("/api/ubicar", {
+      method: "POST",
+      body: JSON.stringify({fila: Number(fila), ubicacion, usuario: USUARIO}),
+    });
+    input.value = r.nueva || "";
+    input.classList.add("ok");
+    input.classList.remove("err", "sin");
+    setTimeout(() => input.classList.remove("ok"), 900);
+    pintarResumen(r.resumen);
+    cargarBitacora();
+    if ($("solo-sin").checked) cargar();
+  } catch (e) {
+    input.classList.add("err");
+    alert(e.message);
+  }
+}
+
+async function noEsta(fila) {
+  const nota = prompt("¿Qué pasó con este lote? (queda en la bitácora)");
+  if (nota === null) return;
+  try {
+    const r = await api("/api/no_encontrado", {
+      method: "POST",
+      body: JSON.stringify({fila: Number(fila), usuario: USUARIO, nota}),
+    });
+    pintarResumen(r.resumen);
+    cargar();
+    cargarBitacora();
+  } catch (e) { alert(e.message); }
+}
+
+async function cargarBitacora() {
+  try {
+    const {movimientos} = await api("/api/bitacora?limite=10");
+    $("n-mov").textContent = movimientos.length ? `(${movimientos.length} más recientes)` : "";
+    $("movimientos").innerHTML = movimientos.map((m) =>
+      `<li><code>${esc(m.ts)}</code> <b>${esc(m.usuario)}</b> ${esc(m.accion.toLowerCase())}
+       ${esc(m.descripcion)} <span style="color:#6b7280">lote ${esc(m.lote || "—")}</span>
+       ${m.ubicacion_origen ? "de " + esc(m.ubicacion_origen) + " " : ""}
+       ${m.ubicacion_destino ? "→ " + esc(m.ubicacion_destino) : ""}
+       ${m.nota ? "· " + esc(m.nota) : ""}</li>`).join("");
+  } catch (e) { /* silencioso */ }
+}
+
+// eventos
+let temporizador;
+$("q").addEventListener("input", () => {
+  clearTimeout(temporizador);
+  temporizador = setTimeout(cargar, 180);
+});
+$("solo-sin").addEventListener("change", cargar);
+$("solo-venc").addEventListener("change", cargar);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target.classList.contains("u")) {
+    e.preventDefault();
+    guardar(e.target);
+  }
+});
+
+document.addEventListener("click", (e) => {
+  const boton = e.target.closest("[data-noesta]");
+  if (boton) noEsta(boton.dataset.noesta);
+});
+
+document.addEventListener("blur", (e) => {
+  if (e.target.classList && e.target.classList.contains("u")) {
+    const original = e.target.defaultValue;
+    if (e.target.value.trim().toUpperCase() !== (original || "").trim().toUpperCase()) {
+      guardar(e.target);
+    }
+  }
+}, true);
+
+cargar();
+cargarBitacora();
+</script>
+</body>
+</html>
