@@ -18,6 +18,7 @@ if not defined PY (
 )
 
 echo Usando: %PY%
+if not defined ALMACEN_HOST set "ALMACEN_HOST=0.0.0.0"
 start "" http://127.0.0.1:8300
 "%PY%" app\server.py
 pause

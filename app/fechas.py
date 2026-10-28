@@ -32,8 +32,11 @@ def parsear(valor):
     if m:
         a, b, c = int(m.group(1)), int(m.group(2)), int(m.group(3))
         if a > 1900:
-            anio, x, y = a, b, c
-        elif c > 1900:
+            # año primero: es ISO (AAAA-MM-DD), no hay ambigüedad que resolver
+            if b > 12 and c <= 12:
+                return _armar(a, c, b)
+            return _armar(a, b, c)
+        if c > 1900:
             anio, x, y = c, a, b
         else:
             return None, f"año ilegible: '{texto}'"

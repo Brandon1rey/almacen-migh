@@ -4,11 +4,22 @@
     python scripts\\empaquetar.py --vendor          → además incluye vendor\\ (PC sin internet/pip)
     python scripts\\empaquetar.py --con-datos       → además incluye data\\Inventario_MP.xlsx y bitacora.db
 """
+import sys
+
+# La consola de Windows no siempre es UTF-8: sin esto, imprimir «→» o «·» lanza
+# UnicodeEncodeError y el script parece fallar aunque ya haya hecho su trabajo.
+for _flujo in (sys.stdout, sys.stderr):
+    try:
+        _flujo.reconfigure(errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 import argparse
 import datetime as dt
 import hashlib
 import importlib.util
 import pathlib
+import re
 import shutil
 import zipfile
 
@@ -19,12 +30,19 @@ INCLUIR = [
     "app", "scripts", "tests", "docs",
     "requirements.txt", "requirements-docs.txt",
     "README.md", "LEEME_INSTALACION.md",
-    "arrancar.cmd", "instalar.cmd", "demo.cmd", "servidor_lan.cmd",
-    "arranque_automatico.cmd", "quitar_arranque.cmd",
 ]
+# todos los .cmd del proyecto entran solos: agregar uno nuevo no debe obligar a tocar esta lista
+INCLUIR.extend(sorted(p.name for p in RAIZ.glob("*.cmd")))
 EXCLUIR_DIRS = {"__pycache__", ".venv", ".git", "__MACOSX"}
 EXCLUIR_SUFIJOS = {".pyc", ".pyo", ".tmp"}
 PAQUETES_VENDOR = ("openpyxl", "et_xmlfile")
+
+
+def version_actual():
+    """Versión declarada en app\\version.py (la que compara el actualizador)."""
+    texto = (RAIZ / "app" / "version.py").read_text(encoding="utf-8")
+    encontrado = re.search(r"VERSION\s*=\s*[\"']([^\"']+)[\"']", texto)
+    return encontrado.group(1) if encontrado else "0.0.0"
 
 
 def sha256(ruta):
@@ -70,7 +88,8 @@ def copiar_vendor():
 def empaquetar(salida=None, con_vendor=False, con_datos=False):
     DIST.mkdir(parents=True, exist_ok=True)
     marca = dt.datetime.now().strftime("%Y%m%d-%H%M")
-    salida = pathlib.Path(salida) if salida else DIST / f"almacen-ubicaciones_{marca}.zip"
+    version = version_actual()
+    salida = pathlib.Path(salida) if salida else DIST / f"almacen-ubicaciones_v{version}_{marca}.zip"
 
     if con_vendor:
         print("copiando dependencias a vendor\\ ...")
@@ -93,7 +112,11 @@ def empaquetar(salida=None, con_vendor=False, con_datos=False):
                 z.write(archivo, relativa)
                 registro.append((relativa, archivo.stat().st_size, sha256(archivo)))
 
+        z.writestr("VERSION.txt", f"{version}\n"
+                   f"generado: {dt.datetime.now():%Y-%m-%d %H:%M}\n"
+                   f"dependencias: {'vendor' if con_vendor else 'pip'}\n")
         manifiesto = ["MANIFIESTO DE EMPAQUE — CONTROL DE UBICACIÓN DE ALMACÉN",
+                      f"version: {version}",
                       f"generado: {dt.datetime.now():%Y-%m-%d %H:%M}",
                       f"archivos: {len(registro)}",
                       f"dependencias incluidas: {'sí (vendor/)' if con_vendor else 'no (requiere pip)'}",
@@ -110,7 +133,7 @@ def empaquetar(salida=None, con_vendor=False, con_datos=False):
     print(f"sha256 zip : {sha256(salida)}")
     if faltantes:
         print(f"omitidos   : {', '.join(faltantes)}")
-    print("\nPara instalar en otra PC: descomprimir y doble clic en instalar.cmd")
+    print("\nPara instalar en otra PC: descomprimir y doble clic en instalar_todo.cmd")
     return salida
 
 

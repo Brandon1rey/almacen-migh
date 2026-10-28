@@ -1,0 +1,382 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Conexiones del control de ubicación: interfaz, endpoints, servidor y datos",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "frontend": {
+          "label": "Interfaz"
+        },
+        "backend": {
+          "label": "Servidor"
+        },
+        "database": {
+          "label": "Datos"
+        },
+        "external": {
+          "label": "Cliente"
+        }
+      }
+    },
+    "views": [
+      {
+        "id": "lectura",
+        "label": "Leer el inventario",
+        "focus": [
+          "navegador",
+          "interfaz",
+          "servidor",
+          "api",
+          "inventario",
+          "excel"
+        ],
+        "note": "El navegador pide la lista y la API responde con el Excel del área leído por inventario.py."
+      },
+      {
+        "id": "movimiento",
+        "label": "Registrar un movimiento",
+        "focus": [
+          "interfaz",
+          "servidor",
+          "api",
+          "inventario",
+          "excel",
+          "bitacora",
+          "sqlite"
+        ],
+        "note": "La API escribe la ubicación en el Excel y el movimiento en SQLite como una sola operación."
+      },
+      {
+        "id": "alta",
+        "label": "Ingresar material con clave del ERP",
+        "focus": [
+          "interfaz",
+          "servidor",
+          "api",
+          "catalogo",
+          "catalogo_json",
+          "inventario",
+          "excel"
+        ],
+        "note": "La clave se valida contra el catálogo del ERP: si no existe o es de otro inventario, no se escribe nada."
+      },
+      {
+        "id": "descarga",
+        "label": "Generar un reporte",
+        "focus": [
+          "interfaz",
+          "servidor",
+          "api",
+          "reportes",
+          "salidas"
+        ],
+        "note": "Las descargas pasan por reportes.py, que escribe el Excel en data/salidas y lo entrega al navegador."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "navegador",
+      "type": "external",
+      "label": "Navegador",
+      "sublabel": "PC del almacén · teléfono por LAN",
+      "pos": [
+        30,
+        175
+      ],
+      "size": [
+        140,
+        70
+      ]
+    },
+    {
+      "id": "interfaz",
+      "type": "frontend",
+      "label": "Interfaz web",
+      "sublabel": "app/static/index.html",
+      "tag": "una sola página",
+      "pos": [
+        230,
+        175
+      ],
+      "size": [
+        150,
+        70
+      ]
+    },
+    {
+      "id": "servidor",
+      "type": "backend",
+      "label": "Servidor HTTP",
+      "sublabel": "server.py · red.py · :8300",
+      "tag": "GET · POST · PATCH",
+      "pos": [
+        440,
+        175
+      ],
+      "size": [
+        150,
+        70
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API JSON",
+      "sublabel": "app/api.py",
+      "tag": "un solo despachador",
+      "pos": [
+        650,
+        60
+      ],
+      "size": [
+        140,
+        300
+      ]
+    },
+    {
+      "id": "inventario",
+      "type": "backend",
+      "label": "Inventario",
+      "sublabel": "inventario.py · ubicaciones.py",
+      "pos": [
+        950,
+        50
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "bitacora",
+      "type": "backend",
+      "label": "Bitácora y usuarios",
+      "sublabel": "bitacora.py · usuarios.py",
+      "pos": [
+        950,
+        160
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "reportes",
+      "type": "backend",
+      "label": "Reportes",
+      "sublabel": "app/reportes.py",
+      "pos": [
+        950,
+        270
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "catalogo",
+      "type": "backend",
+      "label": "Catálogo del ERP",
+      "sublabel": "app/catalogo.py",
+      "pos": [
+        950,
+        380
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "excel",
+      "type": "database",
+      "label": "Excel del área",
+      "sublabel": "data/Inventario_MP|MEP|PT.xlsx",
+      "pos": [
+        1210,
+        50
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "sqlite",
+      "type": "database",
+      "label": "SQLite",
+      "sublabel": "data/bitacora.db",
+      "pos": [
+        1210,
+        160
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "salidas",
+      "type": "database",
+      "label": "Salidas",
+      "sublabel": "data/salidas/*.xlsx",
+      "pos": [
+        1210,
+        270
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "catalogo_json",
+      "type": "database",
+      "label": "Catálogo en disco",
+      "sublabel": "data/catalogo_insumos.json",
+      "pos": [
+        1210,
+        380
+      ],
+      "size": [
+        180,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "PC del almacén · sin internet",
+      "wraps": [
+        "servidor",
+        "api",
+        "inventario",
+        "bitacora",
+        "reportes",
+        "catalogo",
+        "excel",
+        "sqlite",
+        "salidas",
+        "catalogo_json"
+      ],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    {
+      "id": "navegador-interfaz",
+      "from": "navegador",
+      "to": "interfaz",
+      "label": "HTTP",
+      "variant": "emphasis"
+    },
+    {
+      "id": "interfaz-servidor",
+      "from": "interfaz",
+      "to": "servidor",
+      "label": "fetch"
+    },
+    {
+      "id": "servidor-api",
+      "from": "servidor",
+      "to": "api",
+      "label": "manejar()"
+    },
+    {
+      "id": "api-inventario",
+      "from": "api",
+      "to": "inventario",
+      "label": "lee/escribe",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "api-bitacora",
+      "from": "api",
+      "to": "bitacora",
+      "label": "registra",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelDx": 40
+    },
+    {
+      "id": "api-reportes",
+      "from": "api",
+      "to": "reportes",
+      "label": "genera",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "api-catalogo",
+      "from": "api",
+      "to": "catalogo",
+      "label": "valida clave",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "inventario-excel",
+      "from": "inventario",
+      "to": "excel",
+      "label": "xlsx"
+    },
+    {
+      "id": "bitacora-sqlite",
+      "from": "bitacora",
+      "to": "sqlite",
+      "label": "SQL"
+    },
+    {
+      "id": "reportes-salidas",
+      "from": "reportes",
+      "to": "salidas",
+      "label": "xlsx"
+    },
+    {
+      "id": "catalogo-json",
+      "from": "catalogo",
+      "to": "catalogo_json",
+      "label": "JSON"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Sesión, consultas y pantalla",
+      "items": [
+        "POST /api/login · /api/logout · GET /api/yo (200 con autenticado:false)",
+        "GET /api/estado · /api/inventarios · /api/inventario · /api/lote · /api/qr",
+        "GET /api/historial · /api/bitacora · /api/resumen · /api/usuarios",
+        "PATCH /api/usuarios/{id} · POST /api/password"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Escritura, alta y bitácora",
+      "items": [
+        "POST /api/mover (completo, parcialidad o PRODUCCION)",
+        "POST /api/ubicar · /api/limpiar · /api/no_encontrado",
+        "POST /api/alta · /api/asignar_qr (etiqueta QR/Barcode opcional)",
+        "POST /api/deshacer · /api/purgar · /api/borrar-renglones"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Catálogo, red, copia y descargas",
+      "items": [
+        "GET /api/catalogo · /api/ubicaciones (solo códigos del catálogo)",
+        "GET /api/red (dirección LAN) · GET y POST /api/copia (USB)",
+        "GET /descargar/inventario · f01 · f01v3 · tabla_macro · bitacora",
+        "Excel y catálogo = fuente única · SQLite = historial y auditoría"
+      ]
+    }
+  ]
+}

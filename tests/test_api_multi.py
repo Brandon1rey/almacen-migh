@@ -3,9 +3,9 @@ import pathlib
 import tempfile
 import unittest
 
-import openpyxl
-
 from app import api, bitacora, inventario, inventarios, usuarios
+
+import openpyxl  # noqa: E402  (después de app, que habilita vendor\)
 from tests.test_multitipo import ENCABEZADOS, filas_de, libro
 
 
@@ -15,7 +15,6 @@ class EstadoDos:
     def __init__(self, carpeta, con):
         self.carpeta_datos = pathlib.Path(carpeta)
         self.con = con
-        self.demo = True
         self.archivo = "prueba"
         self._invs = {t: inventario.Inventario(self.carpeta_datos / f"{t}.xlsx", tipo=t)
                       for t in ("mp", "mep")}
@@ -99,9 +98,17 @@ class TestApiMulti(unittest.TestCase):
         self.assertIn("MP", wb.sheetnames)
         self.assertIn("MEP", wb.sheetnames)
 
+    def test_solo_admin_crea_usuarios(self):
+        codigo, res, _ = self.api("POST", "/api/usuarios", cuerpo={
+            "nombre": "No Debe", "password": "Migh.No.2026", "rol": "admin"})
+        self.assertEqual(codigo, 403)
+        self.assertIn("administrador", res["error"])
+
     def test_tipo_invalido_no_rompe(self):
-        with self.assertRaises(ValueError):
-            self.api("GET", "/api/inventario", {"tipo": "xyz"})
+        """Antes salía un ValueError sin manejar (500 en la cara del usuario): ahora es 400."""
+        codigo, res, _ = self.api("GET", "/api/inventario", {"tipo": "xyz"})
+        self.assertEqual(codigo, 400, res)
+        self.assertIn("inventario desconocido", res["error"])
 
 
 if __name__ == "__main__":

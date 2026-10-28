@@ -4,12 +4,20 @@
     python scripts\\crear_usuario.py --nombre "Esteban Soto" --rol almacen
     python scripts\\crear_usuario.py --nombre "Galilea Medina" --rol almacen --password "Clave.2026"
     python scripts\\crear_usuario.py --reset "Esteban Soto"
-    python scripts\\crear_usuario.py --db data\\demo\\bitacora_demo.db --listar
 """
 import argparse
 import pathlib
 import secrets
 import sys
+
+# La consola de Windows no siempre es UTF-8: sin esto, imprimir «→» o «·» lanza
+# UnicodeEncodeError y el script parece fallar aunque ya haya hecho su trabajo.
+for _flujo in (sys.stdout, sys.stderr):
+    try:
+        _flujo.reconfigure(errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 
 RAIZ = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))

@@ -19,6 +19,9 @@ demo.cmd
 
 Se abre en `http://127.0.0.1:8301`. La app real (puerto 8300) no se toca.
 
+Al entrar, si es la primera vez en ese navegador, aparece el resumen de **primeros pasos** con la
+regla de oro («si no está, no se inventa»). El botón **?** del encabezado tiene la guía completa.
+
 ## 0:00 — El problema en 20 segundos
 
 > «Hoy el almacén se organiza con memoria. El archivo tiene 137 lotes, 29 ya vencidos y 48 que vencen antes de fin de año, y **no tiene una sola columna que diga dónde está nada**. No es un problema de auditoría: es que no podemos contestar qué se vence primero.»
@@ -30,6 +33,9 @@ Señalar la banda roja y aclarar: **esto es un demo, las ubicaciones son de ejem
 Teclear `lactosa` en el buscador.
 
 > «Dos lotes. Uno en `PASILLO-A` —que es el área de rechazo de alérgenos— y otro en `MPA-A-008` con 65 días vencido. El sistema no esconde lo que está mal: lo pone en rojo.»
+
+> «Y abajo de los números, la revisión de datos le dice al almacén qué corregir en su Excel: las
+> celdas con fórmula, los lotes sin caducidad, los que no tienen número de lote.»
 
 ## 1:00 — Registrar el movimiento (el corazón del sistema)
 

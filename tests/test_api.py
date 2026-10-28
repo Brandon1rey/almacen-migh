@@ -10,7 +10,10 @@ sys.path.insert(0, str(RAIZ))
 
 from app import api, bitacora, inventario, usuarios  # noqa: E402
 
-ORIGEN = pathlib.Path(r"C:\Users\asegm\Desktop\Copia de 06 OCT 26 INVENTARIO MP.xlsx")
+ORIGEN_AREA = pathlib.Path(r"C:\Users\asegm\Desktop\Copia de 06 OCT 26 INVENTARIO MP.xlsx")
+# Si la PC no es la del área, se usa el archivo real versionado en el repositorio: sin este
+# respaldo, 34 pruebas se saltaban en silencio (y un salto no es una prueba que pasa).
+ORIGEN = ORIGEN_AREA if ORIGEN_AREA.exists() else RAIZ / "data" / "Inventario_MP.xlsx"
 
 
 class EstadoFalso:
@@ -18,7 +21,6 @@ class EstadoFalso:
         self._inv = inventario.Inventario(ruta_xlsx)
         self.con = bitacora.conectar(ruta_db)
         self.archivo = pathlib.Path(ruta_xlsx).name
-        self.demo = True
         self.carpeta_datos = pathlib.Path(ruta_xlsx).parent
 
     def inventario(self, tipo=None):

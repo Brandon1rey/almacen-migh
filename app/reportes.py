@@ -27,8 +27,16 @@ def _marca():
 
 
 def _ruta(nombre):
-    SALIDAS.mkdir(parents=True, exist_ok=True)
-    return SALIDAS / nombre
+    try:
+        if os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV"):
+            raise OSError("entorno serverless de solo lectura")
+        SALIDAS.mkdir(parents=True, exist_ok=True)
+        return SALIDAS / nombre
+    except OSError:
+        import tempfile
+        alterna = pathlib.Path(tempfile.gettempdir()) / "almacen-salidas"
+        alterna.mkdir(parents=True, exist_ok=True)
+        return alterna / nombre
 
 
 def _encabezado_f01(ws, version, total_filas=0):
@@ -97,8 +105,11 @@ def _hoja_inventario(ws, inv, version):
 
     orden = {"MP-ALERGENO": 1, "MP-NO-ALERGENO": 2, "PT": 3, "EM": 4, "ESPECIAL": 5,
              "SIN UBICAR": 9}
-    sin_ubicar = [f for f in inv.filas if not f["ubicacion"]]
-    filas = [f for f in inv.filas if f["ubicacion"]]
+    # Solo renglones con existencia: los anulados (cantidad 0) no se reportan y así el
+    # total impreso cuadra con las líneas del formato.
+    vigentes = inv.activas()
+    sin_ubicar = [f for f in vigentes if not f["ubicacion"]]
+    filas = [f for f in vigentes if f["ubicacion"]]
     filas.sort(key=lambda f: (orden.get(ubicaciones.zona_de(f["ubicacion"]), 8),
                               f["ubicacion"], str(f["lote"] or "")))
 
@@ -233,7 +244,7 @@ def exportar_inventario(inv, destino=None):
     """El Excel del área, tal cual, con la columna UBICACIÓN + hojas Resumen y Sin ubicar."""
     import openpyxl as ox
     inv.guardar()
-    wb = ox.load_workbook(inv.ruta)
+    wb = inv.construir_workbook() if getattr(inv, "en_db", False) else ox.load_workbook(inv.ruta)
     resumen = inv.resumen()
     for previa in ("Resumen", "Sin ubicar"):
         if previa in wb.sheetnames:
@@ -254,6 +265,8 @@ def exportar_inventario(inv, destino=None):
         ("Vencen en 31-90 días", resumen["semaforo"]["AVISO"]),
         ("Sin caducidad legible", resumen["sin_caducidad"]),
         ("Sin número de lote", resumen["sin_lote"]),
+        # un código que no está en el catálogo no es una ubicación: se cuenta como pendiente
+        ("Ubicaciones no válidas (fuera del catálogo)", resumen["ubicaciones_invalidas"]),
     ]
     fila = 4
     for etiqueta, valor in datos:
@@ -272,18 +285,20 @@ def exportar_inventario(inv, destino=None):
     _anchos(hoja, [38, 14])
 
     pendientes = wb.create_sheet("Sin ubicar")
-    encabezados = ["FILA", "DESCRIPCIÓN", "LOTE", "CANTIDAD", "UNIDAD", "CADUCIDAD", "SEMÁFORO"]
+    encabezados = ["FILA", "DESCRIPCIÓN", "LOTE", "CANTIDAD", "UNIDAD", "CADUCIDAD", "SEMÁFORO",
+                   "UBICACIÓN ESCRITA EN EL EXCEL"]
     fila = _tabla(pendientes, 1, encabezados)
-    for f in inv.filas:
+    for f in inv.activas():
         if f["ubicacion"]:
             continue
         for i, v in enumerate([f["fila"], f["descripcion"], f["lote"], f["cantidad"],
-                               f["unidad"], f["caducidad"], f["semaforo"]], start=1):
+                               f["unidad"], f["caducidad"], f["semaforo"],
+                               f["ubicacion_invalida"]], start=1):
             c = pendientes.cell(row=fila, column=i, value=v)
             c.font = NORMAL
             c.border = BORDE
         fila += 1
-    _anchos(pendientes, [7, 46, 20, 10, 8, 12, 10])
+    _anchos(pendientes, [7, 46, 20, 10, 8, 12, 10, 30])
     pendientes.freeze_panes = "A2"
 
     destino = pathlib.Path(destino) if destino else _ruta(
@@ -307,7 +322,7 @@ def tabla_macro(inv, destino=None):
     fila = _tabla(ws, 4, encabezados)
 
     materiales = {}
-    for f in inv.filas:
+    for f in inv.activas():
         clave = f["descripcion"].strip().upper()
         d = materiales.setdefault(clave, {"proveedor": f["proveedor"], "zonas": {},
                                           "total": 0.0, "lotes": [],
@@ -346,7 +361,7 @@ def tabla_macro(inv, destino=None):
     encabezados = ["UBICACIÓN", "MATERIAL", "LOTE", "CANTIDAD", "UNIDAD",
                    "CADUCIDAD", "DÍAS", "SEMÁFORO"]
     fila = _tabla(hoja, 3, encabezados)
-    ordenados = sorted(inv.filas,
+    ordenados = sorted(inv.activas(),
                        key=lambda f: (f["caducidad"] is None, f["caducidad"] or "9999"))
     for f in ordenados:
         valores = [f["ubicacion"] or "(sin ubicar)", f["descripcion"], f["lote"],
@@ -383,20 +398,20 @@ def exportar_bitacora(con, destino=None, inventario=None):
     ws["A1"].font = Font(bold=True, size=13)
     ws["A2"] = f"Exportada {dt.datetime.now():%Y-%m-%d %H:%M} · {len(movimientos)} movimientos"
     encabezados = ["ID", "FECHA-HORA", "INVENTARIO", "ACCIÓN", "DESCRIPCIÓN", "LOTE", "ORIGEN",
-                   "DESTINO", "CANTIDAD", "MOTIVO", "REF. DOCUMENTO", "USUARIO", "NOTA"]
+                   "DESTINO", "CANTIDAD", "UNIDAD", "MOTIVO", "REF. DOCUMENTO", "USUARIO", "NOTA"]
     fila = _tabla(ws, 4, encabezados)
     for m in movimientos:
         valores = [m["id"], m["ts"], m.get("inventario") or "mp", m["accion"], m["descripcion"],
                    m["lote"], m["ubicacion_origen"], m["ubicacion_destino"], m.get("cantidad"),
-                   m["motivo"], m["ref_doc"], m["usuario"], m["nota"]]
+                   m.get("unidad"), m["motivo"], m["ref_doc"], m["usuario"], m["nota"]]
         for i, v in enumerate(valores, start=1):
             c = ws.cell(row=fila, column=i, value=v)
             c.font = NORMAL
             c.border = BORDE
         fila += 1
-    _anchos(ws, [6, 20, 11, 15, 44, 20, 16, 16, 10, 18, 16, 22, 40])
+    _anchos(ws, [6, 20, 11, 15, 44, 20, 16, 16, 10, 8, 18, 16, 22, 40])
     ws.freeze_panes = "A5"
-    ws.auto_filter.ref = f"A4:M{max(fila - 1, 4)}"
+    ws.auto_filter.ref = f"A4:N{max(fila - 1, 4)}"
     destino = pathlib.Path(destino) if destino else _ruta(f"Bitacora_movimientos_{_marca()}.xlsx")
     wb.save(destino)
     return destino

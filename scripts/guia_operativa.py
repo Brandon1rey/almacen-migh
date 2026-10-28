@@ -3,6 +3,15 @@ import json
 import pathlib
 import sys
 
+# La consola de Windows no siempre es UTF-8: sin esto, imprimir «→» o «·» lanza
+# UnicodeEncodeError y el script parece fallar aunque ya haya hecho su trabajo.
+for _flujo in (sys.stdout, sys.stderr):
+    try:
+        _flujo.reconfigure(errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
+
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Cm, Pt, RGBColor

@@ -1,0 +1,224 @@
+{
+  "total": 43,
+  "fallas": 0,
+  "resultados": [
+    {
+      "prueba": "la página carga",
+      "ok": true,
+      "detalle": "http://127.0.0.1:8390"
+    },
+    {
+      "prueba": "pantalla de acceso visible",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "el acceso explica dónde está la contraseña inicial",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "el formulario de acceso funciona",
+      "ok": true,
+      "detalle": "admin"
+    },
+    {
+      "prueba": "los primeros pasos aparecen la primera vez",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "«Entendido» los oculta",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "la lista y los indicadores se pintan",
+      "ok": true,
+      "detalle": "{\"total\":\"154\",\"cob\":\"95.5%\",\"lotes\":154}"
+    },
+    {
+      "prueba": "al recargar sigue la sesión (sin volver al login)",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "los primeros pasos no vuelven a molestar",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "la ayuda tiene sus secciones y la versión",
+      "ok": true,
+      "detalle": "{\"secciones\":7,\"version\":\"Versión 1.9.0 · los datos viven en la PC del almacén (esta app no sale a internet)\"}"
+    },
+    {
+      "prueba": "Esc cierra la ayuda",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "un error de JavaScript de la pantalla llega al registro del servidor",
+      "ok": true,
+      "detalle": "{\"hay\":true,\"total\":3}"
+    },
+    {
+      "prueba": "el servidor encuentra parecidos cuando no hay coincidencia exacta",
+      "ok": true,
+      "detalle": "ratificial ~ artificial"
+    },
+    {
+      "prueba": "la pantalla dice que los resultados son aproximados y sugiere",
+      "ok": true,
+      "detalle": "2 fila(s) · 1 sugerencia(s)"
+    },
+    {
+      "prueba": "al tocar la sugerencia se busca el nombre exacto",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "una ubicación fuera del catálogo se rechaza con explicación",
+      "ok": true,
+      "detalle": "la ubicación «RACK-INVENTADO» no existe en el catálogo ALM-PNO-002"
+    },
+    {
+      "prueba": "el intento inválido no ensucia la bitácora",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "el servidor ofrece ubicaciones válidas para sugerir",
+      "ok": true,
+      "detalle": "MPA-A-009"
+    },
+    {
+      "prueba": "una ubicación válida se guarda",
+      "ok": true,
+      "detalle": "Ubicación guardada"
+    },
+    {
+      "prueba": "el campo queda sincronizado (no se guarda dos veces)",
+      "ok": true,
+      "detalle": "MPA-A-009 = MPA-A-009"
+    },
+    {
+      "prueba": "salir del campo otra vez no duplica el movimiento",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "la parcialidad se explica y acepta «5 kg»",
+      "ok": true,
+      "detalle": "Parcialidad: se moverán 5 kg y quedarán 145 kg en MPNA-A-104. Se crea un renglón nuevo en el destino"
+    },
+    {
+      "prueba": "el movimiento queda como parcialidad de 5 kg",
+      "ok": true,
+      "detalle": "PARCIAL 5 kg · antes: {\"cantidad\":\"5 kg\",\"destino\":\"MPA-A-013\",\"nota\":\"Parcialidad: se moverán 5 kg y quedarán 145 kg en MPNA-A-104\"}"
+    },
+    {
+      "prueba": "el atajo de producción explica que el material sale del almacén",
+      "ok": true,
+      "detalle": "Registrar salida a producción"
+    },
+    {
+      "prueba": "la salida a producción queda en la bitácora",
+      "ok": true,
+      "detalle": "SALIDA 50 kg"
+    },
+    {
+      "prueba": "una clave que no existe en el ERP se avisa al escribir",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "se acepta un insumo que no está en el catálogo (con aviso, sin bloquear)",
+      "ok": true,
+      "detalle": "{\"cerrado\":true,\"filas\":1,\"error\":\"\",\"avisos\":[\"la ubicación «RACK-INVENTADO» no existe en el catálogo ALM-PNO-002\",\"Ubicación guardada\",\"Parcialidad registrada: 5 kg → MPA-A-013\"]}"
+    },
+    {
+      "prueba": "escribir la descripción llena sola la clave del ERP y sus datos",
+      "ok": true,
+      "detalle": "{\"erp\":\"MIGH-MP001\",\"unidad\":\"kg\",\"cat\":\"Excipiente\"}"
+    },
+    {
+      "prueba": "la pantalla dice de dónde salieron los datos",
+      "ok": true,
+      "detalle": "Tomado del catálogo del ERP: ACAIVERRY EXT."
+    },
+    {
+      "prueba": "escribir la clave del ERP llena descripción, unidad, categoría y proveedor",
+      "ok": true,
+      "detalle": "{\"desc\":\"LATA 401x411 FO75L.20 C/FONDO\",\"unidad\":\"pza\",\"prov\":\"CROW LA VILLA\",\"cat\":\"Empaque\"}"
+    },
+    {
+      "prueba": "la ficha muestra todos los datos del insumo (clave, máximo, mínimo, fabricante)",
+      "ok": true,
+      "detalle": "Datos del catálogo del ERPClaveMIGH-MT001DescripciónLATA 401x411 FO75L.20 C/FONDOTipoEmpaqueUnidadpzaFabricanteCROW LA VILLAMáximo10,000Míni"
+    },
+    {
+      "prueba": "un insumo sin tipo en el ERP se llena pero NO cambia de inventario solo",
+      "ok": true,
+      "detalle": "{\"desc\":\"GUANTE DE NITRILO\",\"chip\":\"mep\"}"
+    },
+    {
+      "prueba": "marcar un renglón habilita el borrado con su cuenta",
+      "ok": true,
+      "detalle": "🗑 Borrar 1 renglón"
+    },
+    {
+      "prueba": "cambiar de inventario limpia la selección (no borra en el libro equivocado)",
+      "ok": true,
+      "detalle": "{\"marcados\":0,\"seleccion\":0,\"boton\":\"🗑 Borrar seleccionados\",\"filas\":24,\"archivo\":\"Material de empaque · reporte mensual\"}"
+    },
+    {
+      "prueba": "la bitácora muestra los movimientos",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "la ventana de red explica cómo compartir el sistema",
+      "ok": true,
+      "detalle": ""
+    },
+    {
+      "prueba": "el modal de cámara abre y permite captura manual (#btn-esc-manual)",
+      "ok": true,
+      "detalle": "{\"modalVisible\":true,\"titulo\":\"Escanear código\",\"capturadoManual\":\"QR-MANUAL-PROMPT\",\"modalCerrado\":true}"
+    },
+    {
+      "prueba": "alta con #btn-esc-qr y #btn-esc-ubi guarda el qr_id y /api/qr lo resuelve",
+      "ok": true,
+      "detalle": "{\"qrEnCampo\":\"QR-E2E-1\",\"ubiEnCampo\":\"MPA-A-010\",\"encontrado\":true,\"fila\":164,\"lote\":\"L-QR-E2E-1\"}"
+    },
+    {
+      "prueba": "escanear material abre #modal-mover, #btn-esc-destino llena el rack y registra el traslado",
+      "ok": true,
+      "detalle": "{\"descModal\":\"\\n    INSUMO QR E2E\\n    lote L-QR-E2E-1 · 25 kg\\n    · cad. 2028-06-01\\n    ubicación actual MPA-A-010\",\"destinoModal\":\"MPA-A-015\",\"nuevaUbi\":\"MPA-A-015\"}"
+    },
+    {
+      "prueba": "escanear un código inexistente ofrece darlo de alta con #a-qr precargado",
+      "ok": true,
+      "detalle": "{\"abierto\":true,\"qrPrecargado\":\"QR-NO-REGISTRADO-99\"}"
+    },
+    {
+      "prueba": "en teléfono no hay desborde horizontal y la ayuda está a mano",
+      "ok": true,
+      "detalle": "{\"desborde\":0,\"cabecera\":\"none\",\"ayuda\":true}"
+    },
+    {
+      "prueba": "en escritorio la tabla usa la cabecera y no desborda",
+      "ok": true,
+      "detalle": "{\"desborde\":-15,\"cabecera\":\"grid\",\"filas\":156}"
+    },
+    {
+      "prueba": "no hubo errores de JavaScript en el navegador",
+      "ok": true,
+      "detalle": ""
+    }
+  ],
+  "erroresNavegador": [
+    "EXCEPCIÓN: Error: prueba de depuracion E2E\n    at <anonymous>:1:41"
+  ]
+}

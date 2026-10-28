@@ -45,6 +45,7 @@
   .usuario{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;text-align:right}
   .usuario b{display:block;font-size:13px}
   .usuario button{background:#ffffff22;border-color:#ffffff44;color:#fff;min-height:36px;padding:6px 10px;font-size:12px}
+  .usuario button.alta{background:#eaf5ee;border-color:#b7dfc5;color:#14532d;font-weight:800}
   nav.tabs{display:flex;gap:6px;padding:8px 10px;background:var(--blanco);border-bottom:1px solid var(--linea);position:sticky;top:calc(56px + env(safe-area-inset-top));z-index:19;overflow-x:auto}
   nav.tabs button{flex:1 0 auto;min-height:42px;font-size:14px;border-radius:999px;padding:8px 16px;background:#f3f4f6;border-color:#e5e7eb}
   nav.tabs button.activo{background:var(--azul);color:#fff;border-color:var(--azul)}
@@ -103,6 +104,19 @@
   .c-acc button{flex:1;font-size:14px}
   .c-acc button.mover{background:var(--azul-claro);border-color:#c7d2fe;color:var(--azul)}
   .vacio{padding:26px;text-align:center;color:var(--suave)}
+  .ayuda-busqueda{font-size:11.5px;color:var(--suave);margin-top:6px;line-height:1.4}
+  .ayuda-busqueda code{background:#f1f3f7;border-radius:4px;padding:0 3px;font-size:11px}
+  .sugerencias{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+  .sugerencias button{min-height:36px;font-size:13px;padding:6px 12px;border-radius:999px}
+
+  /* ---------- ayuda de la copia ---------- */
+  .leyenda{display:grid;gap:8px;margin-top:8px}
+  .leyenda div{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#374151;line-height:1.35}
+  .leyenda .sem{flex:0 0 auto;margin-top:1px}
+  .arbol{background:#f5f7fb;border:1px solid var(--linea);border-radius:10px;padding:10px 12px;
+         font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11.5px;line-height:1.5;
+         white-space:pre;overflow-x:auto;color:#1f2937;margin-top:8px}
+  summary{outline:none}
 
   /* ---------- bitácora ---------- */
   .mov{background:var(--blanco);border:1px solid var(--linea);border-radius:10px;padding:10px;margin-bottom:8px;font-size:13px}
@@ -128,6 +142,40 @@
   .cant-fila input{font-size:18px;font-weight:700;text-align:right}
   .cant-fila span{font-size:13px;color:var(--suave);white-space:nowrap}
   .nota-parcial{background:#fff2cc;border-radius:10px;padding:8px 10px;font-size:12px;color:#7a5b00;margin-top:8px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .chip{min-height:34px;padding:4px 12px;font-size:12.5px;font-weight:700;border-radius:999px;
+        border:1.5px solid var(--azul);background:#eaf1fb;color:var(--azul);cursor:pointer}
+  .chip:hover{background:var(--azul);color:#fff}
+  .chip.natur.activo{background:var(--azul);color:#fff}
+  .campo-sug{position:relative;display:flex;gap:6px;align-items:center}
+  .campo-sug .panel-sug{left:0;right:auto}
+  #modal-escaner video{display:block;margin-top:4px}
+  .panel-sug{position:absolute;left:0;right:auto;top:calc(100% - 2px);z-index:60;
+        width:max(100%,230px);
+        background:var(--card,#fff);border:1.5px solid var(--azul);border-radius:12px;
+        box-shadow:0 10px 26px rgba(16,32,60,.18);max-height:min(58vh,320px);overflow:auto;
+        margin-top:2px}
+  .lote .c-ubi{position:relative}
+  .lote{position:relative}
+  .lote.con-sel{padding-left:40px}
+  .sel-caja{position:absolute;top:10px;left:10px;display:flex;align-items:center;justify-content:center;
+            width:26px;height:26px;cursor:pointer;z-index:2}
+  .sel{width:20px;height:20px;accent-color:var(--azul);cursor:pointer}
+  .lote.seleccionado{outline:2px solid var(--azul);outline-offset:-2px;background:#f4f8ff}
+  .lista-borrar{max-height:180px;overflow:auto;border:1px solid var(--linea);border-radius:10px;
+        padding:8px 10px;font-size:12.5px;line-height:1.5;background:#fafbfd}
+  .lista-borrar b{font-weight:800}
+  .sug{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%;text-align:left;
+        min-height:46px;padding:8px 12px;background:none;border:0;border-bottom:1px solid #eef1f6;
+        font-size:15px;cursor:pointer}
+  .sug:last-child{border-bottom:0}
+  .sug.activa,.sug:hover{background:#eaf1fb}
+  .sug-cod{font-weight:800;letter-spacing:.3px;font-family:ui-monospace,Consolas,monospace}
+  .sug small{width:100%;font-size:11.5px;color:var(--suave)}
+  .badge{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;letter-spacing:.2px}
+  .badge.ok{background:#dcf3e4;color:#14683a}
+  .badge.occ{background:#eceff5;color:#41506b}
+  .badge.alerta{background:#fde2e1;color:#9b1c1c}
   .acciones-modal{display:flex;gap:8px;margin-top:16px}
   .acciones-modal button{flex:1}
   .historial ol{padding-left:18px;margin:0;max-height:180px;overflow:auto}
@@ -148,7 +196,36 @@
   .toast.ok{background:var(--verde)} .toast.err{background:var(--rojo)}
   .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:40;width:auto;height:56px;padding:0 20px;border-radius:999px;background:var(--azul);color:#fff;border:none;font-size:15px;font-weight:800;box-shadow:0 10px 24px #1f3b7355;display:none}
 
+  /* ---------- ayuda, primeros pasos y avisos de calidad (aditivo) ---------- */
+  .pasos{margin:8px 0 0;padding-left:20px;font-size:13px;line-height:1.5;color:#374151}
+  .pasos li{margin:4px 0}
+  .ayuda-seccion{border-top:1px solid #e5e7eb;padding-top:10px;margin-top:10px}
+  .ayuda-seccion:first-of-type{border-top:0;margin-top:4px;padding-top:0}
+  .ayuda-seccion h3{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--azul)}
+  .ayuda-seccion p,.ayuda-seccion li{font-size:13px;color:#374151;line-height:1.45;margin:4px 0}
+  .ayuda-seccion ul{padding-left:18px;margin:4px 0}
+  .ayuda-seccion code{background:#f1f3f7;border-radius:4px;padding:0 3px;font-size:12px}
+  .ayuda-seccion kbd{background:#f1f3f7;border:1px solid #d1d5db;border-bottom-width:2px;
+        border-radius:5px;padding:0 5px;font-size:12px;font-family:ui-monospace,Consolas,monospace}
+  .aviso-calidad{background:#fff2cc;border-color:#f0d48a}
+  .aviso-calidad b{display:block;font-size:13px;margin-bottom:4px;color:#7a5b00}
+  .aviso-calidad ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.45;color:#7a5b00}
+  .pie-login code{background:#eef2ff;border-radius:4px;padding:0 3px;font-size:11px}
+  .sugerencias button.chip{min-height:34px}
+
   /* ---------- tablet / escritorio ---------- */
+  /* pantallas angostas: la barra superior no debe ensanchar la página */
+  @media (max-width:560px){
+    header.top{padding:8px 10px;gap:6px}
+    .marca{font-size:13px;max-width:38vw}
+    .marca small{font-size:10px}
+    .usuario{gap:5px}
+    .usuario > div{display:none}
+    header.top button{min-height:34px;padding:4px 9px;font-size:12px}
+    .txt-red{display:none}
+  }
+  body{overflow-x:hidden}
+
   @media (min-width:760px){
     main{padding:16px 20px 120px}
     .kpis{grid-template-columns:repeat(6,1fr)}
@@ -172,37 +249,37 @@
 </head>
 <body>
 
-<div id="banda-demo" class="banda" hidden>DEMO · DATOS DE DEMOSTRACIÓN — NO ES UN REGISTRO DE CALIDAD</div>
-
 <!-- ======================= LOGIN ======================= -->
+
 <section id="login">
   <form class="tarjeta-login" id="form-login" autocomplete="on">
     <h1>Control de ubicación</h1>
     <p class="sub">Almacén de materias primas · Comercializadora MIGH</p>
-
     <label for="l-usuario">Usuario</label>
     <input id="l-usuario" name="username" autocomplete="username" autocapitalize="words"
            enterkeyhint="next" required>
-
     <label for="l-password">Contraseña</label>
     <input id="l-password" name="password" type="password" autocomplete="current-password"
            enterkeyhint="go" required>
-
     <div id="l-error" class="error" hidden></div>
-
     <div style="margin-top:18px">
       <button class="primario" type="submit" style="width:100%">Entrar</button>
     </div>
     <p class="pie-login">Si no tienes usuario, pídelo al administrador del sistema.</p>
   </form>
+
 </section>
 
 <!-- ======================= APP ======================= -->
 <div id="app" hidden>
+
   <header class="top">
     <div class="marca">Ubicación de almacén<small id="archivo">Materias primas</small></div>
     <div class="usuario">
       <div><b id="u-nombre">—</b><span id="u-rol">—</span></div>
+      <button type="button" id="btn-nuevo-usuario-top" class="alta" title="Crear un usuario"
+              hidden>+ Usuario</button>
+      <button type="button" id="btn-ayuda" title="Ayuda, atajos y qué hacer si algo falla">?<span class="txt-red"> Ayuda</span></button>
       <button type="button" id="btn-clave" title="Cambiar mi contraseña">Clave</button>
       <button type="button" id="btn-salir" title="Salir">Salir</button>
     </div>
@@ -211,14 +288,17 @@
   <nav class="tabs">
     <button data-vista="inventario" class="activo">Inventario</button>
     <button data-vista="bitacora">Movimientos</button>
+    <button data-vista="copia" id="tab-copia">Copia</button>
     <button data-vista="usuarios" id="tab-usuarios" hidden>Usuarios</button>
   </nav>
-
   <div class="selector-inv" id="selector-inv"></div>
 
   <main>
+
     <!-- ---------- tablero de los tres inventarios ---------- -->
+
     <section id="vista-todos" hidden>
+
       <div class="panel">
         <b style="font-size:15px">Almacén completo</b>
         <p style="margin:6px 0 0;font-size:12px;color:var(--suave)">
@@ -226,18 +306,46 @@
           material de empaque (mensual) y producto terminado (semanal). El reporte F01 los consolida.</p>
       </div>
       <div class="tarjetas-inv" id="tarjetas-inv"></div>
+
     </section>
 
     <!-- ---------- inventario ---------- -->
+
     <section id="vista-inventario">
+
+      <div class="panel" id="primeros-pasos" hidden>
+        <b style="font-size:14px">Primeros pasos</b>
+        <ol class="pasos">
+          <li><b>Busca</b> el material por nombre, lote, proveedor, código ERP o ubicación. No hace
+            falta escribir igual: si te equivocas de letra, la app te propone lo parecido.</li>
+          <li><b>Escribe la ubicación</b> en el renglón (te va sugiriendo los racks válidos). Se
+            guarda al salir del campo o con <b>Enter</b>.</li>
+          <li>Si el material <b>cambia de rack</b> usa <b>⇄ Mover</b>. Si <b>sale a producción</b>,
+            dentro de ese mismo modal toca <b>→ Producción</b>.</li>
+          <li>Todo queda en <b>Movimientos</b>. Si te equivocaste, ahí mismo puedes <b>Deshacer</b>.</li>
+        </ol>
+        <div class="fila-filtros">
+          <button type="button" class="mini primario" id="btn-entendido">Entendido</button>
+          <button type="button" class="mini" id="btn-ver-ayuda">Ayuda completa</button>
+        </div>
+      </div>
+      <div class="panel aviso-calidad" id="aviso-calidad" hidden></div>
+
       <div class="panel">
-        <input id="q" type="search" placeholder="Buscar material, lote, proveedor o ERP…"
+        <input id="q" type="search" placeholder="Material, lote, proveedor, ERP o ubicación…"
                autocomplete="off" enterkeyhint="search">
+        <div class="ayuda-busqueda">
+          Varias palabras, en cualquier orden («bolsa 2 kg» = «2 kg bolsa»). Para apuntar a un campo:
+          <code>lote:</code> <code>erp:</code> <code>qr:</code> <code>ubicacion:</code> <code>proveedor:</code>
+        </div>
+        <div id="q-info" class="ayuda-busqueda" hidden></div>
         <div class="fila-filtros">
           <label class="chip"><input type="checkbox" id="f-sin"> sin ubicar</label>
           <label class="chip"><input type="checkbox" id="f-venc"> vencidos</label>
           <label class="chip" id="chip-cero" hidden><input type="checkbox" id="f-cero"> anulados</label>
           <button type="button" class="mini primario" id="btn-mover-global">⇄ Registrar movimiento</button>
+          <button type="button" class="mini" id="btn-escanear-material"
+                  title="Escanear la etiqueta de un pallet">📷 Escanear</button>
           <button type="button" class="mini" id="btn-refrescar">Actualizar</button>
         </div>
         <div class="kpis">
@@ -249,6 +357,8 @@
           <div class="kpi"><b id="k-pza">–</b><span>piezas</span></div>
         </div>
         <div class="fila-filtros" style="margin-top:0">
+          <button type="button" class="mini primario" id="btn-alta">＋ Ingresar material</button>
+          <button type="button" class="mini peligro" id="btn-borrar-sel" hidden>🗑 Borrar seleccionados</button>
           <button type="button" class="mini" data-descarga="inventario">Inventario + ubicación</button>
           <button type="button" class="mini" data-descarga="f01">Reporte F01</button>
           <button type="button" class="mini" data-descarga="f01v3">F01 con caducidad</button>
@@ -256,16 +366,18 @@
           <button type="button" class="mini" data-descarga="bitacora">Bitácora</button>
         </div>
       </div>
-
       <div class="cabecera-lista">
         <div>Material</div><div>Lote</div><div>Cantidad</div><div>Caducidad</div>
         <div>Ubicación</div><div>Acciones</div>
       </div>
       <div id="lista"></div>
+
     </section>
 
     <!-- ---------- bitácora ---------- -->
+
     <section id="vista-bitacora" hidden>
+
       <div class="panel">
         <div class="fila-filtros" style="margin:0">
           <button type="button" class="mini" id="btn-mas-mov">Cargar más</button>
@@ -273,16 +385,104 @@
         </div>
       </div>
       <div id="movimientos"></div>
+
+    </section>
+
+    <!-- ---------- copia a la USB ---------- -->
+
+    <section id="vista-copia" hidden>
+
+      <div class="panel">
+        <b style="font-size:15px">Copia de la base a la USB</b>
+        <p style="margin:6px 0 0;font-size:12.5px;color:var(--suave)">
+          Copia la bitácora (movimientos y usuarios) y los tres inventarios a la memoria USB, <b>sin
+          detener el servidor</b> y sin tocar los archivos originales. Antes de escribir compara: si la
+          USB ya trae algo más nuevo, no lo pisa.</p>
+        <label for="copia-destino" style="display:block;font-size:12px;font-weight:700;color:#374151;margin:12px 0 4px">
+          Carpeta de destino</label>
+        <div class="cant-fila">
+          <input id="copia-destino" placeholder="D:\almacen-ubicaciones-datos" spellcheck="false"
+                 autocapitalize="off" style="font-size:13px">
+          <button type="button" class="mini" id="btn-revisar-copia">Revisar</button>
+        </div>
+        <div id="copia-estado" class="detalle" style="margin-top:10px">Revisando…</div>
+        <div class="fila-filtros" style="margin-top:10px">
+          <button type="button" class="primario" id="btn-copiar" style="flex:1">Copiar ahora</button>
+        </div>
+        <div class="fila-filtros" style="margin-top:6px">
+          <label class="chip"><input type="checkbox" id="copia-historial" checked> guardar copia con fecha</label>
+          <label class="chip"><input type="checkbox" id="copia-forzar"> forzar si la USB va adelante</label>
+        </div>
+        <div class="fila-filtros" style="margin-top:8px">
+          <span style="font-size:11.5px;color:var(--suave)">
+            «con fecha» deja además una copia en <code>historial\</code> (se conservan las últimas 30).
+            «forzar» sobrescribe aunque la copia parezca más nueva: úsalo solo si esa memoria no sirve.</span>
+        </div>
+        <div id="copia-resultado" class="detalle" hidden style="margin-top:10px"></div>
+      </div>
+
+      <div class="panel">
+        <b style="font-size:14px">Qué significa cada estado</b>
+        <div class="leyenda">
+          <div><span class="sem OK">igual</span> La copia y el servidor tienen lo mismo. No se copia nada.</div>
+          <div><span class="sem CRITICO">hay cambios por copiar</span> El servidor tiene movimientos o
+            inventarios más nuevos; al copiar se actualizan.</div>
+          <div><span class="sem VENCIDO">falta en la copia</span> Ese archivo todavía no existe en la USB
+            (primera copia o memoria nueva).</div>
+          <div><span class="sem AVISO">la copia está más al día</span> La USB trae datos que este servidor
+            no tiene (¿viene de otra PC?). No se sobrescribe.</div>
+        </div>
+        <p style="margin:10px 0 0;font-size:12px;color:var(--suave)">
+          La base se compara por <b>movimientos y último folio</b>, no por fecha: el archivo cambia de
+          fecha con solo abrir una sesión y eso daría falsos avisos. Los inventarios sí se comparan por
+          fecha y tamaño, que es lo que ves en el explorador de archivos.</p>
+      </div>
+
+      <div class="panel">
+        <b style="font-size:14px">Qué queda en la USB</b>
+        <div class="arbol">
+ultima\bitacora.db            movimientos, usuarios y auditoría de ese momento
+ultima\Inventario_MP.xlsx     materias primas, con su columna UBICACIÓN
+ultima\Inventario_MEP.xlsx    material de empaque
+ultima\Inventario_PT.xlsx     producto terminado
+ultima\sincronizacion.json    conteos, tamaños y SHA-256 de lo copiado
+historial\bitacora_*.db       copias con fecha (si marcas la casilla)
+LEEME.txt                     explica a quien abra la memoria qué está viendo
+        </div>
+        <details style="margin-top:10px">
+          <summary style="font-size:12.5px;color:var(--azul);font-weight:700;cursor:pointer">
+            Cómo revisar la copia</summary>
+          <ul style="font-size:12px;color:#374151;margin:8px 0 0;padding-left:18px;line-height:1.45">
+            <li>Abre <code>ultima\bitacora.db</code> con <b>DB Browser for SQLite</b>
+              (<a href="https://sqlitebrowser.org" target="_blank" rel="noopener">sqlitebrowser.org</a>),
+              gratis y sin instalar nada raro.</li>
+            <li>O desde la consola: <code>sincronizar_usb.cmd --resumen</code> dice cuántos movimientos
+              tiene la copia, de qué inventarios y cuál fue el último.</li>
+            <li>Para ver la diferencia antes de copiar: <code>sincronizar_usb.cmd --estado</code>.</li>
+          </ul>
+        </details>
+        <p style="margin:10px 0 0;font-size:12px;color:var(--suave)">
+          La copia es <b>de lectura</b>: el servidor sigue siendo la única fuente de verdad y aquí no se
+          escribe nada de vuelta. Esto <b>no sustituye el respaldo</b> (<code>respaldo.cmd</code>), que
+          guarda una copia fechada con manifiesto en <code>data&#92;respaldos</code>.</p>
+      </div>
+      <div id="copia-archivos"></div>
+
     </section>
 
     <!-- ---------- usuarios ---------- -->
+
     <section id="vista-usuarios" hidden>
+
       <div class="panel">
         <b style="font-size:15px">Nuevo usuario</b>
         <label for="nu-nombre" style="display:block;font-size:13px;margin:10px 0 4px">Nombre completo</label>
         <input id="nu-nombre" autocapitalize="words" placeholder="Nombre y apellido">
         <label for="nu-clave" style="display:block;font-size:13px;margin:10px 0 4px">Contraseña (mínimo 8)</label>
-        <input id="nu-clave" type="text" placeholder="Se la entregas a la persona">
+        <div class="cant-fila">
+          <input id="nu-clave" type="text" placeholder="Se la entregas a la persona" autocomplete="off">
+          <button type="button" class="mini" id="btn-generar-clave">Generar</button>
+        </div>
         <label for="nu-rol" style="display:block;font-size:13px;margin:10px 0 4px">Rol</label>
         <select id="nu-rol">
           <option value="almacen">Almacén (registra movimientos)</option>
@@ -290,11 +490,12 @@
           <option value="admin">Administrador (todo)</option>
         </select>
         <div style="margin-top:12px"><button class="primario" type="button" id="btn-nuevo-usuario">Crear usuario</button></div>
+        <div id="nu-resultado" class="detalle" hidden style="margin-top:12px"></div>
       </div>
       <div id="lista-usuarios"></div>
+
     </section>
   </main>
-
 </div>
 
 <!-- ======================= MODAL MOVIMIENTO ======================= -->
@@ -304,28 +505,35 @@
       <h2>Registrar movimiento</h2>
       <button type="button" class="mini" onclick="cerrar('modal-mover')">Cerrar</button>
     </div>
-
     <div id="m-buscador">
       <label for="m-buscar">¿Qué lote se mueve?</label>
       <input id="m-buscar" type="search" placeholder="Material, lote o código ERP" autocomplete="off">
       <div id="m-resultados" class="resultado"></div>
     </div>
-
     <div id="m-form" hidden>
       <div id="m-detalle" class="detalle"></div>
-
       <label for="m-cantidad">Cantidad a mover</label>
       <div class="cant-fila">
-        <input id="m-cantidad" type="number" inputmode="decimal" step="0.001" min="0">
+        <input id="m-cantidad" type="text" inputmode="decimal" autocomplete="off"
+               placeholder="todo el lote">
         <span id="m-unidad">kg</span>
         <button type="button" class="mini" id="btn-todo">Todo</button>
       </div>
       <div id="m-nota-parcial" class="nota-parcial" hidden></div>
-
-      <label for="m-destino">Destino (rack)</label>
-      <input id="m-destino" list="codigos" placeholder="MPA-A-005" autocomplete="off" autocapitalize="characters">
-      <datalist id="codigos"></datalist>
-
+      <label for="m-destino">Destino (rack, zona especial o <b>PRODUCCION</b>)</label>
+      <div class="campo-sug">
+        <input id="m-destino" placeholder="MPA-A-005" autocomplete="off" autocapitalize="characters"
+               role="combobox" aria-autocomplete="list" aria-controls="sug-destino" aria-expanded="false"
+               oninput="sugerirUbicacion('m-destino','sug-destino','mover')"
+               onfocus="sugerirUbicacion('m-destino','sug-destino','mover')">
+        <button type="button" class="mini" id="btn-esc-destino" title="Escanear el rack">📷</button>
+        <div id="sug-destino" class="panel-sug" role="listbox" hidden></div>
+      </div>
+      <div class="chips">
+        <button type="button" class="chip" onclick="ponerDestino('PRODUCCION')">→ Producción</button>
+        <button type="button" class="chip" onclick="ponerDestino('CUARENTENA-MP')">Cuarentena</button>
+      </div>
+      <div id="m-aviso-prod" class="nota-parcial" hidden></div>
       <label for="m-motivo">Motivo</label>
       <select id="m-motivo">
         <option value="reacomodo">Reacomodo por espacio</option>
@@ -335,20 +543,133 @@
         <option value="cuarentena">Envío a cuarentena o retención</option>
         <option value="otro">Otro (explicar en la nota)</option>
       </select>
-
       <label for="m-ref">Documento de referencia (opcional)</label>
       <input id="m-ref" placeholder="OP-1234 · R-ALM-001" autocomplete="off">
-
       <label for="m-nota">Nota (opcional)</label>
       <input id="m-nota" placeholder="se juntan los lotes del mismo material" autocomplete="off">
-
       <div class="acciones-modal">
         <button class="primario" type="button" id="btn-registrar">Registrar movimiento</button>
         <button type="button" onclick="cerrar('modal-mover')">Cancelar</button>
       </div>
-
       <h3>Historial de este lote</h3>
       <div class="historial"><ol id="m-historial"></ol></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL ALTA ======================= -->
+<div id="modal-alta" class="modal" hidden>
+  <div class="caja">
+    <div class="cab">
+      <h2>Ingresar material al inventario</h2>
+      <button type="button" class="mini" onclick="cerrar('modal-alta')">Cerrar</button>
+    </div>
+    <p style="font-size:12px;color:var(--suave);margin:0 0 4px">
+      Se agrega un renglón nuevo al Excel del área y queda registrado en la bitácora con tu
+      usuario. Los campos con <b>*</b> son obligatorios: sin lote no hay trazabilidad
+      (ALM-PNO-002 §V.2.2.2) y sin caducidad no hay PEPS/FEFO.</p>
+
+    <label>Naturaleza del material</label>
+    <div class="chips" id="a-naturaleza">
+      <button type="button" class="chip natur" data-natur="mp">Materia prima</button>
+      <button type="button" class="chip natur" data-natur="mep">Material de empaque</button>
+      <button type="button" class="chip natur" data-natur="pt">Producto terminado</button>
+    </div>
+    <div class="ayuda-busqueda" id="a-destino-natur"></div>
+
+    <label for="a-qr">Código QR / Barcode (opcional)</label>
+    <div class="cant-fila">
+      <input id="a-qr" placeholder="75010553108 · QR-0045" autocomplete="off"
+             autocapitalize="characters" spellcheck="false">
+      <button type="button" class="mini" id="btn-esc-qr" title="Leer con la cámara">📷</button>
+    </div>
+    <div class="ayuda-busqueda">Si el pallet trae etiqueta, escanéala; si no, déjalo vacío.</div>
+
+    <label for="a-desc">Descripción del material *</label>
+    <input id="a-desc" list="dl-materiales" placeholder="LACTOSA 200 MESH"
+           autocapitalize="characters" autocomplete="off">
+    <datalist id="dl-materiales"></datalist>
+    <div id="a-desc-estado" class="ayuda-busqueda"></div>
+
+    <div class="cant-fila" style="gap:8px">
+      <div style="flex:1">
+        <label for="a-lote">Lote *</label>
+        <input id="a-lote" placeholder="LAC-2601" autocapitalize="characters" spellcheck="false">
+      </div>
+      <div style="flex:1">
+        <label for="a-cant">Cantidad *</label>
+        <input id="a-cant" type="text" inputmode="decimal" autocomplete="off" placeholder="500">
+      </div>
+      <div style="width:86px">
+        <label for="a-unidad">Unidad</label>
+        <select id="a-unidad">
+          <option value="kg">kg</option>
+          <option value="pza">pza</option>
+          <option value="lt">lt</option>
+          <option value="m">m</option>
+        </select>
+      </div>
+    </div>
+
+    <label for="a-prov">Proveedor *</label>
+    <input id="a-prov" list="dl-proveedores" placeholder="LACTOSA MX" autocapitalize="characters">
+    <datalist id="dl-proveedores"></datalist>
+
+    <div class="cant-fila" style="gap:8px">
+      <div style="flex:1">
+        <label for="a-cad">Caducidad *</label>
+        <input id="a-cad" type="date">
+      </div>
+      <div style="flex:1">
+        <label for="a-erp">ERP / SKU</label>
+        <input id="a-erp" list="dl-erp" placeholder="MIGH-MP200" autocapitalize="characters" oninput="buscarEnCatalogo()">
+        <datalist id="dl-erp"></datalist>
+      </div>
+    </div>
+    <div id="a-catalogo" class="resultado" hidden></div>
+    <div id="a-cat-estado" class="ayuda-busqueda"></div>
+    <div id="a-ficha" class="detalle" hidden style="margin-top:8px"></div>
+
+    <label for="a-ubi">Ubicación (opcional)</label>
+    <div class="campo-sug">
+      <input id="a-ubi" placeholder="MPNA-A-050" autocapitalize="characters" spellcheck="false"
+             autocomplete="off" role="combobox" aria-autocomplete="list"
+             aria-controls="sug-ubi" aria-expanded="false"
+             oninput="sugerirUbicacion('a-ubi','sug-ubi','alta')"
+             onfocus="sugerirUbicacion('a-ubi','sug-ubi','alta')">
+      <button type="button" class="mini" id="btn-esc-ubi" title="Escanear el rack">📷</button>
+      <div id="sug-ubi" class="panel-sug" role="listbox" hidden></div>
+    </div>
+    <div class="ayuda-busqueda">Si la dejas vacía, el lote entra como <b>pendiente de ubicar</b> y se
+      localiza después con el buscador o el tablero.</div>
+
+    <label for="a-cat">Categoría</label>
+    <input id="a-cat" list="dl-categorias" placeholder="Carbohidrato" autocapitalize="characters">
+    <datalist id="dl-categorias"></datalist>
+
+    <label for="a-obs">Observaciones</label>
+    <input id="a-obs" placeholder="caja colectiva 12 pzas, saco dañado, etc.">
+
+    <details style="margin-top:10px">
+      <summary style="font-size:12px;color:var(--azul);font-weight:700;cursor:pointer">
+        Datos de presentación (producto terminado)</summary>
+      <div class="cant-fila" style="gap:8px;margin-top:8px">
+        <div style="flex:1">
+          <label for="a-pres">Presentación</label>
+          <input id="a-pres" placeholder="900 g · caja 12 pzas">
+        </div>
+        <div style="flex:1">
+          <label for="a-piezas">Piezas por caja</label>
+          <input id="a-piezas" inputmode="numeric" placeholder="12">
+        </div>
+      </div>
+    </details>
+
+    <div id="a-error" class="error" hidden></div>
+
+    <div class="acciones-modal">
+      <button class="primario" type="button" id="btn-guardar-alta">Ingresar al inventario</button>
+      <button type="button" onclick="cerrar('modal-alta')">Cancelar</button>
     </div>
   </div>
 </div>
@@ -376,6 +697,30 @@
   </div>
 </div>
 
+<!-- ======================= MODAL BORRAR RENGLONES ======================= -->
+<div id="modal-borrar" class="modal" hidden>
+  <div class="caja" style="max-width:520px">
+    <div class="cab">
+      <h2>Borrar renglones del inventario</h2>
+      <button type="button" class="mini" onclick="cerrar('modal-borrar')">Cerrar</button>
+    </div>
+    <p style="font-size:13px;color:#9b1c1c;font-weight:700;margin:0 0 4px">
+      Esto quita los renglones del Excel del área: no se puede deshacer desde la pantalla.</p>
+    <p style="font-size:12px;color:var(--suave);margin:0 0 8px">
+      Antes de borrar se guarda una copia del libro en <code>data\respaldos\</code> y la bitácora
+      conserva qué había en cada renglón (material, lote, cantidad y ubicación), con tu usuario y el
+      motivo.</p>
+    <div id="b-lista" class="lista-borrar"></div>
+    <label for="b-motivo">Motivo del borrado (obligatorio)</label>
+    <input id="b-motivo" placeholder="renglones duplicados de la importación…">
+    <div id="b-error" class="error" hidden></div>
+    <div class="acciones-modal">
+      <button class="peligro" type="button" id="btn-confirmar-borrar">Borrar de tajo</button>
+      <button type="button" onclick="cerrar('modal-borrar')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ======================= MODAL BORRAR MOVIMIENTO ======================= -->
 <div id="modal-purgar" class="modal" hidden>
   <div class="caja" style="max-width:440px">
@@ -396,6 +741,133 @@
   </div>
 </div>
 
+<!-- ======================= MODAL ESCÁNER ======================= -->
+<div id="modal-escaner" class="modal" hidden>
+  <div class="caja" style="max-width:420px">
+    <div class="cab">
+      <h2>Escanear código</h2>
+      <button type="button" class="mini" onclick="terminarEscaner(null)">Cerrar</button>
+    </div>
+    <video id="esc-video" playsinline muted
+           style="width:100%;border-radius:12px;background:#000;aspect-ratio:1/1"></video>
+    <input id="esc-archivo" type="file" accept="image/*" capture="environment" hidden>
+    <div id="esc-lector-archivo" hidden></div>
+    <div id="esc-estado" class="ayuda-busqueda">Encendiendo la cámara…</div>
+    <div class="acciones-modal">
+      <button type="button" class="mini primario" id="btn-esc-foto">📷 Tomar foto del código</button>
+      <button type="button" class="mini" id="btn-esc-manual">Escribir el código</button>
+      <button type="button" onclick="terminarEscaner(null)">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL AYUDA ======================= -->
+<div id="modal-ayuda" class="modal" hidden>
+  <div class="caja" style="max-width:620px">
+    <div class="cab">
+      <h2>Ayuda</h2>
+      <button type="button" class="mini" onclick="cerrar('modal-ayuda')">Cerrar</button>
+    </div>
+    <p style="margin:0;font-size:12px;color:var(--suave)" id="ayuda-version"></p>
+
+    <div class="ayuda-seccion">
+      <h3>1. Buscar</h3>
+      <p>Arriba escribes y la lista se filtra sola. Entiende varias palabras en cualquier orden
+        («bolsa 2 kg» = «2 kg bolsa»), mayúsculas, acentos y el lote con o sin guiones
+        («bl202601» encuentra «BL-2026-01»).</p>
+      <ul>
+        <li>Para apuntar a un campo: <code>lote:</code> <code>erp:</code>
+          <code>qr:</code> <code>ubicacion:</code> <code>proveedor:</code>
+          <code>material:</code></li>
+        <li>Con etiqueta: toca <b>📷 Escanear</b> y apunta al código del pallet; la app abre
+          ese renglón. Los rack también se pueden escanear en el campo Destino.</li>
+        <li>Si no aparece nada, la app ofrece los parecidos (<b>«¿Quisiste decir…?»</b>) y una
+          búsqueda aproximada que tolera letras cambiadas: dale clic a la sugerencia para buscar
+          el nombre tal como está escrito en el Excel.</li>
+        <li>Casillas: <b>sin ubicar</b>, <b>vencidos</b> y (solo admin) <b>anulados</b>.</li>
+      </ul>
+    </div>
+
+    <div class="ayuda-seccion">
+      <h3>2. Ubicar un lote</h3>
+      <p>Cada renglón tiene su campo <b>Ubicación</b>. Al escribir aparecen los racks válidos con su
+        zona, si están libres y cuántos lotes tienen. Se guarda al salir del campo o con
+        <kbd>Enter</kbd>; si el código no existe en el catálogo, no se guarda y te dice por qué.</p>
+      <p>La ubicación siempre sale del <b>catálogo de ubicaciones</b> (una sola fuente de verdad):
+        no se inventan racks nuevos desde la pantalla.</p>
+    </div>
+
+    <div class="ayuda-seccion">
+      <h3>3. Mover, parcialidades y producción</h3>
+      <ul>
+        <li><b>⇄ Mover</b> cambia el lote de rack. Si escribes una cantidad menor, se crea un
+          <b>renglón nuevo</b> en el destino y el original se queda con el resto (parcialidad).</li>
+        <li><b>→ Producción</b> (o destino <code>PRODUCCION</code>) registra una <b>salida</b>: el
+          material sale del almacén y baja la existencia. No es un rack, así que no aparece en la
+          columna Ubicación.</li>
+        <li>«Todo» pone la cantidad completa. Si dejas la cantidad vacía, también se mueve todo:
+          la app te lo avisa antes de registrar.</li>
+        <li>En la bitácora de cada lote ves su historial completo con usuario, motivo y referencia.</li>
+      </ul>
+    </div>
+
+    <div class="ayuda-seccion">
+      <h3>4. Si te equivocaste</h3>
+      <ul>
+        <li>En <b>Movimientos</b>, el botón <b>Deshacer</b> revierte el último movimiento de ese
+          lote (devuelve la cantidad y la ubicación anteriores).</li>
+        <li>El admin puede <b>Borrar</b> un movimiento: se revierte y se borra de la bitácora,
+          dejando registro de quién lo hizo y por qué.</li>
+        <li>Borrar renglones completos del Excel (duplicados de importación) es solo para admin,
+          pide motivo y guarda un respaldo antes de tocar el libro.</li>
+      </ul>
+    </div>
+
+    <div class="ayuda-seccion">
+      <h3>5. Ingresar material nuevo</h3>
+      <ul>
+        <li>Elige la <b>naturaleza</b>: materia prima, empaque o producto terminado. Eso decide a
+          qué Excel se guarda, la unidad y si la caducidad es obligatoria.</li>
+        <li>Con <b>ERP/SKU</b>: escribe la clave <i>o el nombre</i> y elige del catálogo. Se llenan
+          solos la clave, la descripción, la unidad, la categoría y el proveedor, y debajo aparece la
+          ficha del insumo con lo que trae el ERP.</li>
+        <li>El sistema <b>acepta cualquier material</b>: si la clave no está en el catálogo, si el
+          insumo no trae tipo o si es producto terminado, se guarda igual con un aviso. Si la clave
+          es de otro inventario, el renglón se guarda en el libro que le corresponde. Lo único que
+          se valida contra catálogo es la <b>ubicación</b> (los racks del layout físico).</li>
+        <li>El <b>lote</b> y la <b>caducidad</b> no son opcionales en materia prima: sin lote no hay
+          trazabilidad y sin caducidad no hay PEPS/FEFO.</li>
+        <li>Si dejas la ubicación vacía, el lote entra como <b>pendiente de ubicar</b>.</li>
+      </ul>
+    </div>
+
+    <div class="ayuda-seccion">
+      <h3>6. Atajos</h3>
+      <ul>
+        <li><kbd>Enter</kbd> en Ubicación: guarda. <kbd>Enter</kbd> en Destino: registra el movimiento.</li>
+        <li><kbd>↑</kbd> <kbd>↓</kbd> en las sugerencias: cambia la opción. <kbd>Enter</kbd>: la elige.</li>
+        <li><kbd>Esc</kbd>: cierra la ventana abierta sin guardar.</li>
+      </ul>
+    </div>
+
+    <div class="ayuda-seccion">
+      <h3>7. Si algo falla</h3>
+      <ul>
+        <li><b>«cierra el Excel»</b>: el libro está abierto en esta PC; ciérralo y reintenta.</li>
+        <li><b>«Tu sesión terminó»</b>: vuelve a entrar con tu usuario.</li>
+        <li><b>Ubicación rechazada</b>: ese código no está en el catálogo; elige una sugerencia.</li>
+        <li><b>Cantidad rara</b>: escribe solo el número (5, 12.5). Con «5 kg» también entiende,
+          siempre que la unidad coincida con la del renglón.</li>
+        <li><b>Catálogo no importado</b>: pide que corran <code>scripts\importar_catalogo.py</code>.</li>
+        <li>Todo lo que pasa queda en <code>data\logs\servidor.log</code> y en la bitácora.</li>
+      </ul>
+    </div>
+
+    <div class="acciones-modal">
+      <button type="button" class="primario" onclick="cerrar('modal-ayuda')">Entendido</button>
+    </div>
+  </div>
+</div>
 <script>
 "use strict";
 const $ = (id) => document.getElementById(id);
@@ -403,24 +875,66 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":
 const num = (v, d = 3) => (v === null || v === undefined || v === "") ? "" :
   Number(v).toLocaleString("es-MX", {maximumFractionDigits: d});
 
-const estado = {usuario: null, lote: null, movimientos: [], limite: 60, purgarId: null,
-                demo: false, tipo: "mp", inventarios: []};
+/* Lee la cantidad como la escribe la gente: «5», «5.5», «5,5», «1,458», «5 kg».
+   Es solo para avisar en pantalla; quien decide es el servidor, que contesta con el
+   mensaje exacto cuando no se puede leer o no cabe en el lote. */
+function leerCantidad(texto, total) {
+  const limpio = String(texto ?? "").trim().toLowerCase().replace(/\s+/g, "");
+  if (!limpio) return null;
+  const partes = limpio.match(/^(-?\d[\d.,]*)([a-záéíóúüñ]+)?$/);
+  if (!partes) return null;
+  const crudo = partes[1];
+  const candidatos = [];
+  if (crudo.includes(",") && crudo.includes(".")) {
+    candidatos.push(crudo.lastIndexOf(",") > crudo.lastIndexOf(".")
+      ? crudo.replace(/\./g, "").replace(",", ".")
+      : crudo.replace(/,/g, ""));
+  } else if (crudo.includes(",") || crudo.includes(".")) {
+    const separador = crudo.includes(",") ? "," : ".";
+    const trozos = crudo.split(separador);
+    candidatos.push(trozos.slice(0, -1).join("") + "." + trozos[trozos.length - 1]);
+    if (trozos.length > 1 && trozos.slice(1).every((t) => t.length === 3)) {
+      candidatos.push(trozos.join(""));
+    }
+  } else {
+    candidatos.push(crudo);
+  }
+  const numeros = candidatos.map(Number).filter((n) => Number.isFinite(n));
+  if (!numeros.length) return null;
+  return numeros.find((n) => total === undefined || total === null || n <= total + 0.0001)
+    ?? numeros[0];
+}
 
+const estado = {usuario: null, lote: null, movimientos: [], limite: 60, purgarId: null,
+                seleccion: new Set(), tipoAlta: "mp",
+                tipo: "mp", inventarios: [], ultimas: [],
+                turno: 0, turnoBitacora: 0, enviando: false};
 /* agrega el inventario activo a cualquier ruta */
 const conTipo = (ruta) => ruta + (ruta.includes("?") ? "&" : "?") + "tipo=" + estado.tipo;
 
 /* ---------------- red ---------------- */
+
 async function api(ruta, opciones = {}) {
-  const r = await fetch(ruta, {
-    credentials: "same-origin",
-    headers: {"Content-Type": "application/json"},
-    ...opciones,
-  });
+  let r;
+  try {
+    r = await fetch(ruta, {
+      credentials: "same-origin",
+      headers: {"Content-Type": "application/json"},
+      ...opciones,
+    });
+  } catch (e) {                       // se cayó el servidor o se fue la red
+    reportarError("error", "no se pudo contactar al servidor: " + e.message, {ruta});
+    throw new Error("no se pudo contactar al servidor; revisa que la ventana negra siga abierta");
+  }
   let cuerpo = {};
   try { cuerpo = await r.json(); } catch (e) { /* respuesta sin JSON */ }
   if (r.status === 401 && !ruta.endsWith("/login")) {
     mostrarLogin("Tu sesión terminó. Vuelve a entrar.");
     throw new Error("sin sesión");
+  }
+  if (r.status >= 500) {              // error del servidor: al registro, con ruta y mensaje
+    reportarError("error", `el servidor respondió ${r.status} en ${ruta}: ${cuerpo.error || ""}`,
+                  {metodo: (opciones.method || "GET"), ruta});
   }
   if (!r.ok) throw new Error(cuerpo.error || ("Error " + r.status));
   return cuerpo;
@@ -434,7 +948,43 @@ function aviso(texto, tipo = "") {
   setTimeout(() => caja.remove(), 4200);
 }
 
+/* ---------------- depuración: los errores del navegador van al registro del servidor ---------------- */
+/* Escucha los errores de JavaScript y las promesas rechazadas y los manda a /api/log, que los
+   escribe en data\logs\depuracion.log. Así, cuando alguien dice «no me funcionó», el archivo
+   cuenta qué pasó sin pedirle capturas de pantalla. Se limita para no llenar el registro. */
+const DEPURACION = {enviados: 0, max: 40, vistos: new Set()};
+
+function reportarError(nivel, mensaje, contexto) {
+  try {
+    const texto = String(mensaje || "").slice(0, 1500);
+    if (!texto || DEPURACION.enviados >= DEPURACION.max) return;
+    if (DEPURACION.vistos.has(texto)) return;         // el mismo error, una sola vez
+    DEPURACION.vistos.add(texto);
+    DEPURACION.enviados += 1;
+    fetch("/api/log", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({nivel, mensaje: texto, contexto: contexto || {},
+                            url: location.pathname}),
+    }).catch(() => { /* si tampoco se puede reportar, no hay nada más que hacer */ });
+  } catch (e) { /* reportar nunca debe romper la pantalla */ }
+}
+
+window.addEventListener("error", (evento) => {
+  reportarError("error", evento.message || "error de JavaScript",
+                {archivo: String(evento.filename || "").split("/").pop(),
+                 linea: evento.lineno, columna: evento.colno});
+});
+
+window.addEventListener("unhandledrejection", (evento) => {
+  const motivo = evento.reason;
+  const texto = (motivo && (motivo.stack || motivo.message)) || String(motivo);
+  reportarError("error", texto, {tipo: "promesa rechazada"});
+});
+
 /* ---------------- sesión ---------------- */
+
 function mostrarLogin(mensaje) {
   $("app").hidden = true;
   $("login").hidden = false;
@@ -466,6 +1016,14 @@ async function iniciar(usuario) {
   const etiquetasRol = {admin:"Administrador", almacen:"Almacén", consulta:"Consulta"};
   $("u-rol").textContent = etiquetasRol[usuario.rol] || usuario.rol;
   $("tab-usuarios").hidden = usuario.rol !== "admin";
+  $("btn-nuevo-usuario-top").hidden = usuario.rol !== "admin";
+  $("btn-alta").hidden = usuario.rol === "consulta";
+  $("btn-borrar-sel").hidden = usuario.rol !== "admin";
+  estado.seleccion.clear();
+  actualizarSeleccion();
+  estado.limite = 60;
+  $("q").value = "";
+  mostrarPrimerosPasos();
   $("chip-cero").hidden = usuario.rol !== "admin";
   await cargarEstado();
   await cargarInventarios();
@@ -495,7 +1053,7 @@ function pintarSelector() {
   const caja = $("selector-inv");
   const botones = estado.inventarios.map((i) => `
     <button type="button" data-inv="${i.clave}" class="${(i.clave === estado.tipo && $("vista-todos").hidden) ? "activo" : ""} ${i.cargado ? "" : "vacio"}">
-      ${esc(i.corto)}<b>${i.cargado ? (i.lotes ? num(i.lotes, 0) + " lotes" : "vacío") : "sin cargar"}</b>
+      ${esc(i.corto)}<b>${i.cargado ? (i.lotes ? num(i.lotes, 0) + (i.lotes === 1 ? " lote" : " lotes") : "vacío") : "sin cargar"}</b>
     </button>`).join("");
   const varios = estado.inventarios.filter((i) => i.cargado).length > 1;
   caja.innerHTML = botones + (varios
@@ -510,6 +1068,9 @@ function seleccionarInventario(clave) {
   estado.tipo = clave;
   estado.limite = 60;
   $("q").value = "";
+  // La selección es del inventario anterior: si se arrastra, el borrado caería en otro Excel.
+  estado.seleccion.clear();
+  actualizarSeleccion();
   pintarSelector();
   cambiarVista("inventario");
   cargarInventario();
@@ -546,14 +1107,13 @@ async function cargarEstado() {
   try {
     const e = await api("/api/estado");
     $("archivo").textContent = e.archivo || "";
-    estado.demo = !!e.demo;
-    $("banda-demo").hidden = !e.demo;
-    if (e.demo) document.title = "DEMO · Ubicación de almacén";
   } catch (e) { /* sin novedad */ }
 }
 
 /* ---------------- inventario ---------------- */
+
 async function cargarInventario() {
+  const turno = ++estado.turno;
   const params = new URLSearchParams({q: $("q").value.trim()});
   if ($("f-sin").checked) params.set("sin_ubicar", "1");
   if ($("f-venc").checked) params.set("vencidos", "1");
@@ -561,25 +1121,80 @@ async function cargarInventario() {
   params.set("tipo", estado.tipo);
   try {
     const datos = await api("/api/inventario?" + params);
+    if (turno !== estado.turno) return;      // llegó tarde: ya hay otra búsqueda en curso
+    estado.ultimas = datos.filas;
     pintarResumen(datos.resumen);
+    pintarCalidad(datos.resumen);
+    const q = params.get("q") || "";
+    const info = $("q-info");
+    const sugerencias = datos.sugerencias || [];
+    info.hidden = !q;
+    if (q) {
+      info.innerHTML = `<b>${datos.filas.length}</b> resultado(s) para «${esc(q)}»`
+        + (datos.difuso
+            ? " · <b>aproximados</b>: no hay coincidencia exacta, estos son los más parecidos."
+            : "");
+      if (datos.difuso && sugerencias.length) {
+        info.innerHTML += `<div class="sugerencias">${sugerencias.map((s) =>
+          `<button type="button" data-sugerencia="${esc(s)}">${esc(s)}</button>`).join("")}</div>`;
+      }
+    }
     const sinDatos = !datos.resumen.total;
     $("lista").innerHTML = datos.filas.length
       ? datos.filas.map(tarjeta).join("")
       : `<div class="vacio">${sinDatos
           ? "Este inventario todavía no tiene lotes. Carga su tabla con <code>scripts\\preparar_inventario.py</code> (ver LEEME) y recarga."
-          : "Sin resultados con ese filtro."}</div>`;
+          : (sugerencias.length
+              ? `Sin resultados para «${esc(q)}». ¿Quisiste decir…?
+                 <div class="sugerencias">${sugerencias.map((s) =>
+                   `<button type="button" data-sugerencia="${esc(s)}">${esc(s)}</button>`).join("")}</div>`
+              : `Sin resultados para «${esc(q)}» con ese filtro. Quita algún filtro o revisa cómo
+                 está escrito en el Excel; también puedes apuntar a un campo con
+                 <code>lote:</code> o <code>ubicacion:</code>.`)}</div>`;
+    conectarSugerencias($("lista"));
   } catch (e) {
+    if (turno !== estado.turno) return;
     $("lista").innerHTML = `<div class="vacio">${esc(e.message)}</div>`;
   }
 }
 
 function pintarResumen(r) {
-  $("k-total").textContent = r.total;
-  $("k-cob").textContent = r.cobertura + "%";
-  $("k-sin").textContent = r.sin_ubicacion;
-  $("k-venc").textContent = r.semaforo.VENCIDO;
+  r = r || {};
+  const sem = r.semaforo || {};
+  $("k-total").textContent = r.total ?? "–";
+  $("k-cob").textContent = (r.cobertura ?? 0) + "%";
+  $("k-sin").textContent = r.sin_ubicacion ?? "–";
+  $("k-venc").textContent = sem.VENCIDO ?? "–";
   $("k-kg").textContent = num(r.kg, 0);
   $("k-pza").textContent = num((r.por_unidad || {}).pza, 0) || "—";
+}
+
+/* Avisos de calidad de los datos del Excel: no bloquean nada, pero dicen qué corregir. */
+function pintarCalidad(r) {
+  const caja = $("aviso-calidad");
+  if (!caja) return;
+  const avisos = [];
+  if (!r) { caja.hidden = true; return; }
+  if (r.ubicaciones_invalidas) {
+    avisos.push(`${r.ubicaciones_invalidas} renglón(es) con una UBICACIÓN que no está en el ` +
+      "catálogo: se cuentan como «sin ubicar». Corrige esa celda en el Excel o asígnales un " +
+      "rack válido desde el buscador.");
+  }
+  if (r.sin_cantidad_legible) {
+    avisos.push(`${r.sin_cantidad_legible} renglón(es) con la CANTIDAD escrita como texto ` +
+      "raro: no suman al total. Corrige la celda en el Excel (solo el número, sin letras).");
+  }
+  if (r.sin_lote) {
+    avisos.push(`${r.sin_lote} renglón(es) sin lote: sin lote no hay trazabilidad.`);
+  }
+  if (!avisos.length) {
+    caja.hidden = true;
+    caja.innerHTML = "";
+    return;
+  }
+  caja.hidden = false;
+  caja.innerHTML = `<b>Hay datos por corregir en el Excel (${avisos.length} tipo(s) de problema)</b>
+    <ul>${avisos.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>`;
 }
 
 function semaforo(f) {
@@ -593,9 +1208,14 @@ function semaforo(f) {
 function tarjeta(f) {
   const deshabilitado = estado.usuario.rol === "consulta" ? "disabled" : "";
   const valor = f.ubicacion || "";
-  return `<article class="lote" data-fila="${f.fila}">
+  const casilla = estado.usuario.rol === "admin" && !deshabilitado
+    ? `<label class="sel-caja" title="Seleccionar para borrar">
+         <input type="checkbox" class="sel" data-sel="${f.fila}" ${estado.seleccion.has(f.fila) ? "checked" : ""}>
+       </label>` : "";
+  return `<article class="lote ${estado.seleccion.has(f.fila) ? "seleccionado" : ""} ${casilla ? "con-sel" : ""}" data-fila="${f.fila}">
+    ${casilla}
     <div class="c-desc">${esc(f.descripcion)}
-      <small>${esc(f.proveedor || "")}${f.categoria ? " · " + esc(f.categoria) : ""}${f.erp ? " · ERP " + esc(f.erp) : ""}</small>
+      <small>${esc(f.proveedor || "")}${f.categoria ? " · " + esc(f.categoria) : ""}${f.erp ? " · ERP " + esc(f.erp) : ""}${f.qr_id ? " · QR " + esc(f.qr_id) : ""}</small>
     </div>
     <div class="c-lote"><span class="et">Lote</span><code>${esc(f.lote || "—")}</code></div>
     <div class="c-cant"><span class="et">Cantidad</span>${num(f.cantidad)} <span style="font-size:11px;color:var(--suave)">${esc(f.unidad || "")}</span></div>
@@ -619,6 +1239,7 @@ async function guardarUbicacion(input) {
     const r = await api("/api/ubicar", {method: "POST",
       body: JSON.stringify({fila, ubicacion, tipo: estado.tipo})});
     if (r.nueva) input.value = r.nueva; else input.value = "";
+    input.defaultValue = input.value;      // si no, al salir del campo se guardaría otra vez
     input.classList.add("ok");
     setTimeout(() => input.classList.remove("ok"), 900);
     pintarResumen(r.resumen);
@@ -643,20 +1264,154 @@ async function noEsta(fila) {
   } catch (e) { aviso(e.message, "err"); }
 }
 
+/* ---------------- lector de cámara (QR y códigos de barras 1D) ---------------- */
+/* Se usa solo si hay contexto seguro (HTTPS o localhost): si no, ofrece escribirlo a mano.
+   Preferencia: BarcodeDetector nativo; respaldo: html5-qrcode.min.js local (iPhone/Safari). */
+let ESCANER = null;
+
+function terminarEscaner(resultado) {
+  const activo = ESCANER;
+  ESCANER = null;
+  if (activo) {
+    if (activo.timer) clearInterval(activo.timer);
+    if (activo.stream) activo.stream.getTracks().forEach((pista) => pista.stop());
+    if (activo.detenerExterno) { try { activo.detenerExterno(); } catch (e) { /* da igual */ } }
+  }
+  const video = $("esc-video");
+  if (video) video.srcObject = null;
+  cerrar("modal-escaner");
+  if (activo && activo.callback && resultado) activo.callback(String(resultado).trim());
+}
+
+async function asegurarHtml5Qrcode() {
+  if (!window.Html5Qrcode) {
+    await new Promise((listo, fallo) => {
+      const script = document.createElement("script");
+      script.src = "/html5-qrcode.min.js";
+      script.onload = listo;
+      script.onerror = () => fallo(new Error("no se pudo cargar el lector"));
+      document.head.appendChild(script);
+    });
+  }
+}
+
+async function leerCodigoDeImagen(archivo) {
+  if (!archivo) return;
+  $("esc-estado").textContent = "Leyendo código de la imagen…";
+  try {
+    if ("BarcodeDetector" in window && "createImageBitmap" in window) {
+      const detector = new BarcodeDetector(
+        {formats: ["qr_code", "code_128", "ean_13", "code_39"]});
+      const bmp = await createImageBitmap(archivo);
+      const codigos = await detector.detect(bmp);
+      if (codigos && codigos.length && codigos[0].rawValue) {
+        terminarEscaner(codigos[0].rawValue);
+        return;
+      }
+    }
+  } catch (e) { /* intenta con el respaldo html5-qrcode */ }
+  try {
+    await asegurarHtml5Qrcode();
+    const lector = new Html5Qrcode("esc-lector-archivo", {verbose: false});
+    const texto = await lector.scanFile(archivo, false);
+    if (texto && String(texto).trim()) {
+      terminarEscaner(String(texto).trim());
+      return;
+    }
+  } catch (e) { /* no se distinguió código en la foto */ }
+  $("esc-estado").textContent =
+    "No se distinguió ningún código en la foto. Acércate más y toca «📷 Tomar foto del código» o «Escribir el código».";
+}
+
+async function abrirEscaner(callback) {
+  ESCANER = {stream: null, callback, timer: null, detenerExterno: null};
+  abrir("modal-escaner");
+  const video = $("esc-video");
+  if (!window.isSecureContext || !navigator.mediaDevices) {
+    if (video) video.hidden = true;
+    $("esc-estado").textContent =
+      "En red sin HTTPS: toca «📷 Tomar foto del código» para abrir la cámara de tu teléfono, o «Escribir el código».";
+    try { $("esc-archivo").value = ""; $("esc-archivo").click(); } catch (e) { /* requiere toque */ }
+    return;
+  }
+  if (video) video.hidden = false;
+  $("esc-estado").textContent = "Encendiendo la cámara…";
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(
+      {video: {facingMode: {ideal: "environment"}}, audio: false});
+    if (!ESCANER) { stream.getTracks().forEach((pista) => pista.stop()); return; }
+    ESCANER.stream = stream;
+    video.srcObject = stream;
+    await video.play();
+    if ("BarcodeDetector" in window) {
+      const detector = new BarcodeDetector(
+        {formats: ["qr_code", "code_128", "ean_13", "code_39"]});
+      $("esc-estado").textContent = "Apunta al código…";
+      ESCANER.timer = setInterval(async () => {
+        try {
+          const codigos = await detector.detect(video);
+          if (codigos && codigos.length) terminarEscaner(codigos[0].rawValue);
+        } catch (e) { /* cuadro sin código */ }
+      }, 250);
+      return;
+    }
+    await cargarLectorRespaldo();
+  } catch (e) {
+    if (video) video.hidden = true;
+    $("esc-estado").textContent =
+      "No se pudo abrir el video en vivo (" + e.message + "). Usa «📷 Tomar foto del código» o «Escribir el código».";
+  }
+}
+
+async function cargarLectorRespaldo() {
+  await asegurarHtml5Qrcode();
+  const lector = new Html5Qrcode("esc-video", {verbose: false});
+  ESCANER.detenerExterno = () => { lector.stop().catch(() => {}); };
+  $("esc-estado").textContent = "Apunta al código…";
+  await lector.start({facingMode: "environment"}, {fps: 8, qrbox: {width: 240, height: 240}},
+                     (texto) => { lector.stop().catch(() => {}); terminarEscaner(texto); },
+                     () => { /* sin lectura en este cuadro */ });
+}
+
+/* Escanear el código de un pallet: abre el movimiento de ese renglón o propone darlo de alta. */
+async function escanearMaterial() {
+  abrirEscaner(async (codigo) => {
+    try {
+      const r = await api(`/api/qr?codigo=${encodeURIComponent(codigo)}`);
+      await abrirMover(r.fila, r.tipo);
+      aviso(`Lote escaneado: ${r.renglon.descripcion || codigo}`, "ok");
+    } catch (e) {
+      if (!String(e.message || "").includes("no está en ningún lote")) {
+        aviso(e.message, "err");
+        return;
+      }
+      if (confirm(`El código «${codigo}» no está en ningún lote activo.\n` +
+                  `¿Darlo de alta con este código?`)) abrirAlta(codigo);
+    }
+  });
+}
+
+function escanearEn(campoId, despues) {
+  abrirEscaner((codigo) => {
+    const campo = $(campoId);
+    if (!campo) return;
+    campo.value = codigo;
+    campo.dispatchEvent(new Event("input", {bubbles: true}));
+    campo.dispatchEvent(new Event("change", {bubbles: true}));
+    if (despues) despues(codigo);
+    campo.focus();
+  });
+}
+
 /* ---------------- modal de movimiento ---------------- */
-async function abrirMover(fila) {
+
+async function abrirMover(fila, tipo) {
   abrir("modal-mover");
   $("m-form").hidden = true;
   $("m-buscador").hidden = false;
-  if (!$("codigos").childElementCount) {
-    try {
-      const {codigos} = await api("/api/ubicaciones");
-      $("codigos").innerHTML = codigos.map((c) => `<option value="${c}">`).join("");
-    } catch (e) { /* el servidor valida igual */ }
-  }
   if (fila) {
     try {
-      const {lote} = await api(conTipo(`/api/lote?fila=${fila}`));
+      const {lote} = await api(`/api/lote?fila=${fila}&tipo=${tipo || estado.tipo}`);
       seleccionarLote(lote);
     } catch (e) { aviso(e.message, "err"); }
   } else {
@@ -687,25 +1442,190 @@ function seleccionarLote(lote) {
   $("m-ref").value = "";
   $("m-motivo").value = "reacomodo";
   $("m-nota-parcial").hidden = true;
-  revisarParcial();
+  revisarDestino();
   $("m-destino").focus();
   cargarHistorial(lote.fila);
 }
+
+/* ---------------- ALMACÉN → PRODUCCIÓN ---------------- */
+
+function ponerDestino(codigo) {
+  $("m-destino").value = codigo;
+  revisarDestino();
+  if (codigo === "PRODUCCION") {
+    $("m-motivo").value = "surtido";
+    $("m-ref").focus();
+  }
+}
+
+function revisarDestino() {
+  const produccion = $("m-destino").value.trim().toUpperCase() === "PRODUCCION";
+  const caja = $("m-aviso-prod");
+  caja.hidden = !produccion;
+  caja.textContent = produccion
+    ? "Salida a producción: el material SALE del almacén, no cambia de rack. La cantidad es la que "
+      + "se surte; con «Todo» el renglón queda en cero y sin ubicación. Escribe la OP en el "
+      + "documento de referencia."
+    : "";
+  $("btn-registrar").textContent = produccion ? "Registrar salida a producción"
+                                              : "Registrar movimiento";
+  if (produccion) $("m-nota-parcial").hidden = true;
+  else revisarParcial();
+}
+
+/* ---------------- sugerencias de ubicación (autocompletado) ---------------- */
+/* Mientras se escribe se piden al servidor las ubicaciones que sirven, ya ordenadas:
+   primero las que coinciden con lo escrito, de la zona del inventario correcto, libres y,
+   si el material es alérgeno, las que sí lo admiten. Se navega con ↑ ↓ y Enter.
+   Se usa en la columna UBICACIÓN de cada renglón, en el destino del movimiento y en el alta. */
+
+const SUG = {input: null, lista: null, activo: -1, timer: null};
+
+async function sugerirPara(input, lista, contexto) {
+  if (!input || !lista) return;
+  if (contexto === "mover") revisarDestino();
+  clearTimeout(SUG.timer);
+  SUG.timer = setTimeout(async () => {
+    const tipoConsulta = contexto === "alta" ? (estado.tipoAlta || estado.tipo) : estado.tipo;
+    const params = new URLSearchParams({q: input.value.trim(), tipo: tipoConsulta, limite: "8"});
+    if (contexto === "mover" && estado.lote) params.set("fila", estado.lote.fila);
+    if (contexto === "alta") {
+      const material = $("a-desc").value.trim();
+      if (material) params.set("material", material);
+    }
+    if (input.dataset.fila) params.set("fila", input.dataset.fila);
+    try {
+      const r = await api(`/api/ubicaciones?${params.toString()}`);
+      pintarSugerencias(input, lista, r.sugerencias || []);
+    } catch (e) { cerrarSugerencias(); }
+  }, 150);
+}
+
+function sugerirUbicacion(inputId, listaId, contexto) {
+  sugerirPara($(inputId), $(listaId), contexto);
+}
+
+function pintarSugerencias(input, lista, items) {
+  SUG.input = input;
+  SUG.lista = lista;
+  SUG.activo = -1;
+  if (!items.length) { cerrarSugerencias(); return; }
+  lista.innerHTML = items.map((s, n) => `
+    <button type="button" class="sug" role="option" data-indice="${n}" data-codigo="${esc(s.codigo)}">
+      <span class="sug-cod">${esc(s.codigo)}</span>
+      ${s.libre ? '<span class="badge ok">libre</span>'
+                : `<span class="badge occ">${s.lotes} lote${s.lotes === 1 ? "" : "s"}</span>`}
+      ${s.aviso ? `<span class="badge alerta">${esc(s.aviso)}</span>` : ""}
+      <small>${esc(s.zona)}${s.motivo ? " · " + esc(s.motivo) : ""}</small>
+    </button>`).join("");
+  lista.hidden = false;
+  input.setAttribute("aria-expanded", "true");
+  lista.querySelectorAll(".sug").forEach((boton) => {
+    boton.addEventListener("mousedown", (e) => e.preventDefault());
+    boton.addEventListener("click", () => elegirSugerencia(boton.dataset.codigo));
+  });
+}
+
+function cerrarSugerencias() {
+  if (SUG.lista) SUG.lista.hidden = true;
+  if (SUG.input) SUG.input.setAttribute("aria-expanded", "false");
+  SUG.input = null;
+  SUG.lista = null;
+  SUG.activo = -1;
+}
+
+function elegirSugerencia(codigo) {
+  const input = SUG.input;
+  const lista = SUG.lista;
+  if (!input) return;
+  input.value = codigo;
+  if (lista) lista.hidden = true;
+  if (input.id === "m-destino") revisarDestino();
+  input.setAttribute("aria-expanded", "false");
+  SUG.input = null;
+  SUG.lista = null;
+  SUG.activo = -1;
+  input.dispatchEvent(new Event("change"));
+  input.focus();
+}
+
+/* La columna UBICACIÓN se dibuja en cada renglón: se le engancha el desplegable una vez. */
+function conectarSugerencias(raiz) {
+  (raiz || document).querySelectorAll("input.u[data-fila]").forEach((input) => {
+    if (input.dataset.sugListo || input.disabled) return;
+    input.dataset.sugListo = "1";
+    const contenedor = input.closest(".c-ubi") || input.parentNode;
+    if (getComputedStyle(contenedor).position === "static") {
+      contenedor.style.position = "relative";
+    }
+    const lista = document.createElement("div");
+    lista.className = "panel-sug";
+    lista.setAttribute("role", "listbox");
+    lista.hidden = true;
+    input.insertAdjacentElement("afterend", lista);
+    input.setAttribute("role", "combobox");
+    input.setAttribute("aria-autocomplete", "list");
+    input.setAttribute("aria-expanded", "false");
+    input.addEventListener("input", () => sugerirPara(input, lista, "inline"));
+    input.addEventListener("focus", () => sugerirPara(input, lista, "inline"));
+  });
+}
+
+document.addEventListener("keydown", (e) => {
+  if (SUG.input !== e.target || !SUG.lista || SUG.lista.hidden) return;
+  const opciones = [...SUG.lista.querySelectorAll(".sug")];
+  if (!opciones.length) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault(); e.stopPropagation();
+    const paso = e.key === "ArrowDown" ? 1 : -1;
+    SUG.activo = (SUG.activo + paso + opciones.length) % opciones.length;
+    opciones.forEach((b, n) => b.classList.toggle("activa", n === SUG.activo));
+    opciones[SUG.activo].scrollIntoView({block: "nearest"});
+  } else if (e.key === "Enter") {
+    e.preventDefault(); e.stopImmediatePropagation();
+    elegirSugerencia(opciones[Math.max(0, SUG.activo)].dataset.codigo);
+  } else if (e.key === "Escape") {
+    e.stopPropagation();
+    cerrarSugerencias();
+  }
+}, true);
+
+document.addEventListener("click", (e) => {
+  if (!SUG.lista || SUG.lista.hidden) return;
+  if (SUG.lista.contains(e.target) || e.target === SUG.input) return;
+  cerrarSugerencias();
+});
 
 function revisarParcial() {
   const lote = estado.lote;
   if (!lote) return;
   const total = Number(lote.cantidad || 0);
-  const movida = Number($("m-cantidad").value || 0);
+  const unidad = lote.unidad || "kg";
+  const escrito = String($("m-cantidad").value || "").trim();
+  const movida = leerCantidad(escrito, total);
   const caja = $("m-nota-parcial");
-  if (!movida || movida >= total - 0.0001) {
-    caja.hidden = true;
+  if ($("m-destino").value.trim().toUpperCase() === "PRODUCCION") {
+    caja.hidden = true;   // a producción no se crea renglón: se surte y baja la existencia
     return;
   }
   caja.hidden = false;
-  caja.textContent = `Parcialidad: se moverán ${num(movida)} ${lote.unidad || "kg"} y quedarán ` +
-    `${num(total - movida)} ${lote.unidad || "kg"} en ${lote.ubicacion || "sin ubicación"}. ` +
-    `Se crea un renglón nuevo en el destino.`;
+  if (!escrito) {
+    caja.textContent = `Sin cantidad se mueve TODO el lote: ${num(total)} ${unidad}. ` +
+      "Escribe cuánto se mueve si es solo una parte.";
+    return;
+  }
+  if (movida === null) {
+    caja.textContent = `No pude leer «${escrito}». Escribe solo el número, por ejemplo 5 o 12.5 ` +
+      `(la unidad de este renglón es ${unidad}).`;
+    return;
+  }
+  if (movida <= 0 || movida >= total - 0.0001) {
+    caja.hidden = true;
+    return;
+  }
+  caja.textContent = `Parcialidad: se moverán ${num(movida)} ${unidad} y quedarán ` +
+    `${num(total - movida)} ${unidad} en ${lote.ubicacion || "sin ubicación"}. ` +
+    "Se crea un renglón nuevo en el destino.";
 }
 
 async function cargarHistorial(fila) {
@@ -724,41 +1644,63 @@ async function cargarHistorial(fila) {
 }
 
 async function registrarMovimiento() {
+  if (estado.enviando) return;                 // doble clic = un solo movimiento
   if (!estado.lote) { aviso("Elige primero el lote", "err"); return; }
   const destino = $("m-destino").value.trim().toUpperCase();
-  const cantidad = $("m-cantidad").value.trim();
+  const escrito = String($("m-cantidad").value || "").trim();
   const motivo = $("m-motivo").value;
   const nota = $("m-nota").value.trim();
-  if (!destino) { aviso("Escribe el rack de destino", "err"); return; }
+  if (!destino) { aviso("Escribe el rack de destino o toca «→ Producción»", "err"); return; }
   if (destino === (estado.lote.ubicacion || "")) {
     aviso("El destino es la ubicación actual: no hay movimiento", "err"); return;
   }
   if (motivo === "otro" && !nota) { aviso("Con motivo «otro» escribe la nota", "err"); return; }
+  if (escrito && leerCantidad(escrito, Number(estado.lote.cantidad || 0)) === null) {
+    aviso(`No pude leer la cantidad «${escrito}»: escribe solo el número (ej. 5 o 12.5)`, "err");
+    return;
+  }
+  estado.enviando = true;
+  const boton = $("btn-registrar");
+  boton.disabled = true;
   try {
     const r = await api("/api/mover", {method: "POST", body: JSON.stringify({
       fila: estado.lote.fila, destino, motivo, nota: nota || null, tipo: estado.tipo,
-      cantidad: cantidad === "" ? null : Number(cantidad),
+      cantidad: escrito === "" ? null : escrito,   // el servidor interpreta «5», «5,5», «5 kg»
       ref_doc: $("m-ref").value.trim() || null,
     })});
     cerrar("modal-mover");
     pintarResumen(r.resumen);
     cargarInventario();
     cargarBitacora();
-    aviso(r.accion === "PARCIAL"
+    aviso(r.accion === "SALIDA"
+      ? `Salida a producción: ${num(r.cantidad)} ${r.unidad} de ${r.anterior}`
+        + (r.saldo ? ` · quedan ${num(r.saldo)} ${r.unidad}` : " · ya no queda nada en el almacén")
+      : r.accion === "PARCIAL"
       ? `Parcialidad registrada: ${num(r.cantidad)} ${r.unidad} → ${r.nueva}`
       : `Movimiento registrado: ${r.anterior} → ${r.nueva}`, "ok");
-  } catch (e) { aviso(e.message, "err"); }
+  } catch (e) {
+    aviso(e.message, "err");
+  } finally {
+    estado.enviando = false;
+    boton.disabled = false;
+  }
 }
 
 /* ---------------- bitácora ---------------- */
+
 async function cargarBitacora() {
+  const turno = ++estado.turnoBitacora;
   try {
     const {movimientos} = await api(`/api/bitacora?limite=${estado.limite}&tipo=${estado.tipo}`);
+    if (turno !== estado.turnoBitacora) return;
     estado.movimientos = movimientos;
     $("mov-cuenta").textContent = `${movimientos.length} movimientos`;
     $("movimientos").innerHTML = movimientos.length ? movimientos.map(movimiento).join("")
       : `<div class="vacio">Todavía no hay movimientos.</div>`;
-  } catch (e) { $("movimientos").innerHTML = `<div class="vacio">${esc(e.message)}</div>`; }
+  } catch (e) {
+    if (turno !== estado.turnoBitacora) return;
+    $("movimientos").innerHTML = `<div class="vacio">${esc(e.message)}</div>`;
+  }
 }
 
 function movimiento(m) {
@@ -794,9 +1736,65 @@ async function deshacer(id) {
     cargarInventario();
     cargarBitacora();
     aviso(r.cantidad
-      ? `Deshecho: ${num(r.cantidad)} ${estado.lote ? estado.lote.unidad || "" : ""} devueltos a ${r.nueva || "sin ubicación"}`
-      : `Deshecho: ${r.anterior} → ${r.nueva || "sin ubicación"}`, "ok");
+      ? `Deshecho: ${num(r.cantidad)} ${r.unidad || ""} devueltos a ${r.nueva || "sin ubicación"}`
+      : `Deshecho: ${r.anterior || "—"} → ${r.nueva || "sin ubicación"}`, "ok");
   } catch (e) { aviso(e.message, "err"); }
+}
+
+/* ---------------- borrar renglones de tajo (solo admin) ---------------- */
+
+function actualizarSeleccion() {
+  const cuantos = estado.seleccion.size;
+  const boton = $("btn-borrar-sel");
+  boton.textContent = cuantos
+    ? `🗑 Borrar ${cuantos} ${cuantos === 1 ? "renglón" : "renglones"}`
+    : "🗑 Borrar seleccionados";
+  boton.disabled = cuantos === 0;
+}
+
+function abrirBorrarSel() {
+  if (!estado.seleccion.size) { aviso("Marca al menos un renglón con la casilla", "err"); return; }
+  const elegidos = (estado.ultimas || []).filter((f) => estado.seleccion.has(f.fila));
+  const faltan = estado.seleccion.size - elegidos.length;
+  $("b-lista").innerHTML = elegidos.map((f) => `
+    <div><b>${esc(f.descripcion)}</b> · lote ${esc(f.lote || "—")} ·
+      ${num(f.cantidad)} ${esc(f.unidad || "")}${f.ubicacion ? " · " + esc(f.ubicacion) : " · sin ubicar"}</div>`
+  ).join("") + (faltan > 0
+    ? `<div style="color:#9b1c1c;font-weight:700;margin-top:6px">Además hay ${faltan} renglón(es)
+        marcados en una búsqueda anterior: quita los filtros o vuelve a marcarlos para verlos.</div>`
+    : "");
+  $("b-motivo").value = "";
+  $("b-error").hidden = true;
+  abrir("modal-borrar");
+}
+
+async function confirmarBorrarSel() {
+  const motivo = $("b-motivo").value.trim();
+  const caja = $("b-error");
+  if (motivo.length < 5) {
+    caja.textContent = "Escribe el motivo (mínimo 5 caracteres)";
+    caja.hidden = false;
+    return;
+  }
+  const boton = $("btn-confirmar-borrar");
+  boton.disabled = true;
+  try {
+    const r = await api("/api/borrar-renglones", {method: "POST",
+      body: JSON.stringify({filas: [...estado.seleccion], motivo, tipo: estado.tipo})});
+    cerrar("modal-borrar");
+    estado.seleccion.clear();
+    actualizarSeleccion();
+    pintarResumen(r.resumen);
+    cargarInventario();
+    cargarBitacora();
+    aviso(`${r.total} ${r.total === 1 ? "renglón borrado" : "renglones borrados"} · `
+      + "respaldo guardado en la carpeta de respaldos", "ok");
+  } catch (e) {
+    caja.textContent = e.message;
+    caja.hidden = false;
+  } finally {
+    boton.disabled = false;
+  }
 }
 
 async function purgar(id) {
@@ -807,6 +1805,9 @@ async function purgar(id) {
 }
 
 async function confirmarPurgar() {
+  const boton = $("btn-confirmar-purgar");
+  if (boton.disabled) return;
+  boton.disabled = true;
   try {
     const r = await api("/api/purgar", {method: "POST",
       body: JSON.stringify({movimiento: estado.purgarId, motivo: $("p-motivo").value.trim()})});
@@ -818,10 +1819,412 @@ async function confirmarPurgar() {
   } catch (e) {
     $("p-error").textContent = e.message;
     $("p-error").hidden = false;
+  } finally {
+    boton.disabled = false;
+  }
+}
+
+/* ---------------- alta de material ---------------- */
+const NATURALEZAS = {
+  mp: {unidad: "kg", archivo: "Inventario_MP.xlsx",
+       regla: "caducidad obligatoria (PEPS/FEFO)"},
+  mep: {unidad: "pza", archivo: "Inventario_MEP.xlsx",
+        regla: "caducidad opcional"},
+  pt: {unidad: "pza", archivo: "Inventario_PT.xlsx",
+       regla: "caducidad obligatoria · presentación y piezas por caja"},
+};
+
+/* La naturaleza manda: define a qué Excel va, la unidad y qué se exige. */
+function elegirNaturaleza(clave, inicial) {
+  const datos = NATURALEZAS[clave] || NATURALEZAS.mp;
+  estado.tipoAlta = clave;
+  document.querySelectorAll("#a-naturaleza .chip").forEach((boton) => {
+    boton.classList.toggle("activo", boton.dataset.natur === clave);
+  });
+  $("a-unidad").value = datos.unidad;
+  $("a-cad").required = clave !== "mep";
+  $("a-destino-natur").innerHTML = `Se guarda en <b>${datos.archivo}</b> · ${datos.regla}`;
+  if (!inicial) {
+    // Al cambiar de naturaleza se limpia la ubicación (las zonas son de otro almacén) y se
+    // cierra la lista del catálogo, pero NO se vuelve a buscar: el insumo elegido ya está.
+    $("a-catalogo").hidden = true;
+    $("a-ubi").value = "";
+    sugerirUbicacion("a-ubi", "sug-ubi", "alta");
+  }
+}
+
+async function abrirAlta(qrInicial) {
+  ["a-desc", "a-lote", "a-cant", "a-prov", "a-cad", "a-erp", "a-ubi", "a-cat", "a-obs",
+   "a-pres", "a-piezas", "a-qr"].forEach((id) => { $(id).value = ""; });
+  if (typeof qrInicial === "string" && qrInicial.trim()) $("a-qr").value = qrInicial.trim();
+  pintarFicha(null);
+  $("a-error").hidden = true;
+  $("a-catalogo").hidden = true;
+  $("a-cat-estado").textContent = "";
+  $("a-desc-estado").textContent = "";
+  $("a-erp").dataset.descripcion = "";
+  clearTimeout(temporizadorDescripcion);
+  pintarFicha(null);
+  elegirNaturaleza(estado.tipo, true);
+  llenarSugerenciasAlta();
+  abrir("modal-alta");
+  estadoCatalogo();
+  setTimeout(() => $("a-desc").focus(), 80);
+}
+
+function llenarSugerenciasAlta() {
+  const unicos = (valores) => [...new Set(valores.filter(Boolean))].slice(0, 400);
+  const filas = estado.ultimas || [];
+  const opciones = (lista) => lista.map((v) => `<option value="${esc(v)}">`).join("");
+  $("dl-materiales").innerHTML = opciones(unicos(filas.map((f) => f.descripcion)));
+  $("dl-proveedores").innerHTML = opciones(unicos(filas.map((f) => f.proveedor)));
+  $("dl-categorias").innerHTML = opciones(unicos(filas.map((f) => f.categoria)));
+  $("dl-erp").innerHTML = opciones(unicos(filas.map((f) => f.erp)));
+}
+
+/* ---------------- catálogo de insumos (MP y ME) ---------------- */
+
+let catalogoActual = [];
+let temporizadorCatalogo = null;
+
+async function estadoCatalogo() {
+  const caja = $("a-cat-estado");
+  try {
+    const r = await api("/api/catalogo?limite=1");
+    const res = r.resumen || {};
+    if (!res.existe) {
+      caja.innerHTML = "Catálogo de insumos no importado: corre <code>python scripts\\importar_catalogo.py</code>.";
+      return;
+    }
+    const cuantos = (res.por_inventario || {})[estado.tipoAlta] || 0;
+    caja.innerHTML = `Catálogo de insumos: <b>${res.total}</b> claves `
+      + `(<b>${cuantos}</b> para ${esc((estado.tipoAlta || estado.tipo).toUpperCase())}). `
+      + "Escribe la clave o el nombre y elige una sugerencia.";
+  } catch (e) { caja.textContent = ""; }
+}
+
+function buscarEnCatalogo() {
+  clearTimeout(temporizadorCatalogo);
+  const texto = $("a-erp").value.trim();
+  const caja = $("a-catalogo");
+  if (fichaSku && texto.toUpperCase() !== fichaSku.toUpperCase()) {
+    $("a-ficha").hidden = true;      // ya no coincide con lo escrito: no confundir
+  }
+  if (texto.length < 2) { caja.hidden = true; return; }
+  temporizadorCatalogo = setTimeout(async () => {
+    try {
+      // Sin filtro por inventario: si el insumo es de empaque y estás en materias primas,
+      // antes no aparecía nunca y era imposible elegirlo. Ahora aparece (con su tipo) y al
+      // elegirlo la pantalla cambia a la naturaleza correcta.
+      const r = await api(`/api/catalogo?q=${encodeURIComponent(texto)}&limite=10`);
+      catalogoActual = r.insumos || [];
+      const exacto = catalogoActual.find(
+        (x) => String(x.sku || "").toUpperCase() === texto.toUpperCase());
+      if (exacto) {           // la clave escrita coincide: se llena sola, sin tocar nada
+        aplicarInsumo(catalogoActual.indexOf(exacto));
+        return;
+      }
+      if (catalogoActual.length) {
+        caja.hidden = false;
+        caja.innerHTML = catalogoActual.map((i, n) => `
+          <button type="button" class="resultado-item" onclick="aplicarInsumo(${n})">
+            <b>${esc(i.sku)}</b> ${esc(i.descripcion)}
+            <span class="suave">${esc(i.tipo)} · ${esc(i.unidad)}${i.fabricante ? " · " + esc(i.fabricante) : ""}</span>
+          </button>`).join("");
+        return;
+      }
+      const parecidos = (r.sugerencias || []).map((i) =>
+        `<button type="button" class="chip" data-insumo="${esc(i.sku)}"
+           title="${esc(i.descripcion)}">${esc(i.sku)} · ${esc(i.descripcion)}</button>`).join("");
+      caja.hidden = false;
+      caja.innerHTML = parecidos
+        ? `<div style="font-size:12.5px;color:#1f3b73;margin-bottom:4px">
+             «${esc(texto)}» no está en el catálogo del ERP. ¿Quisiste decir…?</div>
+           <div class="chips">${parecidos}</div>`
+        : `<div style="font-size:12.5px;color:#7a5b00">«${esc(texto)}» no está en el catálogo
+             del ERP. Se puede ingresar igual: se guarda tal como lo capturaste. Revisa la clave o
+             pide que den de alta el insumo en el ERP.</div>`;
+    } catch (e) { caja.hidden = true; }
+  }, 250);
+}
+
+/* La descripción escrita también busca en el catálogo: si coincide con un solo insumo, se
+   llenan solos la clave y los demás datos; si hay varias claves con ese nombre, se elige. */
+let temporizadorDescripcion = null;
+
+function normalizarTexto(texto) {
+  return String(texto || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase().replace(/[^A-Z0-9]+/g, " ").trim();
+}
+
+function pintarListaCatalogo(lista, nota) {
+  const caja = $("a-catalogo");
+  if (!lista.length) { caja.hidden = true; return; }
+  const pista = nota
+    ? `<div style="font-size:12.5px;color:#7a5b00;margin-bottom:4px">${esc(nota)}</div>` : "";
+  caja.hidden = false;
+  caja.innerHTML = pista + lista.map((i, n) => `
+    <button type="button" class="resultado-item" onclick="aplicarInsumo(${n})">
+      <b>${esc(i.sku)}</b> ${esc(i.descripcion)}
+      <span class="suave">${esc(i.tipo || "sin tipo en el ERP")} · ${esc(i.unidad)}${i.fabricante ? " · " + esc(i.fabricante) : ""}</span>
+    </button>`).join("");
+}
+
+function buscarPorDescripcion() {
+  clearTimeout(temporizadorDescripcion);
+  const texto = $("a-desc").value.trim();
+  const estadoTexto = $("a-desc-estado");
+  if (fichaSku
+      && normalizarTexto(texto) !== normalizarTexto($("a-erp").dataset.descripcion || "")) {
+    // El nombre ya no es el del insumo elegido: la clave y la ficha dejan de aplicar.
+    $("a-ficha").hidden = true;
+    $("a-erp").value = "";
+    fichaSku = null;
+  }
+  if (texto.length < 3) {
+    $("a-catalogo").hidden = true;
+    estadoTexto.textContent = "";
+    return;
+  }
+  temporizadorDescripcion = setTimeout(async () => {
+    try {
+      const r = await api(`/api/catalogo?q=${encodeURIComponent(texto)}&limite=10`);
+      const lista = r.insumos || [];
+      const buscado = normalizarTexto(texto);
+      const exactos = lista.filter((i) => normalizarTexto(i.descripcion) === buscado);
+      catalogoActual = lista;
+      if (exactos.length === 1) {          // una sola clave con ese nombre: se llena sola
+        estadoTexto.textContent = "Encontrado en el catálogo del ERP: se llenó la clave y sus datos.";
+        aplicarInsumo(lista.indexOf(exactos[0]));
+        return;
+      }
+      if (exactos.length > 1) {
+        estadoTexto.textContent = "Hay varias claves con ese nombre en el ERP: elige la correcta.";
+        pintarListaCatalogo(lista, "Varias claves con ese nombre: elige la del proveedor correcto.");
+        return;
+      }
+      estadoTexto.textContent = lista.length
+        ? "No coincide exacto con el catálogo: elige una de las coincidencias o escribe la clave."
+        : "No está en el catálogo del ERP: se puede ingresar igual (se guarda como lo capturaste).";
+      if (lista.length) {
+        pintarListaCatalogo(lista, "Coincidencias en el catálogo del ERP:");
+      } else {
+        $("a-catalogo").hidden = true;
+      }
+    } catch (e) {
+      estadoTexto.textContent = "";
+      $("a-catalogo").hidden = true;
+    }
+  }, 350);
+}
+
+/* La unidad que trae el ERP manda: si trae «ml» o «g», se agrega a la lista del alta. */
+function ponerUnidad(unidad) {
+  const valor = String(unidad || "").trim().toLowerCase();
+  if (!valor) return;
+  const select = $("a-unidad");
+  if (![...select.options].some((opcion) => opcion.value === valor)) {
+    const opcion = document.createElement("option");
+    opcion.value = valor;
+    opcion.textContent = valor;
+    select.appendChild(opcion);
+  }
+  select.value = valor;
+}
+
+let fichaSku = null;
+
+/* Todos los datos del insumo del ERP a la vista, para que la captura no dependa de memoria. */
+function pintarFicha(i) {
+  const caja = $("a-ficha");
+  if (!i) {
+    caja.hidden = true;
+    caja.innerHTML = "";
+    fichaSku = null;
+    return;
+  }
+  fichaSku = i.sku || null;
+  const textos = (valor) => valor !== null && valor !== undefined
+    && String(valor).trim() !== "";
+  const filas = [
+    ["Clave", i.sku],
+    ["Descripción", i.descripcion],
+    ["Tipo", i.tipo],
+    ["Unidad", i.unidad],
+    ["Fabricante", i.fabricante],
+    ["Código de barra", i.barra],
+    ["Máximo", textos(i.maximo) ? num(i.maximo, 0) : null],
+    ["Mínimo", textos(i.minimo) ? num(i.minimo, 0) : null],
+  ].filter(([, valor]) => textos(valor));
+  caja.hidden = false;
+  caja.innerHTML = "<b>Datos del catálogo del ERP</b>"
+    + `<div style="display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin-top:6px;font-size:12.5px">`
+    + filas.map(([etiqueta, valor]) =>
+        `<span style="color:var(--suave)">${esc(etiqueta)}</span><span>${esc(valor)}</span>`).join("")
+    + "</div>";
+}
+
+function aplicarInsumo(n) {
+  const i = catalogoActual[n];
+  if (!i) return;
+  const antes = {desc: $("a-desc").value.trim(), prov: $("a-prov").value.trim(),
+                 cat: $("a-cat").value.trim()};
+  // Primero la naturaleza (ella pone la unidad por omisión); después, los datos del ERP.
+  if (i.inventario && i.inventario !== estado.tipoAlta) elegirNaturaleza(i.inventario);
+  $("a-erp").value = i.sku || "";
+  // Clave, descripción, unidad, categoría y fabricante son los del ERP: se toman siempre,
+  // para que el renglón no quede con datos que no existen en el catálogo (fuente única).
+  if (i.descripcion) $("a-desc").value = i.descripcion;
+  $("a-erp").dataset.descripcion = i.descripcion || "";
+  if (i.descripcion) {
+    $("a-desc-estado").textContent = `Tomado del catálogo del ERP: ${i.descripcion}.`;
+  }
+  ponerUnidad(i.unidad);
+  if (i.tipo) $("a-cat").value = i.tipo;
+  if (i.fabricante) $("a-prov").value = i.fabricante;
+  $("a-catalogo").hidden = true;
+  $("a-error").hidden = true;
+  pintarFicha(i);
+  if (!i.inventario) {
+    aviso(`${i.sku}: el ERP no trae tipo para este insumo; elige el inventario a mano`, "err");
+  } else if (i.inventario !== estado.tipoAlta && !antes.cat) {
+    aviso(`${i.sku} · ${i.descripcion}`, "ok");
+  }
+  const cambiados = [];
+  if (antes.desc && antes.desc.toUpperCase() !== String(i.descripcion || "").toUpperCase()) {
+    cambiados.push("descripción");
+  }
+  if (antes.prov && antes.prov.toUpperCase() !== String(i.fabricante || "").toUpperCase()) {
+    cambiados.push("proveedor");
+  }
+  if (antes.cat && antes.cat.toUpperCase() !== String(i.tipo || "").toUpperCase()) {
+    cambiados.push("categoría");
+  }
+  if (cambiados.length) {
+    setTimeout(() => aviso(`Tomado del catálogo del ERP: ${cambiados.join(", ")}`, "ok"), 800);
+  }
+}
+
+async function guardarAlta() {
+  const cuerpo = {
+    tipo: estado.tipoAlta,
+    descripcion: $("a-desc").value.trim(),
+    lote: $("a-lote").value.trim(),
+    cantidad: $("a-cant").value.trim(),
+    unidad: $("a-unidad").value,
+    proveedor: $("a-prov").value.trim(),
+    caducidad: $("a-cad").value,
+    erp: $("a-erp").value.trim() || null,
+    qr_id: $("a-qr").value.trim() || null,
+    ubicacion: $("a-ubi").value.trim() || null,
+    categoria: $("a-cat").value.trim() || null,
+    observaciones: $("a-obs").value.trim() || null,
+    presentacion: $("a-pres").value.trim() || null,
+    piezas: $("a-piezas").value.trim() || null,
+    motivo: "recepcion",
+  };
+  const obligatorios = [["descripcion", "la descripción"], ["lote", "el lote"],
+                        ["cantidad", "la cantidad"], ["proveedor", "el proveedor"]];
+  if (estado.tipoAlta !== "mep") obligatorios.push(["caducidad", "la caducidad"]);
+  const faltan = obligatorios.filter(([campo]) => !String(cuerpo[campo] ?? "").trim());
+  const cajaError = $("a-error");
+  if (faltan.length) {
+    cajaError.textContent = "Falta " + faltan.map(([, nombre]) => nombre).join(", ");
+    cajaError.hidden = false;
+    return;
+  }
+  const boton = $("btn-guardar-alta");
+  boton.disabled = true;
+  try {
+    const r = await api("/api/alta", {method: "POST", body: JSON.stringify(cuerpo)});
+    cerrar("modal-alta");
+    if (r.naturaleza && r.naturaleza !== estado.tipo) {
+      seleccionarInventario(r.naturaleza);
+      cargarInventarios();      // refresca los contadores del selector (MP/MEP/PT)
+    }
+    pintarResumen(r.resumen);
+    $("q").value = r.lote;
+    $("q").dispatchEvent(new Event("input"));
+    aviso(`Ingresado en ${r.naturaleza_nombre || "inventario"}: ${r.descripcion} · lote ${r.lote}`
+      + (r.ubicacion ? ` → ${r.ubicacion}` : " (pendiente de ubicar)"), "ok");
+    if (r.aviso) setTimeout(() => aviso(r.aviso, "err"), 900);
+  } catch (e) {
+    cajaError.textContent = e.message;
+    cajaError.hidden = false;
+  } finally {
+    boton.disabled = false;
+  }
+}
+
+/* ---------------- copia a la USB ---------------- */
+const COLOR_ESTADO = {
+  "igual": "OK", "hay cambios por copiar": "CRITICO", "falta en la copia": "VENCIDO",
+  "la copia está más al día": "AVISO", "sin origen": "SIN",
+};
+
+async function cargarCopia() {
+  try { pintarCopia(await api("/api/copia")); }
+  catch (e) { $("copia-estado").innerHTML = `<b>No se pudo revisar</b><br>${esc(e.message)}`; }
+}
+
+function pintarCopia(d) {
+  const b = d.base || {};
+  const adelante = (d.adelantados || []).length > 0;
+  const titulo = adelante ? "La copia de la USB va adelante"
+    : (d.al_dia ? "La copia está al día" : "Hay cambios por copiar");
+  const sinUsb = !d.existe_destino;
+  $("copia-estado").innerHTML = `
+    <b>${titulo}</b><br>
+    ${esc(d.destino)}${sinUsb
+      ? " · <span style=\"color:var(--rojo)\">la USB no está conectada (o la carpeta no existe)</span>" : ""}<br>
+    servidor <b>${num(b.movimientos_origen, 0)}</b> movimientos · copia <b>${num(b.movimientos_copia, 0)}</b>
+    ${d.ultima_copia ? " · última copia " + esc(d.ultima_copia) : ""}
+    ${adelante ? `<br><span style="color:var(--rojo)">No se sobrescribe: la copia trae datos más nuevos
+      (${esc(d.adelantados.join(", "))}). Marca «forzar» solo si esa copia no sirve.</span>` : ""}`;
+  $("copia-archivos").innerHTML = Object.entries(d.archivos || {}).map(([nombre, a]) => `
+    <article class="lote" style="grid-template-columns:1fr auto;align-items:center">
+      <div class="c-desc">${esc(nombre)}
+        <small>servidor ${a.bytes_origen === null ? "—" : num(a.bytes_origen, 0)} B ·
+          copia ${a.bytes_copia === null ? "—" : num(a.bytes_copia, 0)} B</small></div>
+      <div><span class="sem ${COLOR_ESTADO[a.estado] || "SIN"}">${esc(a.estado)}</span></div>
+    </article>`).join("");
+}
+
+async function copiarAhora() {
+  const boton = $("btn-copiar");
+  boton.disabled = true; boton.textContent = "Copiando…";
+  try {
+    const r = await api("/api/copia", {method: "POST", body: JSON.stringify({
+      historial: $("copia-historial").checked, forzar: $("copia-forzar").checked})});
+    const caja = $("copia-resultado");
+    caja.hidden = false;
+    caja.innerHTML = `<b>Copia hecha</b> · ${esc(r.generado)}<br>
+      ${num(r.movimientos, 0)} movimientos · integridad ${esc(r.integridad)}<br>
+      ${esc(r.destino)}
+      ${Object.keys(r.omitidos || {}).length
+        ? "<br>sin cambios: " + esc(Object.keys(r.omitidos).join(", ")) : ""}
+      ${(r.avisos || []).map((a) => `<br><span style="color:var(--rojo)">${esc(a)}</span>`).join("")}`;
+    aviso(`Copia lista: ${r.movimientos} movimientos`, "ok");
+    cargarCopia();
+  } catch (e) {
+    aviso(e.message, "err");
+  } finally {
+    boton.disabled = false; boton.textContent = "Copiar ahora";
   }
 }
 
 /* ---------------- usuarios ---------------- */
+
+function claveSugerida() {
+  const mayus = "ABCDEFGHJKLMNPQRSTUVWXYZ", minus = "abcdefghijkmnpqrstuvwxyz";
+  const nums = "23456789", simbolos = ".-_";
+  const todos = mayus + minus + nums + simbolos;
+  const azar = (cadena) => cadena[Math.floor(Math.random() * cadena.length)];
+  let clave = "Migh" + azar(simbolos) + azar(mayus) + azar(minus) + azar(nums);
+  while (clave.length < 12) clave += azar(todos);
+  return clave;
+}
+
 async function cargarUsuarios() {
   try {
     const {usuarios} = await api("/api/usuarios");
@@ -844,16 +2247,30 @@ async function cargarUsuarios() {
 }
 
 async function crearUsuario() {
+  const boton = $("btn-nuevo-usuario");
+  if (boton.disabled) return;                  // doble clic = un solo usuario
+  const nombre = $("nu-nombre").value.trim();
+  const clave = $("nu-clave").value;
+  const rol = $("nu-rol").value;
+  if (!nombre) { aviso("Escribe el nombre. Es lo que va a firmar cada movimiento", "err"); return; }
+  if (clave.length < 8) { aviso("La contraseña necesita al menos 8 caracteres", "err"); return; }
+  boton.disabled = true;
   try {
-    await api("/api/usuarios", {method: "POST", body: JSON.stringify({
-      nombre: $("nu-nombre").value.trim(),
-      password: $("nu-clave").value,
-      rol: $("nu-rol").value,
-    })});
+    await api("/api/usuarios", {method: "POST",
+      body: JSON.stringify({nombre, password: clave, rol})});
     $("nu-nombre").value = ""; $("nu-clave").value = "";
+    const caja = $("nu-resultado");
+    caja.hidden = false;
+    caja.innerHTML = `<b>Usuario creado</b><br>${esc(nombre)} · ${esc(rol)}<br>
+      contraseña provisional: <code>${esc(clave)}</code><br>
+      <span style="color:var(--suave);font-size:12px">Anótala y entrégala en mano: no se vuelve a mostrar.</span>`;
     cargarUsuarios();
-    aviso("Usuario creado", "ok");
-  } catch (e) { aviso(e.message, "err"); }
+    aviso("Usuario creado: " + nombre, "ok");
+  } catch (e) {
+    aviso(e.message, "err");
+  } finally {
+    boton.disabled = false;
+  }
 }
 
 async function editarUsuario(id, cambios) {
@@ -865,12 +2282,17 @@ async function editarUsuario(id, cambios) {
 }
 
 async function claveDeUsuario(id) {
-  const nueva = prompt("Contraseña nueva (mínimo 8 caracteres):");
-  if (!nueva) return;
-  await editarUsuario(id, {password: nueva});
+  const sugerida = claveSugerida();
+  const nueva = prompt(`Contraseña nueva (mínimo 8).\nSugerencia (déjala vacía para usarla): ${sugerida}`, "");
+  if (nueva === null) return;                 // canceló
+  const clave = nueva.trim() || sugerida;
+  if (clave.length < 8) { aviso("La contraseña necesita al menos 8 caracteres", "err"); return; }
+  await editarUsuario(id, {password: clave});
+  aviso(`Contraseña de ese usuario: ${clave}`, "ok");
 }
 
 /* ---------------- contraseña propia ---------------- */
+
 function abrirClave(obligatorio) {
   $("clave-aviso").hidden = !obligatorio;
   $("c-actual").value = ""; $("c-nueva").value = ""; $("c-repetir").value = "";
@@ -879,29 +2301,54 @@ function abrirClave(obligatorio) {
 }
 
 async function cambiarClave() {
+  const boton = $("btn-cambiar-clave");
+  if (boton.disabled) return;
   const actual = $("c-actual").value, nueva = $("c-nueva").value, repetir = $("c-repetir").value;
   const error = $("c-error");
   error.hidden = true;
   if (nueva !== repetir) { error.textContent = "Las contraseñas nuevas no coinciden"; error.hidden = false; return; }
+  if (nueva.length < 8) { error.textContent = "La contraseña nueva necesita al menos 8 caracteres"; error.hidden = false; return; }
+  boton.disabled = true;
   try {
     await api("/api/password", {method: "POST", body: JSON.stringify({actual, nueva})});
     cerrar("modal-clave");
     aviso("Contraseña cambiada; vuelve a entrar", "ok");
     setTimeout(() => mostrarLogin(""), 800);
   } catch (e) { error.textContent = e.message; error.hidden = false; }
+  finally { boton.disabled = false; }
+}
+
+/* ---------------- ayuda y primeros pasos (aditivo) ---------------- */
+
+function abrirAyuda() {
+  abrir("modal-ayuda");
+  api("/api/estado").then((e) => {
+    $("ayuda-version").textContent = e.version
+      ? `Versión ${e.version} · los datos viven en la PC del almacén (esta app no sale a internet)`
+      : "";
+  }).catch(() => { $("ayuda-version").textContent = ""; });
+}
+
+function mostrarPrimerosPasos() {
+  let visto = null;
+  try { visto = localStorage.getItem("migh-primeros-pasos"); } catch (e) { /* modo privado */ }
+  $("primeros-pasos").hidden = visto === "visto";
 }
 
 /* ---------------- modales y navegación ---------------- */
+
 function abrir(id) { $(id).hidden = false; document.body.style.overflow = "hidden"; }
+
 function cerrar(id) { $(id).hidden = true; document.body.style.overflow = ""; }
 
 function cambiarVista(nombre) {
   document.querySelectorAll("nav.tabs button").forEach((b) =>
     b.classList.toggle("activo", b.dataset.vista === nombre));
-  ["inventario", "bitacora", "usuarios", "todos"].forEach((v) =>
+  ["inventario", "bitacora", "usuarios", "todos", "copia"].forEach((v) =>
     $("vista-" + v).hidden = v !== nombre);
-  $("selector-inv").hidden = nombre === "usuarios" || nombre === "bitacora";
+  $("selector-inv").hidden = nombre === "usuarios" || nombre === "bitacora" || nombre === "copia";
   if (nombre === "todos") cargarTablero();
+  if (nombre === "copia") cargarCopia();
   if (nombre === "usuarios") cargarUsuarios();
   if (nombre === "bitacora") cargarBitacora();
 }
@@ -919,21 +2366,68 @@ $("btn-todo").addEventListener("click", () => {
 });
 $("m-cantidad").addEventListener("input", revisarParcial);
 $("btn-nuevo-usuario").addEventListener("click", crearUsuario);
+$("btn-generar-clave").addEventListener("click", () => {
+  $("nu-clave").value = claveSugerida();
+  $("nu-clave").focus();
+});
+$("btn-nuevo-usuario-top").addEventListener("click", () => {
+  cambiarVista("usuarios");
+  $("nu-resultado").hidden = true;
+  setTimeout(() => $("nu-nombre").focus(), 60);
+});
 $("btn-confirmar-purgar").addEventListener("click", confirmarPurgar);
 $("btn-mover-global").addEventListener("click", () => abrirMover(null));
+$("btn-escanear-material").addEventListener("click", escanearMaterial);
+$("btn-esc-qr").addEventListener("click", () => escanearEn("a-qr"));
+$("btn-esc-ubi").addEventListener("click", () => escanearEn("a-ubi"));
+$("btn-esc-destino").addEventListener("click", () => escanearEn("m-destino", revisarDestino));
+$("btn-esc-foto").addEventListener("click", () => {
+  $("esc-archivo").value = "";
+  $("esc-archivo").click();
+});
+$("esc-archivo").addEventListener("change", (e) => {
+  const archivo = e.target.files && e.target.files[0];
+  if (archivo) leerCodigoDeImagen(archivo);
+});
+$("btn-esc-manual").addEventListener("click", () => {
+  const manual = prompt("Escribe el código QR / Barcode:");
+  terminarEscaner(manual && manual.trim() ? manual.trim() : null);
+});
 $("btn-refrescar").addEventListener("click", () => { cargarInventario(); cargarBitacora(); });
+$("btn-alta").addEventListener("click", abrirAlta);
+document.querySelectorAll("#a-naturaleza .chip").forEach((boton) => {
+  boton.addEventListener("click", () => elegirNaturaleza(boton.dataset.natur));
+});
+$("btn-ayuda").addEventListener("click", abrirAyuda);
+$("btn-ver-ayuda").addEventListener("click", abrirAyuda);
+$("btn-entendido").addEventListener("click", () => {
+  $("primeros-pasos").hidden = true;
+  try { localStorage.setItem("migh-primeros-pasos", "visto"); } catch (e) { /* modo privado */ }
+});
+$("btn-borrar-sel").addEventListener("click", abrirBorrarSel);
+$("btn-confirmar-borrar").addEventListener("click", confirmarBorrarSel);
+document.addEventListener("change", (e) => {
+  if (!e.target.classList || !e.target.classList.contains("sel")) return;
+  const fila = Number(e.target.dataset.sel);
+  if (e.target.checked) estado.seleccion.add(fila);
+  else estado.seleccion.delete(fila);
+  const articulo = e.target.closest("article.lote");
+  if (articulo) articulo.classList.toggle("seleccionado", e.target.checked);
+  actualizarSeleccion();
+});
+$("a-desc").addEventListener("input", buscarPorDescripcion);
+$("btn-guardar-alta").addEventListener("click", guardarAlta);
+$("btn-copiar").addEventListener("click", copiarAhora);
+$("btn-revisar-copia").addEventListener("click", cargarCopia);
 $("btn-mas-mov").addEventListener("click", () => { estado.limite += 60; cargarBitacora(); });
-
 let temporizador;
 $("q").addEventListener("input", () => {
   clearTimeout(temporizador);
   temporizador = setTimeout(cargarInventario, 200);
 });
 ["f-sin", "f-venc", "f-cero"].forEach((id) => $(id).addEventListener("change", cargarInventario));
-
 document.querySelectorAll("nav.tabs button").forEach((b) =>
   b.addEventListener("click", () => cambiarVista(b.dataset.vista)));
-
 let tempBuscar;
 $("m-buscar").addEventListener("input", (e) => {
   clearTimeout(tempBuscar);
@@ -941,19 +2435,36 @@ $("m-buscar").addEventListener("input", (e) => {
     const q = e.target.value.trim();
     if (q.length < 2) { $("m-resultados").innerHTML = ""; return; }
     try {
-      const {filas} = await api(`/api/inventario?q=${encodeURIComponent(q)}`);
-      $("m-resultados").innerHTML = filas.slice(0, 8).map((f) => `
+      const {filas, difuso, sugerencias} = await api(
+        `/api/inventario?q=${encodeURIComponent(q)}&tipo=${estado.tipo}`);
+      const pista = difuso
+        ? `<div style="font-size:12px;color:#1f3b73">No hay coincidencia exacta: estos son los
+             más parecidos.${sugerencias && sugerencias.length
+               ? " Parecidos: " + sugerencias.map((s) => `<b>${esc(s)}</b>`).join(" · ") : ""}</div>`
+        : "";
+      $("m-resultados").innerHTML = pista + (filas.slice(0, 8).map((f) => `
         <div data-sel="${f.fila}"><b>${esc(f.descripcion)}</b> · lote ${esc(f.lote || "—")}
           · ${esc(f.ubicacion || "sin ubicar")} · ${num(f.cantidad)} ${esc(f.unidad || "")}</div>`).join("")
-        || "<div>Sin resultados</div>";
+        || "<div>Sin resultados</div>");
     } catch (err) { $("m-resultados").innerHTML = `<div>${esc(err.message)}</div>`; }
   }, 220);
 });
-
 document.addEventListener("click", (e) => {
   const invBtn = e.target.closest("[data-inv]");
   if (invBtn) { seleccionarInventario(invBtn.dataset.inv); return; }
   if (e.target.closest("[data-vista-todos]")) { cambiarVista("todos"); pintarSelector(); return; }
+  const sugerencia = e.target.closest("[data-sugerencia]");
+  if (sugerencia) {
+    $("q").value = sugerencia.dataset.sugerencia;
+    $("q").dispatchEvent(new Event("input"));
+    return;
+  }
+  const insumo = e.target.closest("[data-insumo]");
+  if (insumo) {
+    $("a-erp").value = insumo.dataset.insumo;
+    buscarEnCatalogo();
+    return;
+  }
   const mover = e.target.closest("[data-mover]");
   if (mover) { abrirMover(Number(mover.dataset.mover)); return; }
   const noEstaBtn = e.target.closest("[data-noesta]");
@@ -980,15 +2491,15 @@ document.addEventListener("click", (e) => {
   const activo = e.target.closest("[data-activo]");
   if (activo) { editarUsuario(activo.dataset.activo, {activo: activo.dataset.estado === "0"}); return; }
 });
-
 document.addEventListener("change", (e) => {
   const rol = e.target.closest("[data-rol]");
   if (rol) editarUsuario(rol.dataset.rol, {rol: rol.value});
 });
-
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
-    ["modal-mover", "modal-clave", "modal-purgar"].forEach((id) => { if (!$(id).hidden) cerrar(id); });
+    ["modal-mover", "modal-clave", "modal-purgar", "modal-alta", "modal-borrar",
+      "modal-ayuda", "modal-escaner"].forEach((id) => { if (!$(id).hidden) cerrar(id); });
+    if (!$("modal-escaner").hidden || ESCANER) terminarEscaner(null);
   }
   if (e.key === "Enter" && e.target.classList && e.target.classList.contains("u")) {
     e.preventDefault();
@@ -999,7 +2510,6 @@ document.addEventListener("keydown", (e) => {
     registrarMovimiento();
   }
 });
-
 document.addEventListener("blur", (e) => {
   if (e.target.classList && e.target.classList.contains("u")) {
     const original = (e.target.defaultValue || "").trim().toUpperCase();

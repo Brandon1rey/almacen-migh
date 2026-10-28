@@ -11,8 +11,8 @@ RAIZ = pathlib.Path(__file__).resolve().parents[1]
 RUTA_DB = RAIZ / "data" / "bitacora.db"
 _LOCK = threading.Lock()
 
-ACCIONES = ("UBICAR", "MOVER", "PARCIAL", "CONFIRMAR", "NO_ENCONTRADO", "LIMPIAR", "IMPORTAR",
-            "DESHACER", "PURGAR")
+ACCIONES = ("ALTA", "UBICAR", "MOVER", "PARCIAL", "SALIDA", "CONFIRMAR",
+            "NO_ENCONTRADO", "LIMPIAR", "IMPORTAR", "DESHACER", "PURGAR")
 ROLES = ("admin", "almacen", "consulta")
 
 ESQUEMA = """
@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS movimiento (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
     ts                TEXT NOT NULL,
     accion            TEXT NOT NULL CHECK (accion IN
-                      ('UBICAR','MOVER','PARCIAL','CONFIRMAR','NO_ENCONTRADO','LIMPIAR','IMPORTAR',
-                       'DESHACER','PURGAR')),
+                      ('ALTA','UBICAR','MOVER','PARCIAL','SALIDA','CONFIRMAR','NO_ENCONTRADO',
+                       'LIMPIAR','IMPORTAR','DESHACER','PURGAR')),
     inventario        TEXT NOT NULL DEFAULT 'mp',
     fila              INTEGER,
     descripcion       TEXT NOT NULL,
@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS movimiento (
     ubicacion_origen  TEXT,
     ubicacion_destino TEXT,
     cantidad          REAL,
+    unidad            TEXT,
     fila_destino      INTEGER,
     usuario           TEXT NOT NULL,
     usuario_id        INTEGER,
@@ -78,8 +79,21 @@ def _ahora():
     return dt.datetime.now().isoformat(sep=" ", timespec="seconds")
 
 
-def conectar(ruta=None):
-    """Una conexión compartida entre los hilos del servidor local."""
+def _entero(valor, defecto=0, minimo=0, maximo=1000):
+    """Convierte a entero sin romper la petición: la API nunca debe caer en un 500 por esto."""
+    try:
+        numero = int(valor)
+    except (TypeError, ValueError):
+        return defecto
+    return max(minimo, min(maximo, numero))
+
+
+def conectar(ruta=None, dsn=None):
+    """Una conexión compartida: PostgreSQL/Supabase si hay DSN, o SQLite en modo local."""
+    from app import db
+    url = dsn or (db.url_postgres() if ruta is None else None)
+    if url:
+        return db.PostgresConnection(url)
     ruta = pathlib.Path(ruta or RUTA_DB)
     ruta.parent.mkdir(parents=True, exist_ok=True)
     con = sqlite3.connect(str(ruta), timeout=10, check_same_thread=False)
@@ -95,7 +109,7 @@ def _migrar(con):
     nuevas = {
         "inventario": "TEXT NOT NULL DEFAULT 'mp'",
         "motivo": "TEXT", "ref_doc": "TEXT", "usuario_id": "INTEGER",
-        "cantidad": "REAL", "fila_destino": "INTEGER",
+        "cantidad": "REAL", "unidad": "TEXT", "fila_destino": "INTEGER",
         "revertido": "INTEGER NOT NULL DEFAULT 0", "revertido_por": "INTEGER",
     }
     for columna, tipo in nuevas.items():
@@ -104,7 +118,9 @@ def _migrar(con):
 
     definicion = con.execute(
         "SELECT sql FROM sqlite_master WHERE type='table' AND name='movimiento'").fetchone()
-    if definicion and not ("DESHACER" in definicion["sql"] and "PARCIAL" in definicion["sql"]):
+    # se compara contra la lista vigente: si falta cualquier acción, se reconstruye la tabla
+    faltantes = [a for a in ACCIONES if f"'{a}'" not in (definicion["sql"] or "")]
+    if definicion and faltantes:
         _reconstruir_movimiento(con)
     # el índice va aquí, después del ALTER: en bases viejas la columna todavía no existía
     con.execute("CREATE INDEX IF NOT EXISTS ix_mov_inv ON movimiento(inventario, fila)")
@@ -126,7 +142,7 @@ def _reconstruir_movimiento(con):
 # ---------------------------------------------------------------- bitácora
 def registrar(con, accion, registro, usuario, destino=None, origen=None, nota=None,
               motivo=None, ref_doc=None, usuario_id=None, cantidad=None, fila_destino=None,
-              inventario=None):
+              inventario=None, unidad=None):
     if not (usuario or "").strip():
         raise ValueError("usuario requerido: la bitácora es el rastro de auditoría")
     if accion not in ACCIONES:
@@ -135,11 +151,12 @@ def registrar(con, accion, registro, usuario, destino=None, origen=None, nota=No
     with _LOCK:
         cur = con.execute(
             "INSERT INTO movimiento (ts, accion, inventario, fila, descripcion, lote, "
-            "ubicacion_origen, ubicacion_destino, cantidad, fila_destino, usuario, usuario_id, "
-            "nota, motivo, ref_doc) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "ubicacion_origen, ubicacion_destino, cantidad, unidad, fila_destino, usuario, "
+            "usuario_id, nota, motivo, ref_doc) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (ts, accion, inventario or registro.get("tipo") or "mp", registro.get("fila"),
              registro["descripcion"], registro.get("lote"), origen, destino, cantidad,
-             fila_destino, usuario.strip(), usuario_id, nota, motivo, ref_doc))
+             unidad or registro.get("unidad"), fila_destino, usuario.strip(), usuario_id,
+             nota, motivo, ref_doc))
         con.commit()
     return ts, cur.lastrowid
 
@@ -151,27 +168,29 @@ def ultimos(con, limite=100, inventario=None):
         sql += " WHERE inventario=?"
         params.append(inventario)
     sql += " ORDER BY id DESC LIMIT ?"
-    params.append(int(limite))
+    params.append(_entero(limite, 100, 1, 100000))
     with _LOCK:
         return [dict(r) for r in con.execute(sql, params).fetchall()]
 
 
 def por_fila(con, fila, limite=12, inventario=None):
     sql = "SELECT * FROM movimiento WHERE fila=?"
-    params = [int(fila)]
+    params = [_entero(fila, -1)]
     if inventario:
         sql += " AND inventario=?"
         params.append(inventario)
     sql += " ORDER BY id DESC LIMIT ?"
-    params.append(int(limite))
+    params.append(_entero(limite, 12, 1, 500))
     with _LOCK:
         return [dict(r) for r in con.execute(sql, params).fetchall()]
 
 
 def por_id(con, movimiento_id):
+    ident = _entero(movimiento_id, 0, 0, 2**31 - 1)
+    if ident <= 0:
+        return None
     with _LOCK:
-        fila = con.execute("SELECT * FROM movimiento WHERE id=?",
-                           (int(movimiento_id),)).fetchone()
+        fila = con.execute("SELECT * FROM movimiento WHERE id=?", (ident,)).fetchone()
     return dict(fila) if fila else None
 
 
@@ -181,7 +200,7 @@ def ultimo_vigente(con, fila=None, inventario=None):
     params = []
     if fila is not None:
         sql += " AND fila=?"
-        params.append(int(fila))
+        params.append(_entero(fila, -1))
     if inventario:
         sql += " AND inventario=?"
         params.append(inventario)
@@ -194,18 +213,20 @@ def ultimo_vigente(con, fila=None, inventario=None):
 def marcar_revertido(con, movimiento_id, por_movimiento):
     with _LOCK:
         con.execute("UPDATE movimiento SET revertido=1, revertido_por=? WHERE id=?",
-                    (por_movimiento, movimiento_id))
+                    (por_movimiento, _entero(movimiento_id, 0, 0, 2**31 - 1)))
         con.commit()
 
 
 def borrar(con, movimiento_id):
     """Borrado físico: sólo lo usa la purga de administrador (queda en auditoría)."""
+    ident = _entero(movimiento_id, 0, 0, 2**31 - 1)
+    if ident <= 0:
+        return None
     with _LOCK:
-        fila = con.execute("SELECT * FROM movimiento WHERE id=?",
-                           (int(movimiento_id),)).fetchone()
+        fila = con.execute("SELECT * FROM movimiento WHERE id=?", (ident,)).fetchone()
         if fila is None:
             return None
-        con.execute("DELETE FROM movimiento WHERE id=?", (int(movimiento_id),))
+        con.execute("DELETE FROM movimiento WHERE id=?", (ident,))
         con.commit()
     return dict(fila)
 

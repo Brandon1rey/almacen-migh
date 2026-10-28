@@ -6,6 +6,15 @@ import socket
 import sqlite3
 import sys
 
+# La consola de Windows no siempre es UTF-8: sin esto, imprimir «→» o «·» lanza
+# UnicodeEncodeError y el script parece fallar aunque ya haya hecho su trabajo.
+for _flujo in (sys.stdout, sys.stderr):
+    try:
+        _flujo.reconfigure(errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
+
 RAIZ = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
 _VENDOR = RAIZ / "vendor"

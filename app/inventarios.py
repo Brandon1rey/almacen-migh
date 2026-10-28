@@ -20,6 +20,9 @@ TIPOS = {
         "orden": 1,
         "base": "ALM-PNO-002 §V.2.1.8 (reporte mensual)",
         "zonas": ("MP-ALERGENO", "MP-NO-ALERGENO", "ESPECIAL"),
+        "exige_caducidad": True,
+        "unidades": ("kg", "lt", "m", "pza"),
+        "unidad_preferida": "kg",
     },
     "mep": {
         "clave": "mep",
@@ -31,6 +34,9 @@ TIPOS = {
         "orden": 2,
         "base": "ALM-PNO-002 §V.2.1.8 (reporte mensual)",
         "zonas": ("EM", "ESPECIAL"),
+        "exige_caducidad": False,
+        "unidades": ("pza", "kg", "m"),
+        "unidad_preferida": "pza",
     },
     "pt": {
         "clave": "pt",
@@ -42,6 +48,9 @@ TIPOS = {
         "orden": 3,
         "base": "ALM-PNO-002 §V.2.3.8 (reporte semanal)",
         "zonas": ("PT", "ESPECIAL"),
+        "exige_caducidad": True,
+        "unidades": ("pza", "kg"),
+        "unidad_preferida": "pza",
     },
 }
 
@@ -72,13 +81,13 @@ def ficha(tipo):
     return {**TIPOS[clave], "ruta": str(ruta(clave))}
 
 
-def lista(carpeta=None):
+def lista(carpeta=None, en_db=False):
     """Los tres tipos en orden, con 'existe' para que la interfaz sepa cuáles hay."""
     salida = []
     for clave in sorted(TIPOS, key=lambda t: TIPOS[t]["orden"]):
         f = ficha(clave)
         f["ruta"] = str(ruta(clave, carpeta))
-        f["existe"] = pathlib.Path(f["ruta"]).exists()
+        f["existe"] = True if en_db else pathlib.Path(f["ruta"]).exists()
         salida.append(f)
     return salida
 

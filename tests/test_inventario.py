@@ -8,7 +8,9 @@ sys.path.insert(0, str(RAIZ))
 
 from app import fechas, inventario, ubicaciones  # noqa: E402
 
-ORIGEN = pathlib.Path(r"C:\Users\asegm\Desktop\Copia de 06 OCT 26 INVENTARIO MP.xlsx")
+ORIGEN_AREA = pathlib.Path(r"C:\Users\asegm\Desktop\Copia de 06 OCT 26 INVENTARIO MP.xlsx")
+# Respaldo al archivo real del repositorio: si no, estas pruebas se saltaban sin avisar.
+ORIGEN = ORIGEN_AREA if ORIGEN_AREA.exists() else RAIZ / "data" / "Inventario_MP.xlsx"
 
 
 class TestUbicaciones(unittest.TestCase):

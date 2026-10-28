@@ -5,6 +5,7 @@ data/bitacora.db-journal
 data/bitacora.db-wal
 data/bitacora.db-shm
 data/salidas/
+data/logs/
 data/pruebas/
 data/respaldos/
 data/*.tmp.xlsx
@@ -15,3 +16,7 @@ dist/
 vendor/
 datos_iniciales/
 data/.prueba_escritura
+.vercel/
+.env
+.env.local
+.env.*.local

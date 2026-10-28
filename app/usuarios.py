@@ -43,12 +43,12 @@ def crear(con, nombre, password, rol="almacen", debe_cambiar=False):
         con.commit()
     except Exception as e:
         raise ValueError(f"no se pudo crear el usuario {nombre}: {e}") from e
-    return con.execute("SELECT * FROM usuario WHERE nombre=?", (nombre,)).fetchone()
+    return con.execute("SELECT * FROM usuario WHERE LOWER(nombre)=LOWER(?)", (nombre,)).fetchone()
 
 
 def verificar(con, nombre, password):
     """Devuelve la fila del usuario si la contraseña es correcta, si no None."""
-    fila = con.execute("SELECT * FROM usuario WHERE nombre=? AND activo=1",
+    fila = con.execute("SELECT * FROM usuario WHERE LOWER(nombre)=LOWER(?) AND activo=1",
                        ((nombre or "").strip(),)).fetchone()
     if fila is None:
         # mismo costo de cálculo aunque el usuario no exista (evita adivinar nombres)
@@ -77,11 +77,21 @@ def cambiar_password(con, usuario_id, nueva, debe_cambiar=False):
 def listar(con):
     return [dict(r) for r in con.execute(
         "SELECT id, nombre, rol, activo, debe_cambiar, creado, ultimo_acceso "
-        "FROM usuario ORDER BY nombre COLLATE NOCASE").fetchall()]
+        "FROM usuario ORDER BY LOWER(nombre)").fetchall()]
 
 
 def por_nombre(con, nombre):
-    return con.execute("SELECT * FROM usuario WHERE nombre=?", ((nombre or "").strip(),)).fetchone()
+    return con.execute("SELECT * FROM usuario WHERE LOWER(nombre)=LOWER(?)",
+                       ((nombre or "").strip(),)).fetchone()
+
+
+def por_id(con, usuario_id):
+    """Fila del usuario o None. La API la usa para responder 404 en vez de fingir éxito."""
+    try:
+        ident = int(usuario_id)
+    except (TypeError, ValueError):
+        return None
+    return con.execute("SELECT * FROM usuario WHERE id=?", (ident,)).fetchone()
 
 
 def cambiar_rol(con, usuario_id, rol):

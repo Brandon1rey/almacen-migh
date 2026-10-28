@@ -1,14 +1,11 @@
-# Dependencias de ejecución del sistema de ubicación de almacén.
+# Dependencias de ejecución del sistema de ubicación de almacén (Local + Vercel Serverless).
 #
-# El servidor y la interfaz usan SOLO la biblioteca estándar de Python
-# (http.server, sqlite3, json). openpyxl es la única dependencia externa:
-# sirve para leer y escribir el Excel del área.
+# - openpyxl / et-xmlfile: lectura y generación de reportes Excel (F01, FEFO, bitácora).
+# - psycopg2-binary: conexión a PostgreSQL (Supabase) en producción (Vercel).
 #
 # Instalación:
 #   python -m pip install -r requirements.txt
-#
-# Sin internet ni pip: copiar la carpeta vendor\ (generada con
-# scripts\empaquetar.py --vendor) junto a app\ y el sistema arranca igual.
 
 openpyxl==3.1.5
 et-xmlfile==2.0.0
+psycopg2-binary==2.9.10

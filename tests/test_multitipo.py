@@ -3,9 +3,9 @@ import pathlib
 import tempfile
 import unittest
 
-import openpyxl
-
 from app import bitacora, inventarios, inventario, reportes
+
+import openpyxl  # noqa: E402  (después de app, que habilita vendor\)
 
 ENCABEZADOS = ["Descripción", "Proveedor", "Categoría", "Unidad de medida", "Cantidad",
                "Caducidad vigente", "Lote actual", "Entrada ERP", "Observaciones",
