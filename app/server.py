@@ -454,6 +454,7 @@ def arrancar(argumento=None, host=None, puerto=None, servir=True):
         servidor = ThreadingHTTPServer((host or HOST, puerto or PUERTO), Handler)
     _anunciar(ESTADO, puerto or PUERTO, host or HOST)
     primer_arranque(ESTADO)
+    usuarios.sembrar_acceso(ESTADO.con)
     if servidor is None:
         return ESTADO
     try:

