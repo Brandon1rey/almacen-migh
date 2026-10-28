@@ -1,8 +1,8 @@
 -- =============================================================================
--- MIGRACIÓN COMPLETA + DATOS SEMILLA PARA SUPABASE (PostgreSQL)
+-- LIENZO LIMPIO (CLEAN CANVAS): ESQUEMA + UBICACIONES + CATÁLOGO DE PRODUCTOS (SIN LOTES)
 -- Generado automáticamente por scripts/migrar_supabase.py
 -- Puedes pegar este archivo completo en el SQL Editor de Supabase o ejecutarlo
--- con: psql "$SUPABASE_DB_URL" -f supabase/seed.sql
+-- con: psql "$SUPABASE_DB_URL" -f supabase/clean_canvas.sql
 -- =============================================================================
 
 -- =============================================================================
@@ -178,7 +178,17 @@ COMMIT;
 BEGIN;
 
 -- -----------------------------------------------------------------------------
--- 1. Ubicaciones (383 ubicaciones oficiales ALM-PNO-002)
+-- 0. Lienzo limpio: vacía lotes, movimientos, sesiones y auditoría previa
+-- -----------------------------------------------------------------------------
+TRUNCATE TABLE
+  public.inventario_lote,
+  public.movimiento,
+  public.auditoria,
+  public.sesion
+RESTART IDENTITY CASCADE;
+
+-- -----------------------------------------------------------------------------
+-- 1. Ubicaciones de Racks y Zonas (383 códigos oficiales ALM-PNO-002)
 -- -----------------------------------------------------------------------------
 INSERT INTO public.ubicaciones (codigo, zona, tipo, permite_alergenos)
 VALUES
@@ -571,7 +581,7 @@ ON CONFLICT (codigo) DO UPDATE SET
   permite_alergenos = EXCLUDED.permite_alergenos;
 
 -- -----------------------------------------------------------------------------
--- 2. Catálogo de insumos (565 registros)
+-- 2. Catálogo de códigos de producto del ERP (565 registros)
 -- -----------------------------------------------------------------------------
 INSERT INTO public.catalogo_insumos (
   sku, descripcion, tipo, inventario, unidad, fabricante, barra, maximo, minimo
@@ -1154,178 +1164,7 @@ ON CONFLICT (sku) DO UPDATE SET
   actualizado = NOW();
 
 -- -----------------------------------------------------------------------------
--- 3. Inventario de lotes (137 renglones)
--- -----------------------------------------------------------------------------
-INSERT INTO public.inventario_lote (
-  inventario, fila, descripcion, categoria, proveedor, unidad,
-  cantidad, cantidad_texto, cantidad_legible, cantidad_formula,
-  caducidad, caducidad_cruda, motivo_caducidad, lote, erp, qr_id,
-  observaciones, ubicacion, ubicacion_cruda, ubicacion_invalida,
-  presentacion, piezas
-)
-VALUES
-  ('mp', 4, 'LACA ROJO 40', 'Aditivo', 'MEDINA', 'kg', 1.95, NULL, TRUE, FALSE, '2027-02-28', '2027-02-28', NULL, '260K1203', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 5, 'LACA ROJO 40', 'Aditivo', 'MEDINA', 'kg', 4.0, NULL, TRUE, FALSE, '2026-11-30', '2026-11-30', NULL, '25030301', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 6, 'Sabor artificial en polvo platano 442', 'Aditivo', 'Multisabores', 'kg', 50.0, NULL, TRUE, FALSE, '2027-07-01', '2027-07-01', NULL, 'SC442230726', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 7, 'Sabor artificial en polvo platano 442', 'Aditivo', 'Multisabores', 'kg', 150.0, NULL, TRUE, FALSE, '2027-06-09', '2027-06-09', NULL, 'sc4421140926in', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 8, 'SABOR CAPUCHINO', 'Aditivo', 'MEDINA', 'kg', 30.0, NULL, TRUE, FALSE, '2025-12-31', '2025-12-31', NULL, '25062504', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 9, 'SABOR FRESA', 'Aditivo', 'Medina', 'kg', 324.0, NULL, TRUE, FALSE, '2027-01-31', '2027-01-31', NULL, '26080507', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 10, 'SABOR FRUTOS ROJOS', 'Aditivo', 'MEDINA', 'kg', 270.0, NULL, TRUE, FALSE, '2027-02-01', '2027-02-01', NULL, '26082509', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 11, 'SABOR LIMON', 'Aditivo', 'MEDINA', 'kg', 40.0, NULL, TRUE, FALSE, '2025-09-30', '2025-09-30', NULL, '26042107', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 12, 'SABOR LIMON', 'Aditivo', 'MEDINA', 'kg', 10.0, NULL, TRUE, FALSE, '2025-09-30', '2025-09-30', NULL, '25030505', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 13, 'SABOR NUEZ', 'Aditivo', 'MEDINA', 'kg', 21.5, NULL, TRUE, FALSE, '2026-11-30', '2026-11-30', NULL, '33041019614', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 14, 'SABOR NUEZ', 'Aditivo', 'DEIMAN', 'kg', 40.0, NULL, TRUE, FALSE, '2028-05-31', '2028-05-31', NULL, '220528', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 15, 'SABOR NUEZ', 'Aditivo', 'DEIMAN', 'kg', 8.0, NULL, TRUE, FALSE, '2026-05-31', '2026-05-31', NULL, '301126', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 16, 'SABOR SANDIA', 'Aditivo', 'MEDINA', 'kg', 22.0, NULL, TRUE, FALSE, '2025-08-31', '2025-08-31', NULL, '25021303', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 17, 'SABOR SANDIA', 'Aditivo', 'MEDINA', 'kg', 9.0, NULL, TRUE, FALSE, '2026-08-31', '2026-08-31', NULL, '26021609', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 18, 'SABOR VAINILLA BELL', 'Aditivo', 'BELL', 'kg', 15.9, NULL, TRUE, FALSE, '2026-03-01', '2026-03-01', NULL, 'PBN000013075', NULL, NULL, 'MAL SURTIDO EN ERP SE TOME DE LOTE PVN4022324', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 19, 'SABOR VAINILLA BELL', 'Aditivo', 'BELL', 'kg', 60.0, NULL, TRUE, FALSE, '2027-03-31', '2027-03-31', NULL, 'PVN4022324', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 20, 'SABORIZANTE CAPUCHINO', 'Aditivo', 'MEDINA', 'kg', 13.0, NULL, TRUE, FALSE, '2025-12-01', '2025-12-01', NULL, '25061612', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 21, 'SABORIZANTE LIMA', 'Aditivo', 'MEDINA', 'kg', 10.0, NULL, TRUE, FALSE, '2026-10-31', '2026-10-31', NULL, '26042208', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 22, 'SABORIZANTE NARANJA', 'Aditivo', 'MEDINA', 'kg', 30.0, NULL, TRUE, FALSE, '2026-04-30', '2026-04-30', NULL, '25102412', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 23, 'SABORIZANTE NARANJA', 'Aditivo', 'MEDINA', 'kg', 10.0, NULL, TRUE, FALSE, '2026-04-30', '2026-04-30', NULL, '25100903', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 24, 'VAINILLINA', 'Aditivo', 'MEDINA', 'kg', 23.0, NULL, TRUE, FALSE, '2027-08-31', '2027-08-31', NULL, '26080510', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 25, 'ACIDO ASPARTICO', 'Aminoácido', 'AMERICA ALIMENTOS', 'kg', 65.6, NULL, TRUE, TRUE, '2026-02-28', '2026-02-28', NULL, '20251022', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 26, 'ACIDO GLUTAMICO', 'Aminoácido', 'AMERICA ALIMENTOS', 'kg', 33.0, NULL, TRUE, FALSE, '2027-03-17', '2027-03-17', NULL, '20250318', 'MP-26-728', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 27, 'ACIDO GLUTAMICO', 'Aminoácido', 'AMERICA ALIMENTOS', 'kg', 100.0, NULL, TRUE, FALSE, '2027-07-31', '2027-07-31', NULL, 'KL250703', 'MP-26-780', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 28, 'ALANINA', 'Aminoácido', 'TCA', 'kg', 250.0, NULL, TRUE, FALSE, '2026-10-18', '2026-10-18', NULL, '3062410026', '26-MP-713', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 29, 'ARGININA', 'Aminoácido', 'DVA', 'kg', 294.75, NULL, TRUE, FALSE, '2026-11-11', '2026-11-11', NULL, '5202411021', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 30, 'BETA ALANINA', 'Aminoácido', 'TCA', 'kg', 25.0, NULL, TRUE, FALSE, '2027-12-31', '2027-12-31', NULL, 'KC251226', '26-MP-810', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 31, 'BETA ALANINA', 'Aminoácido', 'TCA', 'kg', 20.0, NULL, TRUE, FALSE, '2026-10-01', '2026-10-01', NULL, '107241003', '26-MP-732', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 32, 'BITARTRATO DE COLINA', 'Aminoácido', 'TCA', 'kg', 24.6, NULL, TRUE, FALSE, '2029-05-04', '2029-05-04', NULL, '3029476', '26-MP-779', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 33, 'FENILALANINA', 'Aminoácido', 'DVA', 'kg', 362.0, NULL, TRUE, FALSE, '2026-10-31', '2026-10-31', NULL, '2182410019', '26-MP-725', NULL, 'FALTA UN 1 EN EL LOTE', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 34, 'GLICINA', 'Aminoácido', 'TCA', 'kg', 208.0, NULL, TRUE, FALSE, '2026-12-16', '2026-12-16', NULL, '1082412040', '26-MP-714', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 35, 'GLUTAMINA', 'Aminoácido', 'TCA', 'kg', 75.0, NULL, TRUE, FALSE, '2027-11-30', '2027-11-30', NULL, '20251108', '26-MP-900 Y 26-MP-807', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 36, 'GLUTAMINA', 'Aminoácido', 'TCA', 'kg', 3.0, NULL, TRUE, FALSE, '2027-06-25', '2027-06-25', NULL, '20250608', '26-MP-803', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 37, 'ISOLEUCINA', 'Aminoácido', 'TCA', 'kg', 68.4, NULL, TRUE, FALSE, '2028-11-06', '2028-11-06', NULL, 'KC251107', '26-mp-733', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 38, 'L CARNITINA', 'Aminoácido', 'TCA', 'kg', 0.0, NULL, TRUE, FALSE, '2026-05-31', '2026-05-31', NULL, '318110KC240528', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 39, 'L CARNITINA', 'Aminoácido', 'TCA', 'kg', 18.5, NULL, TRUE, FALSE, '2027-03-30', '2027-03-30', NULL, 'KC250331', '26-MP-833', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 40, 'L CISTINA', 'Aminoácido', 'TCA', 'kg', 51.7, NULL, TRUE, FALSE, '2026-11-30', '2026-11-30', NULL, '2242411001', 'MP-26-781', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 41, 'L HISTIDINA', 'Aminoácido', 'DVA', 'kg', 235.0, NULL, TRUE, FALSE, '2026-12-02', '2026-12-02', NULL, '3562411001', '26-MP-730', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 42, 'L TRIPTOFANO', 'Aminoácido', 'DVA', 'kg', 88.8, NULL, TRUE, TRUE, '2026-12-22', '2026-12-22', NULL, '5102412001', '26-MP-731', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 43, 'LEUCINA', 'Aminoácido', 'TCA', 'kg', 250.0, NULL, TRUE, FALSE, '2027-12-15', '2027-12-15', NULL, 'KC251216', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 44, 'METIONINA', 'Aminoácido', 'TCA', 'kg', 100.0, NULL, TRUE, FALSE, '2027-01-05', '2027-01-05', NULL, 'KC250106', '26-mp-785', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 45, 'METIONINA', 'Aminoácido', 'TCA', 'kg', 70.2, NULL, TRUE, FALSE, '2026-10-31', '2026-10-31', NULL, '5012410009', '26-mp-724', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 46, 'NICOTINAMIDA NAD', 'Aminoácido', 'TCA', 'kg', 8.0, NULL, TRUE, FALSE, '2026-02-28', '2026-02-28', NULL, '241020', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 47, 'NICOTINAMIDA NAD', 'Aminoácido', 'TCA', 'kg', 25.0, NULL, TRUE, FALSE, '2027-03-17', '2027-03-17', NULL, '20250328', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 48, 'PROLINA', 'Aminoácido', 'DVA', 'kg', 321.27, NULL, TRUE, FALSE, '2026-11-12', '2026-11-12', NULL, '1052411007', '26-mp-818', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 49, 'SERINA', 'Aminoácido', 'DVA', 'kg', 172.3, NULL, TRUE, TRUE, '2026-12-02', '2026-12-02', NULL, '12924112001', '26-mp-619,813.727', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 50, 'TAURINA', 'Aminoácido', 'TCA', 'kg', 53.0, NULL, TRUE, FALSE, '2026-09-30', '2026-09-30', NULL, 'XP24094216', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 51, 'TIROSINA', 'Aminoácido', 'TCA', 'kg', 25.0, NULL, TRUE, FALSE, '2026-10-31', '2026-10-31', NULL, 'KC251222', '26-MP-866', NULL, '13.65 MAS', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 52, 'TREONINA', 'Aminoácido', 'DVA', 'kg', 150.0, NULL, TRUE, FALSE, '2029-07-25', '2029-07-25', NULL, 'KC260311', '26-MP-867', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 53, 'VALINA', 'Aminoácido', 'DVA', 'kg', 100.0, NULL, TRUE, FALSE, '2028-02-22', '2028-02-22', NULL, 'KC260223', '26-MP-868', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 54, 'VALINA', 'Aminoácido', 'DVA', 'kg', 150.0, NULL, TRUE, FALSE, '2027-11-03', '2027-11-03', NULL, 'KC251104', '26-MP-898', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 55, 'ALMIDON DE MAIZ', 'Carbohidrato', 'INGREDION', 'kg', 57.0, NULL, TRUE, FALSE, '2029-05-09', '2029-05-09', NULL, '2JE018', '26-mp-744', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 56, 'CAFÉ EN POLVO', 'Carbohidrato', 'CAFIBER', 'kg', 550.0, NULL, TRUE, FALSE, '2027-02-01', '2027-02-01', NULL, 'RPT03E120', 'MP-26-729', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 57, 'GOMA GARROFIN', 'Carbohidrato', 'LUCERO JULIAN', 'kg', 24.0, NULL, TRUE, FALSE, '2028-09-30', '2028-09-30', NULL, '23C1210', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 58, 'GOMA XANTHANA', 'Carbohidrato', 'ANDRES', 'kg', 275.0, NULL, TRUE, FALSE, '2027-06-01', '2027-06-01', NULL, 'NA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 59, 'INULINA DE AGAVE', 'Carbohidrato', 'MYDI', 'kg', 331.2, NULL, TRUE, FALSE, '2028-02-28', '2028-02-28', NULL, 'CB037613', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 60, 'LACTOSA', 'Carbohidrato', 'PROANKA', 'kg', 2990.0, NULL, TRUE, FALSE, '2026-01-10', '2026-01-10', NULL, '2574538', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 61, 'LACTOSA', 'Carbohidrato', 'PROANKA', 'kg', 7475.0, NULL, TRUE, FALSE, '2026-08-18', '2026-08-18', NULL, '255745', NULL, NULL, '1.290 TON DIFERENCIA EN ERP', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 62, 'LECHE DESCREMADA', 'Carbohidrato', 'PROQUIMLECHE', 'kg', 273.9, NULL, TRUE, FALSE, '2029-04-01', '2029-04-01', NULL, 'J10326', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 63, 'MALTODEXTRINA', 'Carbohidrato', 'MYDI', 'kg', 10000.0, NULL, TRUE, FALSE, '2029-09-01', '2029-09-01', NULL, '2JG638', NULL, NULL, '1000 del lote 610', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 64, 'MALTODEXTRINA', 'Carbohidrato', 'MYDI', 'kg', 4000.0, NULL, TRUE, FALSE, '2029-08-01', '2029-08-01', NULL, '2JH611', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 65, 'MALTODEXTRINA', 'Carbohidrato', 'MYDI', 'kg', 8337.0, NULL, TRUE, FALSE, '2029-07-01', '2029-07-01', NULL, '2JG644', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 66, 'SUCRALOSA', 'Carbohidrato', 'TCA', 'kg', 60.13, NULL, TRUE, FALSE, '2029-05-22', '2029-05-22', NULL, 'U126052211', '26-MP-882', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 67, 'STEVIA', 'Carbohidrato', 'TCA', 'kg', 25.0, NULL, TRUE, FALSE, '2026-01-26', '2026-01-26', NULL, '20240101', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 68, 'BICARBONATO DE POTASIO', 'Mineral', 'LUCERO JULIAN', 'kg', 91.0, NULL, TRUE, FALSE, '2026-12-31', '2026-12-31', NULL, '25010101', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 69, 'BIOXIDO DE TITANIO', 'Mineral', 'TAE', 'kg', 371.0, NULL, TRUE, FALSE, '2028-06-01', '2028-06-01', NULL, '1590', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 70, 'BISGLICINATO DE ZINC', 'Mineral', 'TCA', 'kg', 12.0, NULL, TRUE, FALSE, '2026-04-30', '2026-04-30', NULL, 'ZN170327', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 71, 'BISGLICINATO DE ZINC', 'Mineral', 'TCA', 'kg', 25.0, NULL, TRUE, FALSE, '2025-01-01', '2025-01-01', NULL, '20230704', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 72, 'BISGLICINATO DE ZINC', 'Mineral', 'TCA', 'kg', 25.0, NULL, TRUE, FALSE, '2027-04-30', '2027-04-30', NULL, '202504010', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 73, 'CITRATO DE MAGNESIO', 'Mineral', 'TCA', 'kg', 57.0, NULL, TRUE, FALSE, '2027-04-13', '2027-04-13', NULL, '20250414', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 74, 'CITRATO TRIPOTASICO', 'Mineral', 'TCA', 'kg', 50.0, NULL, TRUE, FALSE, '2029-01-31', '2029-01-31', NULL, '601030068', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 75, 'CITRATO TRIPOTASICO', 'Mineral', 'TCA', 'kg', 25.0, NULL, TRUE, FALSE, '2027-04-30', '2027-04-30', NULL, '40430068', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 76, 'ISOLEUCINA', 'Aminoácido', 'TCA', 'kg', 218.15, NULL, TRUE, FALSE, '2026-11-25', '2026-11-25', NULL, '2142411004', '26-mp-733', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 77, 'CITRATO TRISODICO', 'Mineral', 'TCA', 'kg', 24.0, NULL, TRUE, FALSE, '2028-02-25', '2028-02-25', NULL, '502020142', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 78, 'FOSFATO DICALCICO', 'Mineral', 'TCA', 'kg', 65.28, NULL, TRUE, FALSE, '2027-08-15', '2027-08-15', NULL, '425081612', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 79, 'FOSFATO DIPOTASICO', 'Mineral', 'TCA', 'kg', 75.55, NULL, TRUE, FALSE, '2027-08-31', '2027-08-31', NULL, '2425080613', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 80, 'FOSFATO TRICALCICO', 'Mineral', 'TCA', 'kg', 50.0, NULL, TRUE, FALSE, '2028-01-11', '2028-01-11', NULL, '26011201', '26-MP-845', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 81, 'FOSFATO TRICALCICO', 'Mineral', 'TCA', 'kg', 20.0, NULL, TRUE, FALSE, '2027-05-31', '2027-05-31', NULL, '0525052613', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 82, 'GLUCONATO DE HIERRO', 'Mineral', 'TCA', 'kg', 15.0, NULL, TRUE, FALSE, '2025-05-31', '2025-05-31', NULL, '06224707', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 83, 'CAFEINA ANHIDRA', 'Otro', 'TCA', 'kg', 65.0, NULL, TRUE, FALSE, '2030-09-30', '2030-09-30', NULL, '1032509420', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 84, 'CREATINA MONOHIDRATADA', 'Otro', 'PKR', 'kg', 3775.0, NULL, TRUE, FALSE, '2027-08-08', '2027-08-08', NULL, '20250809', 'MP-26-880', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 85, 'CREATINA MONOHIDRATADA', 'Otro', 'DVA', 'kg', 2375.0, NULL, TRUE, FALSE, '2027-08-08', '2027-08-08', NULL, '20250809', 'MP-26-899 Y MP-26-878', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 86, 'FIBRA DE TRIGO', 'Otro', 'LUCERO JULIAN', 'kg', 30.0, NULL, TRUE, FALSE, '2029-06-01', '2029-06-01', NULL, 'FT040625', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 87, 'INOSITOL EN POLVO', 'Otro', 'TCA', 'kg', 2.0, NULL, TRUE, FALSE, '2026-07-17', '2026-07-17', NULL, '1012205901', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 88, 'INOSITOL EN POLVO', 'Otro', 'TCA', 'kg', 24.9, NULL, TRUE, FALSE, '2029-03-31', '2029-03-31', NULL, 'KC250331', '26-MP-782', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 89, 'TONGKAT ALI', 'Otro', 'LUCERO JULIAN', 'kg', 138.0, NULL, TRUE, FALSE, '2027-02-20', '2027-02-20', NULL, 'TOA020623', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 90, 'ZANAHORIA EN POLVO', 'Otro', 'LUCERO JULIAN', 'kg', 10.0, NULL, TRUE, FALSE, '2026-09-03', '2026-09-03', NULL, '2H0325', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 91, 'CASEINATO DE CALCIO', 'Proteína', 'TCA', 'kg', 20.0, NULL, TRUE, FALSE, '2027-04-11', '2027-04-11', NULL, 'FW202502937', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 92, 'COLAGENO BOVINO', 'Proteína', 'NOVAORGANIC', 'kg', 483.58, NULL, TRUE, FALSE, '2027-11-20', '2027-11-20', NULL, '26026882', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 93, 'colageno de pescado', 'proteina', 'tca', 'kg', 11.975, NULL, TRUE, FALSE, '2027-06-04', '2027-06-04', NULL, 'B24060053', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 94, 'MPI 85%', 'Proteína', 'BEYOND NUTRITION', 'kg', 695.0, NULL, TRUE, FALSE, '2025-08-01', '2025-08-01', NULL, '23236', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 95, 'PROTEINA AISLADA DE SOYA', 'Proteína', 'Beyond Nutrition', 'kg', 500.0, NULL, TRUE, FALSE, '2027-10-26', '2027-10-26', NULL, 'D1114', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 96, 'PROTEINA DE ARROZ PARCIALMENTE HIDROLIZADA AL 80%', 'Proteína', 'Suafarma', 'kg', 1781.2, NULL, TRUE, FALSE, '2027-04-17', '2027-04-17', NULL, '20251218Q580', '26-MP-738', NULL, '94.5 EN JAULA 2 CUARENTENA', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 97, 'SUERO DESMINERALIZADO AL 90%', 'Proteína', 'ILAS', 'kg', 259.995, NULL, TRUE, FALSE, '2027-09-20', '2027-09-20', NULL, 'C620B', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 98, 'SUERO DULCE DE LECHE', 'Proteína', 'TAE', 'kg', 850.0, NULL, TRUE, FALSE, '2027-02-26', '2027-02-26', NULL, '0321', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 99, 'WPC 80%', 'Proteína', 'Marquez Brothers', 'kg', 1458.0, NULL, TRUE, FALSE, '2028-04-23', '2028-04-23', NULL, '22260425002', '26-MP-710', NULL, '458 LOTE AAD26097S Y 1 TON 22260425002', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 100, 'WPC 8500', 'Proteína', 'Vhiler', 'kg', 440.0, NULL, TRUE, FALSE, '2025-02-01', '2025-02-01', NULL, '1492812', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 101, 'WPH 8360', 'Proteína', 'Vhiler', 'kg', 920.0, NULL, TRUE, FALSE, '2026-06-23', '2026-06-23', NULL, '1515435', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 102, 'ACIDO CITRICO', 'Vitamina', 'TAE', 'kg', 195.22, NULL, TRUE, FALSE, '2028-01-31', '2028-01-31', NULL, '2AX2502016', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 103, 'ACIDO CITRICO', 'Vitamina', 'TAE', 'kg', 500.0, NULL, TRUE, FALSE, '2029-03-29', '2029-03-29', NULL, '6AX2603046', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 104, 'PREMIX FORTIRAAM', 'Vitamina', 'STERLING', 'kg', 10.0, NULL, TRUE, FALSE, '2028-04-30', '2028-04-30', NULL, 'V10062026B', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 105, 'PREMIX WINMIX', 'Vitamina', 'WIN', 'kg', 22.0, NULL, TRUE, FALSE, '2026-11-30', '2026-11-30', NULL, '2000608', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 106, 'SAL MOLIDA', 'Mineral', 'PROQUIMLECHE', 'kg', 17.3, NULL, TRUE, FALSE, NULL, 'N/A', 'vacía', 'M3126', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 107, 'SAL MOLIDA', 'Mineral', 'PROQUIMLECHE', 'kg', 100.0, NULL, TRUE, FALSE, NULL, 'n/a', 'vacía', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 108, 'FOS', 'FIBRA', 'AZELIS', 'kg', 464.0, NULL, TRUE, FALSE, '2029-07-29', '2029-07-29', NULL, 'C2063747', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 109, 'fosfato de calcio', 'mineral', 'WIN', 'kg', 16.0, NULL, TRUE, FALSE, '2027-08-16', '2027/agos/16', NULL, '425081612', '26-MP-841', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 110, 'dioxido de silicio', 'Aditivo', 'PROQUIMLECHE', 'kg', NULL, NULL, FALSE, FALSE, '2028-08-22', '2028-08-22', NULL, '23236', NULL, NULL, 'NO EXISTE', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 111, 'dioxido de silicio', 'Aditivo', 'PROQUIMLECHE', 'kg', 23.48, NULL, TRUE, FALSE, '2028-01-31', '2028-01-31', NULL, '202601090A', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 113, 'acido ascorbico', 'Vitamina', 'tca', 'kg', 13.48, NULL, TRUE, FALSE, '2028-11-30', '2028-11-30', NULL, '3230141081', NULL, NULL, '3230141081 LOTE', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 114, 'grasa l50', 'base', 'falanx', 'kg', 8100.0, NULL, TRUE, FALSE, '2027-06-01', '2027-06-01', NULL, '260622', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 115, 'mtc 50', 'base', 'falanx', 'kg', 2675.0, NULL, TRUE, FALSE, '2027-06-01', '2027-06-01', NULL, '260622', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 116, 'LEUCINA', 'Aminoácido', 'DVA', 'kg', 385.9, NULL, TRUE, FALSE, '2026-11-25', '2026-11-25', NULL, '1132411002', '26-MP-723', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 117, 'LEUCINA', 'Aminoácido', 'DVA', 'kg', 25.0, NULL, TRUE, FALSE, '2026-11-25', '2026-11-25', NULL, '1132411001', NULL, NULL, 'LOTE KC251216 250KG', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 118, 'LISINA', 'Aminoácido', 'DVA', 'kg', 325.0, NULL, TRUE, FALSE, '2027-07-03', '2027-07-03', NULL, 'KC250704', NULL, NULL, 'DAR DE ALTA', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 119, 'ARGININA', 'Aminoácido', 'TCA', 'kg', 312.3, NULL, TRUE, TRUE, '2026-11-11', '2026-11-11', NULL, '5202411021', '26-MP-804', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 120, 'VALINA', 'Aminoácido', 'TCA', 'kg', 169.15, NULL, TRUE, FALSE, '2026-12-05', '2026-12-05', NULL, '323241202', '26-MP-897', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 121, 'L TRIPTOFANO', 'Aminoácido', 'TCA', 'kg', 25.0, NULL, TRUE, FALSE, '2027-01-01', '2027-01-01', NULL, 'KC250102', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 122, 'L-HISTIDINA', 'Aminoácido', 'TCA', 'kg', 25.0, NULL, TRUE, FALSE, '2028-01-06', '2028-01-06', NULL, 'KC260107', 'N/E', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 123, 'TREONINA', 'Aminoácido', 'TCA', 'kg', 275.0, NULL, TRUE, FALSE, '2028-03-28', '2028-03-28', NULL, '5042411017', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 124, 'BITARTRATO DE COLINA', 'Aminoácido', 'TCA', 'kg', 41.3, NULL, TRUE, FALSE, '2029-12-26', '12/26/2029', NULL, '3030774', NULL, NULL, 'DAR DE ALTA', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 125, 'azucar', 'Aminoácido', 'TCA', 'kg', 400.0, NULL, TRUE, FALSE, NULL, 'N/A', 'vacía', 'CR-0729229', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 126, 'CHICORIA', 'FIBRA', 'AZELIS', 'kg', 375.0, NULL, TRUE, FALSE, '2029-04-05', '2029-04-05', NULL, 'C204148', '26-mp-897', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 127, 'carbonato ligero de potasio', 'Aminoácido', 'bonanza', 'kg', 30.0, NULL, TRUE, FALSE, NULL, '26/17/07', 'año ilegible: ''26/17/07''', 'K2101181212101', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 128, 'cloruro de potasio', 'vitamina', 'lucero juliana', 'kg', 12.5, NULL, TRUE, FALSE, '2028-07-28', '2028-07-28', NULL, '8925000061', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 129, 'betaglucano', 'aditivo', 'n/a', 'kg', 9.0, NULL, TRUE, FALSE, '2026-03-31', '2026-03-31', NULL, 'C2405023132', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 130, 'Polisorbarto', 'conservador', 'difarmer', 'kg', 20.0, NULL, TRUE, FALSE, '2028-06-12', '2028-06-12', NULL, '260612Z021569', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 131, 'ENMASCARANTE', 'Aditivo', 'Multisabores', 'kg', 18.55, NULL, TRUE, FALSE, '2028-09-01', '2028-09-01', NULL, 'PT208240926', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 132, 'CREATINA MONOHIDRATADA', 'OTRO', 'TCA', 'kg', 3000.0, NULL, TRUE, FALSE, NULL, '2028/07/2028', 'año repetido: ''2028/07/2028''', '250408-C11', 'MP-26-878', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 133, 'SORBITOL', 'OTRO', 'DIFARME', 'kg', 370.0, NULL, TRUE, FALSE, NULL, NULL, 'vacía', '2JE605', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 134, 'celulosa', 'otro', 'n/a', 'kg', 6.0, NULL, TRUE, FALSE, NULL, NULL, 'vacía', '2F102020L28', '26-MP-829', NULL, 'JAULA CUARENTENA', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 135, 'LEUCINA', 'Aminoácido', 'TCA', 'kg', 200.0, NULL, TRUE, FALSE, '2027-12-01', '2027-12-01', NULL, 'KC251216', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 136, 'RESVERATTROL', 'ANTIOXIDANTE', 'TCA', 'kg', 18.24, NULL, TRUE, FALSE, '2027-05-08', 'MAY/08/2027', NULL, 'S20982405002', NULL, NULL, 'DAR DE ALTA', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 137, 'INOSITOL EN POLVO', 'Otro', 'TCA', 'kg', 24.5, NULL, TRUE, FALSE, '2029-06-17', '2029-06-17', NULL, '1012506180300', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-  ('mp', 138, 'BITARTRATO DE COLINA', 'Aminoácido', 'TCA', 'kg', 50.0, NULL, TRUE, FALSE, '2028-08-24', '2028-08-24', NULL, 'DL250825', NULL, NULL, 'DAR DE ALTA', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 139, 'BICARBONATO DE CALCIO', 'Aminoácido', 'WIN', 'kg', 15.2, NULL, TRUE, FALSE, '2027-06-22', '2027-06-22', NULL, '2518010909', NULL, NULL, 'DAR DE ALTA', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 140, 'NMN NICOTINAMIDA', 'Aminoácido', 'TCA', 'kg', 50.0, NULL, TRUE, FALSE, '2017-03-17', '2017-03-17', NULL, '20250318', NULL, NULL, 'DAR DE ALTA', NULL, NULL, NULL, NULL, NULL),
-  ('mp', 141, 'SULFATO DE MAGNESIO', 'Mineral', 'TCA', 'kg', 44.0, NULL, TRUE, FALSE, '2027-06-08', '2027-06-08', NULL, '910625', NULL, NULL, 'DAR DE ALTA', NULL, NULL, NULL, NULL, NULL)
-ON CONFLICT (inventario, fila) DO UPDATE SET
-  descripcion = EXCLUDED.descripcion,
-  categoria = EXCLUDED.categoria,
-  proveedor = EXCLUDED.proveedor,
-  unidad = EXCLUDED.unidad,
-  cantidad = EXCLUDED.cantidad,
-  cantidad_texto = EXCLUDED.cantidad_texto,
-  cantidad_legible = EXCLUDED.cantidad_legible,
-  cantidad_formula = EXCLUDED.cantidad_formula,
-  caducidad = EXCLUDED.caducidad,
-  caducidad_cruda = EXCLUDED.caducidad_cruda,
-  motivo_caducidad = EXCLUDED.motivo_caducidad,
-  lote = EXCLUDED.lote,
-  erp = EXCLUDED.erp,
-  qr_id = EXCLUDED.qr_id,
-  observaciones = EXCLUDED.observaciones,
-  ubicacion = EXCLUDED.ubicacion,
-  ubicacion_cruda = EXCLUDED.ubicacion_cruda,
-  ubicacion_invalida = EXCLUDED.ubicacion_invalida,
-  presentacion = EXCLUDED.presentacion,
-  piezas = EXCLUDED.piezas,
-  actualizado = NOW();
-
--- -----------------------------------------------------------------------------
--- 4. Usuarios (7 cuentas)
+-- 3. Usuarios del sistema (7 cuentas)
 -- -----------------------------------------------------------------------------
 INSERT INTO public.usuario (
   id, nombre, rol, hash, salt, iteraciones, activo, debe_cambiar, creado, ultimo_acceso
@@ -1347,30 +1186,5 @@ ON CONFLICT (nombre) DO UPDATE SET
   debe_cambiar = EXCLUDED.debe_cambiar,
   ultimo_acceso = EXCLUDED.ultimo_acceso;
 SELECT setval(pg_get_serial_sequence('public.usuario', 'id'), COALESCE((SELECT MAX(id) FROM public.usuario), 1), true);
-
--- -----------------------------------------------------------------------------
--- 5. Movimientos de bitácora (0 registros)
--- -----------------------------------------------------------------------------
-
--- -----------------------------------------------------------------------------
--- 6. Auditoría (13 registros)
--- -----------------------------------------------------------------------------
-INSERT INTO public.auditoria (id, ts, usuario, accion, detalle)
-VALUES
-  (1, '2026-10-22 16:11:08', 'consola', 'USUARIO_CREADO', '{"nombre": "Maria Elena Becerra", "rol": "admin"}'),
-  (2, '2026-10-22 16:11:08', 'consola', 'USUARIO_CREADO', '{"nombre": "Esteban Soto", "rol": "almacen"}'),
-  (3, '2026-10-22 16:11:08', 'consola', 'USUARIO_CREADO', '{"nombre": "Galilea Medina", "rol": "almacen"}'),
-  (4, '2026-10-22 16:11:08', 'consola', 'USUARIO_CREADO', '{"nombre": "Auditor Calidad", "rol": "consulta"}'),
-  (5, '2026-10-22 16:11:22', 'Esteban Soto', 'LOGIN', 'sesión hasta 2026-10-23 04:11:22'),
-  (6, '2026-10-22 16:11:23', 'Esteban Soto', 'LOGIN_FALLIDO', 'credenciales inválidas'),
-  (7, '2026-10-22 16:18:18', 'Maria Elena Becerra', 'LOGIN', 'sesión hasta 2026-10-23 04:18:18'),
-  (8, '2026-10-22 16:18:26', 'Maria Elena Becerra', 'LOGIN', 'sesión hasta 2026-10-23 04:18:26'),
-  (9, '2026-10-22 16:42:03', 'Maria Elena Becerra', 'LOGIN', 'sesión hasta 2026-10-23 04:42:03'),
-  (10, '2026-10-22 16:43:52', 'Maria Elena Becerra', 'LOGIN', 'sesión hasta 2026-10-23 04:43:52'),
-  (11, '2026-10-24 11:47:18', 'GALILEA', 'LOGIN_FALLIDO', 'credenciales inválidas'),
-  (12, '2026-10-24 11:48:54', 'consola', 'RESET_PASSWORD', 'Maria Elena Becerra'),
-  (13, '2026-10-24 11:49:29', 'Maria Elena Becerra', 'LOGIN', 'sesión hasta 2026-10-24 23:49:29')
-ON CONFLICT (id) DO NOTHING;
-SELECT setval(pg_get_serial_sequence('public.auditoria', 'id'), COALESCE((SELECT MAX(id) FROM public.auditoria), 1), true);
 
 COMMIT;

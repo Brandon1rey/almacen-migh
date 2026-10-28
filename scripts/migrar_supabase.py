@@ -1,10 +1,21 @@
-"""Genera el SQL de migración + datos semilla para Supabase o los aplica directo.
+"""Genera el SQL de migración + catálogos base para Supabase o los aplica directo.
+
+Por defecto genera un lienzo limpio ("clean canvas"):
+  - Crea las 7 tablas, índices, triggers y políticas RLS (`supabase/schema.sql`).
+  - Limpia `inventario_lote`, `movimiento`, `auditoria` y `sesion` (0 renglones de inventario).
+  - Siembra ÚNICAMENTE los datos de clasificación y acceso:
+      1. `ubicaciones` (383 posiciones de racks y zonas de ALM-PNO-002)
+      2. `catalogo_insumos` (565 claves y descripciones de productos del ERP)
+      3. `usuario` (cuentas de usuario para poder iniciar sesión en Vercel)
 
 Uso:
-  1) Generar archivo SQL completo (esquema + datos actuales de data/):
+  1) Generar SQL de lienzo limpio (en `supabase/clean_canvas.sql` y `supabase/seed.sql`):
        python scripts/migrar_supabase.py
 
-  2) Aplicar directo contra Supabase PostgreSQL (usando SUPABASE_DB_URL / DATABASE_URL):
+  2) Incluir también los lotes actuales de los Excel (`data/Inventario_*.xlsx`):
+       python scripts/migrar_supabase.py --con-inventario
+
+  3) Aplicar directo contra Supabase PostgreSQL (usando SUPABASE_DB_URL / DATABASE_URL):
        python scripts/migrar_supabase.py --aplicar
        python scripts/migrar_supabase.py --aplicar --dsn "postgresql://postgres..."
 """
@@ -124,17 +135,26 @@ def _cargar_sqlite(carpeta_datos: Path) -> dict[str, list[dict]]:
     return resultado
 
 
-def construir_sql_seed(carpeta_datos: Path | None = None) -> str:
+def construir_sql_seed(
+    carpeta_datos: Path | None = None,
+    incluir_inventario: bool = False,
+) -> str:
     carpeta = carpeta_datos or (RAIZ / "data")
     esquema_path = RAIZ / "supabase" / "schema.sql"
     esquema_sql = esquema_path.read_text(encoding="utf-8")
 
+    modo_titulo = (
+        "MIGRACIÓN COMPLETA + INVENTARIO ACTUAL"
+        if incluir_inventario
+        else "LIENZO LIMPIO (CLEAN CANVAS): ESQUEMA + UBICACIONES + CATÁLOGO DE PRODUCTOS (SIN LOTES)"
+    )
+
     lineas: list[str] = [
         "-- =============================================================================",
-        "-- MIGRACIÓN COMPLETA + DATOS SEMILLA PARA SUPABASE (PostgreSQL)",
+        f"-- {modo_titulo}",
         "-- Generado automáticamente por scripts/migrar_supabase.py",
         "-- Puedes pegar este archivo completo en el SQL Editor de Supabase o ejecutarlo",
-        "-- con: psql \"$SUPABASE_DB_URL\" -f supabase/seed.sql",
+        "-- con: psql \"$SUPABASE_DB_URL\" -f supabase/clean_canvas.sql",
         "-- =============================================================================",
         "",
         esquema_sql.strip(),
@@ -142,7 +162,17 @@ def construir_sql_seed(carpeta_datos: Path | None = None) -> str:
         "BEGIN;",
         "",
         "-- -----------------------------------------------------------------------------",
-        f"-- 1. Ubicaciones ({len(ubicaciones.CATALOGO)} ubicaciones oficiales ALM-PNO-002)",
+        "-- 0. Lienzo limpio: vacía lotes, movimientos, sesiones y auditoría previa",
+        "-- -----------------------------------------------------------------------------",
+        "TRUNCATE TABLE",
+        "  public.inventario_lote,",
+        "  public.movimiento,",
+        "  public.auditoria,",
+        "  public.sesion",
+        "RESTART IDENTITY CASCADE;",
+        "",
+        "-- -----------------------------------------------------------------------------",
+        f"-- 1. Ubicaciones de Racks y Zonas ({len(ubicaciones.CATALOGO)} códigos oficiales ALM-PNO-002)",
         "-- -----------------------------------------------------------------------------",
     ]
 
@@ -165,7 +195,7 @@ def construir_sql_seed(carpeta_datos: Path | None = None) -> str:
     lineas.extend([
         "",
         "-- -----------------------------------------------------------------------------",
-        f"-- 2. Catálogo de insumos ({len(insumos)} registros)",
+        f"-- 2. Catálogo de códigos de producto del ERP ({len(insumos)} registros)",
         "-- -----------------------------------------------------------------------------",
     ])
     if insumos:
@@ -192,65 +222,12 @@ def construir_sql_seed(carpeta_datos: Path | None = None) -> str:
             "  actualizado = NOW();"
         )
 
-    lotes = _cargar_inventarios_excel(carpeta)
-    lineas.extend([
-        "",
-        "-- -----------------------------------------------------------------------------",
-        f"-- 3. Inventario de lotes ({len(lotes)} renglones)",
-        "-- -----------------------------------------------------------------------------",
-    ])
-    if lotes:
-        valores_lotes = [
-            f"  ({_sql_str(l['inventario'])}, {_sql_str(l['fila'])}, {_sql_str(l['descripcion'])}, "
-            f"{_sql_str(l['categoria'])}, {_sql_str(l['proveedor'])}, {_sql_str(l['unidad'])}, "
-            f"{_sql_str(l['cantidad'])}, {_sql_str(l['cantidad_texto'])}, "
-            f"{_sql_str(l['cantidad_legible'])}, {_sql_str(l['cantidad_formula'])}, "
-            f"{_sql_str(l['caducidad'])}, {_sql_str(l['caducidad_cruda'])}, "
-            f"{_sql_str(l['motivo_caducidad'])}, {_sql_str(l['lote'])}, {_sql_str(l['erp'])}, "
-            f"{_sql_str(l['qr_id'])}, {_sql_str(l['observaciones'])}, {_sql_str(l['ubicacion'])}, "
-            f"{_sql_str(l['ubicacion_cruda'])}, {_sql_str(l['ubicacion_invalida'])}, "
-            f"{_sql_str(l['presentacion'])}, {_sql_str(l['piezas'])})"
-            for l in lotes
-        ]
-        lineas.append(
-            "INSERT INTO public.inventario_lote (\n"
-            "  inventario, fila, descripcion, categoria, proveedor, unidad,\n"
-            "  cantidad, cantidad_texto, cantidad_legible, cantidad_formula,\n"
-            "  caducidad, caducidad_cruda, motivo_caducidad, lote, erp, qr_id,\n"
-            "  observaciones, ubicacion, ubicacion_cruda, ubicacion_invalida,\n"
-            "  presentacion, piezas\n"
-            ")\nVALUES\n"
-            + ",\n".join(valores_lotes)
-            + "\nON CONFLICT (inventario, fila) DO UPDATE SET\n"
-            "  descripcion = EXCLUDED.descripcion,\n"
-            "  categoria = EXCLUDED.categoria,\n"
-            "  proveedor = EXCLUDED.proveedor,\n"
-            "  unidad = EXCLUDED.unidad,\n"
-            "  cantidad = EXCLUDED.cantidad,\n"
-            "  cantidad_texto = EXCLUDED.cantidad_texto,\n"
-            "  cantidad_legible = EXCLUDED.cantidad_legible,\n"
-            "  cantidad_formula = EXCLUDED.cantidad_formula,\n"
-            "  caducidad = EXCLUDED.caducidad,\n"
-            "  caducidad_cruda = EXCLUDED.caducidad_cruda,\n"
-            "  motivo_caducidad = EXCLUDED.motivo_caducidad,\n"
-            "  lote = EXCLUDED.lote,\n"
-            "  erp = EXCLUDED.erp,\n"
-            "  qr_id = EXCLUDED.qr_id,\n"
-            "  observaciones = EXCLUDED.observaciones,\n"
-            "  ubicacion = EXCLUDED.ubicacion,\n"
-            "  ubicacion_cruda = EXCLUDED.ubicacion_cruda,\n"
-            "  ubicacion_invalida = EXCLUDED.ubicacion_invalida,\n"
-            "  presentacion = EXCLUDED.presentacion,\n"
-            "  piezas = EXCLUDED.piezas,\n"
-            "  actualizado = NOW();"
-        )
-
     datos_sqlite = _cargar_sqlite(carpeta)
     usuarios_db = datos_sqlite["usuario"]
     lineas.extend([
         "",
         "-- -----------------------------------------------------------------------------",
-        f"-- 4. Usuarios ({len(usuarios_db)} cuentas)",
+        f"-- 3. Usuarios del sistema ({len(usuarios_db)} cuentas)",
         "-- -----------------------------------------------------------------------------",
     ])
     if usuarios_db:
@@ -280,62 +257,59 @@ def construir_sql_seed(carpeta_datos: Path | None = None) -> str:
             "COALESCE((SELECT MAX(id) FROM public.usuario), 1), true);"
         )
 
-    movimientos_db = datos_sqlite["movimiento"]
-    lineas.extend([
-        "",
-        "-- -----------------------------------------------------------------------------",
-        f"-- 5. Movimientos de bitácora ({len(movimientos_db)} registros)",
-        "-- -----------------------------------------------------------------------------",
-    ])
-    if movimientos_db:
-        valores_mov = [
-            f"  ({_sql_str(m['id'])}, {_sql_str(m['ts'])}, {_sql_str(m['accion'])}, "
-            f"{_sql_str(m.get('inventario') or 'mp')}, {_sql_str(m.get('fila'))}, "
-            f"{_sql_str(m['descripcion'])}, {_sql_str(m.get('lote'))}, "
-            f"{_sql_str(m.get('ubicacion_origen'))}, {_sql_str(m.get('ubicacion_destino'))}, "
-            f"{_sql_str(m.get('cantidad'))}, {_sql_str(m.get('unidad'))}, "
-            f"{_sql_str(m.get('fila_destino'))}, {_sql_str(m['usuario'])}, "
-            f"{_sql_str(m.get('usuario_id'))}, {_sql_str(m.get('nota'))}, "
-            f"{_sql_str(m.get('motivo'))}, {_sql_str(m.get('ref_doc'))}, "
-            f"{_sql_str(m.get('revertido', 0))}, {_sql_str(m.get('revertido_por'))})"
-            for m in movimientos_db
-        ]
-        lineas.append(
-            "INSERT INTO public.movimiento (\n"
-            "  id, ts, accion, inventario, fila, descripcion, lote,\n"
-            "  ubicacion_origen, ubicacion_destino, cantidad, unidad, fila_destino,\n"
-            "  usuario, usuario_id, nota, motivo, ref_doc, revertido, revertido_por\n"
-            ")\nVALUES\n"
-            + ",\n".join(valores_mov)
-            + "\nON CONFLICT (id) DO NOTHING;"
-        )
-        lineas.append(
-            "SELECT setval(pg_get_serial_sequence('public.movimiento', 'id'), "
-            "COALESCE((SELECT MAX(id) FROM public.movimiento), 1), true);"
-        )
-
-    auditoria_db = datos_sqlite["auditoria"]
-    lineas.extend([
-        "",
-        "-- -----------------------------------------------------------------------------",
-        f"-- 6. Auditoría ({len(auditoria_db)} registros)",
-        "-- -----------------------------------------------------------------------------",
-    ])
-    if auditoria_db:
-        valores_aud = [
-            f"  ({_sql_str(a['id'])}, {_sql_str(a['ts'])}, {_sql_str(a['usuario'])}, "
-            f"{_sql_str(a['accion'])}, {_sql_str(a.get('detalle'))})"
-            for a in auditoria_db
-        ]
-        lineas.append(
-            "INSERT INTO public.auditoria (id, ts, usuario, accion, detalle)\nVALUES\n"
-            + ",\n".join(valores_aud)
-            + "\nON CONFLICT (id) DO NOTHING;"
-        )
-        lineas.append(
-            "SELECT setval(pg_get_serial_sequence('public.auditoria', 'id'), "
-            "COALESCE((SELECT MAX(id) FROM public.auditoria), 1), true);"
-        )
+    if incluir_inventario:
+        lotes = _cargar_inventarios_excel(carpeta)
+        lineas.extend([
+            "",
+            "-- -----------------------------------------------------------------------------",
+            f"-- 4. Inventario de lotes ({len(lotes)} renglones)",
+            "-- -----------------------------------------------------------------------------",
+        ])
+        if lotes:
+            valores_lotes = [
+                f"  ({_sql_str(l['inventario'])}, {_sql_str(l['fila'])}, {_sql_str(l['descripcion'])}, "
+                f"{_sql_str(l['categoria'])}, {_sql_str(l['proveedor'])}, {_sql_str(l['unidad'])}, "
+                f"{_sql_str(l['cantidad'])}, {_sql_str(l['cantidad_texto'])}, "
+                f"{_sql_str(l['cantidad_legible'])}, {_sql_str(l['cantidad_formula'])}, "
+                f"{_sql_str(l['caducidad'])}, {_sql_str(l['caducidad_cruda'])}, "
+                f"{_sql_str(l['motivo_caducidad'])}, {_sql_str(l['lote'])}, {_sql_str(l['erp'])}, "
+                f"{_sql_str(l['qr_id'])}, {_sql_str(l['observaciones'])}, {_sql_str(l['ubicacion'])}, "
+                f"{_sql_str(l['ubicacion_cruda'])}, {_sql_str(l['ubicacion_invalida'])}, "
+                f"{_sql_str(l['presentacion'])}, {_sql_str(l['piezas'])})"
+                for l in lotes
+            ]
+            lineas.append(
+                "INSERT INTO public.inventario_lote (\n"
+                "  inventario, fila, descripcion, categoria, proveedor, unidad,\n"
+                "  cantidad, cantidad_texto, cantidad_legible, cantidad_formula,\n"
+                "  caducidad, caducidad_cruda, motivo_caducidad, lote, erp, qr_id,\n"
+                "  observaciones, ubicacion, ubicacion_cruda, ubicacion_invalida,\n"
+                "  presentacion, piezas\n"
+                ")\nVALUES\n"
+                + ",\n".join(valores_lotes)
+                + "\nON CONFLICT (inventario, fila) DO UPDATE SET\n"
+                "  descripcion = EXCLUDED.descripcion,\n"
+                "  categoria = EXCLUDED.categoria,\n"
+                "  proveedor = EXCLUDED.proveedor,\n"
+                "  unidad = EXCLUDED.unidad,\n"
+                "  cantidad = EXCLUDED.cantidad,\n"
+                "  cantidad_texto = EXCLUDED.cantidad_texto,\n"
+                "  cantidad_legible = EXCLUDED.cantidad_legible,\n"
+                "  cantidad_formula = EXCLUDED.cantidad_formula,\n"
+                "  caducidad = EXCLUDED.caducidad,\n"
+                "  caducidad_cruda = EXCLUDED.caducidad_cruda,\n"
+                "  motivo_caducidad = EXCLUDED.motivo_caducidad,\n"
+                "  lote = EXCLUDED.lote,\n"
+                "  erp = EXCLUDED.erp,\n"
+                "  qr_id = EXCLUDED.qr_id,\n"
+                "  observaciones = EXCLUDED.observaciones,\n"
+                "  ubicacion = EXCLUDED.ubicacion,\n"
+                "  ubicacion_cruda = EXCLUDED.ubicacion_cruda,\n"
+                "  ubicacion_invalida = EXCLUDED.ubicacion_invalida,\n"
+                "  presentacion = EXCLUDED.presentacion,\n"
+                "  piezas = EXCLUDED.piezas,\n"
+                "  actualizado = NOW();"
+            )
 
     lineas.extend(["", "COMMIT;", ""])
     return "\n".join(lineas)
@@ -355,17 +329,22 @@ def aplicar_en_supabase(dsn: str, sql: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Genera supabase/seed.sql y opcionalmente migra los datos directo a Supabase."
+        description="Genera el SQL de Supabase (lienzo limpio por defecto: solo esquema + ubicaciones + catálogo)."
     )
     parser.add_argument(
         "--salida",
-        default=str(RAIZ / "supabase" / "seed.sql"),
-        help="Ruta del archivo SQL a generar (por defecto: supabase/seed.sql)",
+        default=None,
+        help="Ruta del archivo SQL a generar (por defecto actualiza supabase/clean_canvas.sql y supabase/seed.sql)",
+    )
+    parser.add_argument(
+        "--con-inventario",
+        action="store_true",
+        help="Incluye también los renglones actuales de data/Inventario_*.xlsx.",
     )
     parser.add_argument(
         "--aplicar",
         action="store_true",
-        help="Conecta a SUPABASE_DB_URL / DATABASE_URL y ejecuta la migración + seed.",
+        help="Conecta a SUPABASE_DB_URL / DATABASE_URL y ejecuta el SQL en Supabase.",
     )
     parser.add_argument(
         "--dsn",
@@ -374,11 +353,18 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    sql = construir_sql_seed()
-    ruta_salida = Path(args.salida)
-    ruta_salida.parent.mkdir(parents=True, exist_ok=True)
-    ruta_salida.write_text(sql, encoding="utf-8")
-    print(f"[OK] Archivo SQL generado en: {ruta_salida} ({len(sql):,} bytes)")
+    sql = construir_sql_seed(incluir_inventario=args.con_inventario)
+    if args.salida:
+        rutas = [Path(args.salida)]
+    else:
+        rutas = [
+            RAIZ / "supabase" / "clean_canvas.sql",
+            RAIZ / "supabase" / "seed.sql",
+        ]
+    for ruta_salida in rutas:
+        ruta_salida.parent.mkdir(parents=True, exist_ok=True)
+        ruta_salida.write_text(sql, encoding="utf-8")
+        print(f"[OK] Archivo SQL generado en: {ruta_salida} ({len(sql):,} bytes)")
 
     if args.aplicar:
         dsn = args.dsn or db.url_postgres()
@@ -386,9 +372,9 @@ def main() -> None:
             raise SystemExit(
                 "Error: Define SUPABASE_DB_URL o DATABASE_URL, o pasa --dsn 'postgresql://...'"
             )
-        print("Aplicando esquema y datos semilla en Supabase PostgreSQL...")
+        print("Aplicando esquema y catálogos en Supabase PostgreSQL...")
         aplicar_en_supabase(dsn, sql)
-        print("[OK] Migración aplicada exitosamente en Supabase.")
+        print("[OK] Lienzo limpio aplicado exitosamente en Supabase.")
 
 
 if __name__ == "__main__":
