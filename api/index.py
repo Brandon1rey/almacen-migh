@@ -1,10 +1,10 @@
 """Punto de entrada Serverless para Vercel (`@vercel/python`).
 
 Vercel detecta la clase `handler(BaseHTTPRequestHandler)` y despacha cada
-petición HTTP a través del mismo `Handler` de `app.server`. Cuando está
-definida la variable `SUPABASE_DB_URL` (o `DATABASE_URL` / `POSTGRES_URL`),
-todo el estado (usuarios, sesiones, inventarios MP/MEP/PT, catálogo, bitácora y
-auditoría) se lee y escribe directamente en Supabase PostgreSQL.
+petición HTTP a través del `Handler` de `app.server`. La conexión a Supabase
+se inicializa bajo demanda en la primera petición de API/descarga, de modo que
+los archivos estáticos (`/`, `/html5-qrcode.min.js`) cargan de inmediato sin
+bloquear ni fallar en el arranque en frío.
 """
 from __future__ import annotations
 
@@ -15,10 +15,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 if str(RAIZ) not in sys.path:
     sys.path.insert(0, str(RAIZ))
 
-from app.server import Handler, asegurar_estado  # noqa: E402
-
-# Inicialización perezosa en el arranque en frío (cold start) del contenedor
-asegurar_estado()
+from app.server import Handler  # noqa: E402
 
 
 class handler(Handler):

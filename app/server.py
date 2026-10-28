@@ -111,6 +111,13 @@ class Estado:
         self.en_db = bool(url_pg)
         if carpeta is None:
             carpeta = pathlib.Path(ruta).parent if ruta else inventarios.CARPETA_DATOS
+            if not self.en_db and ruta is None and db.es_vercel():
+                import shutil
+                import tempfile
+                tmp_datos = pathlib.Path(tempfile.gettempdir()) / "almacen-datos"
+                if not tmp_datos.exists():
+                    shutil.copytree(carpeta, tmp_datos, dirs_exist_ok=True)
+                carpeta = tmp_datos
         self.carpeta_datos = pathlib.Path(carpeta)
         self._rutas = {t: inventarios.ruta(t, self.carpeta_datos) for t in inventarios.TIPOS}
         if ruta and pathlib.Path(ruta).is_file():
@@ -263,10 +270,31 @@ class Handler(BaseHTTPRequestHandler):
 
     # ---------- despacho ----------
     def _despachar(self, metodo):
-        asegurar_estado()
         partes = urllib.parse.urlparse(self.path)
         ruta = partes.path
         params = dict(urllib.parse.parse_qsl(partes.query))
+
+        if metodo == "GET" and not ruta.startswith(("/api/", "/descargar/")):
+            if ruta == "/favicon.ico":
+                self.send_response(204)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
+            if ruta in ("/", ""):
+                return self._archivo(STATIC / "index.html")
+            archivo = STATIC / ruta.lstrip("/")
+            try:
+                dentro = archivo.exists() and archivo.resolve().is_relative_to(STATIC.resolve())
+            except OSError:
+                dentro = False
+            if dentro:
+                return self._archivo(archivo)
+            return self._json(404, {"error": "no encontrado"})
+
+        try:
+            asegurar_estado()
+        except Exception as e:  # noqa: BLE001
+            return self._json(503, {"error": f"Error al conectar con la base de datos: {e}"})
 
         if ruta.startswith("/api/"):
             return self._api(metodo, ruta, params)
@@ -274,25 +302,9 @@ class Handler(BaseHTTPRequestHandler):
         if metodo != "GET":
             return self._json(405, {"error": f"método no permitido: {metodo} {ruta}"})
 
-        if ruta == "/favicon.ico":
-            # el navegador lo pide solo; sin esto llena la consola de 404
-            self.send_response(204)
-            self.send_header("Content-Length", "0")
-            self.end_headers()
-            return
-
         if ruta.startswith("/descargar/"):
             return self._descargar(ruta, params)
 
-        if ruta in ("/", ""):
-            return self._archivo(STATIC / "index.html")
-        archivo = STATIC / ruta.lstrip("/")
-        try:
-            dentro = archivo.exists() and archivo.resolve().is_relative_to(STATIC.resolve())
-        except OSError:
-            dentro = False
-        if dentro:
-            return self._archivo(archivo)
         return self._json(404, {"error": "no encontrado"})
 
     def _api(self, metodo, ruta, params):

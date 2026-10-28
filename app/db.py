@@ -209,8 +209,7 @@ class PostgresConnection:
         self._con = None
         self._conectar()
         if inicializar:
-            self.executescript(ESQUEMA_POSTGRES)
-            self._sembrar_ubicaciones()
+            self._asegurar_esquema()
 
     def _conectar(self):
         import psycopg2
@@ -219,8 +218,19 @@ class PostgresConnection:
                 self._con.close()
             except Exception:  # noqa: BLE001
                 pass
-        self._con = psycopg2.connect(self.dsn)
+        self._con = psycopg2.connect(self.dsn, connect_timeout=10)
         self._con.autocommit = False
+
+    def _asegurar_esquema(self):
+        """Verifica rápido si las tablas existen; solo ejecuta DDL en bases recién creadas."""
+        try:
+            fila = self.execute("SELECT COUNT(*) FROM ubicaciones").fetchone()
+            if fila and fila[0] >= 300:
+                return
+        except Exception:  # noqa: BLE001
+            pass
+        self.executescript(ESQUEMA_POSTGRES)
+        self._sembrar_ubicaciones()
 
     def _sembrar_ubicaciones(self):
         """Asegura que el catálogo físico de ubicaciones (ALM-PNO-002) esté en la base."""
